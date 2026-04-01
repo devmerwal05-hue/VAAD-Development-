@@ -199,9 +199,20 @@ export function setCorsHeaders(req, res) {
 }
 
 export function verifyAdminPassword(password) {
-  // Simple comparison - just check if it's "2025"
-  console.log('verifyAdminPassword called with:', password);
-  return password === '2025';
+  if (!password || typeof password !== 'string') return false;
+
+  const expected = getEnv('ADMIN_PASSWORD');
+  if (!expected) {
+    console.error('ADMIN_PASSWORD environment variable is not set');
+    return false;
+  }
+
+  // To prevent timing attacks, hash both and compare with timingSafeEqual.
+  // This ensures both inputs to timingSafeEqual have the same fixed length.
+  const providedHash = crypto.createHash('sha256').update(password).digest();
+  const expectedHash = crypto.createHash('sha256').update(expected).digest();
+
+  return crypto.timingSafeEqual(providedHash, expectedHash);
 }
 
 export function startAdminSession(req, res) {
