@@ -35,7 +35,7 @@ export default function Footer() {
       items: [
         { label: getContentValue('services', 'card_1_title', 'High-conviction websites'), href: '/services' },
         { label: getContentValue('services', 'card_2_title', 'Operational web apps'), href: '/services' },
-        { label: getContentValue('services', 'card_3_title', 'E-commerce launches'), href: '/services' },
+        { label: getContentValue('services', 'card_3_title', 'Commerce builds'), href: '/services' },
         { label: getContentValue('process', 'title', 'A fast, visible process'), href: '/process' },
       ],
     },

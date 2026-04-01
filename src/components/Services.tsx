@@ -6,27 +6,27 @@ import { useContent } from '../lib/useContent';
 
 const iconComponents = [Globe, Code2, ShoppingBag, Wrench];
 
+const serviceDefaults = [
+  { title: 'High-conviction websites', description: 'Marketing sites with strong information hierarchy, custom visuals, and a CMS handoff your team can actually maintain.' },
+  { title: 'Operational web apps', description: 'Internal tools, client dashboards, and workflow systems that reduce manual follow-up and keep teams aligned.' },
+  { title: 'Commerce builds', description: 'Stores and product funnels designed around clear merchandising, product storytelling, and mobile conversion paths.' },
+  { title: 'Launch support', description: 'Deployment, analytics, content updates, and post-launch improvements so the build keeps paying off after go-live.' },
+];
+
 export default function Services() {
   const { getContentValue } = useContent();
   const labelParts = getContentValue('services', 'label', '01 / Services').split(' / ');
-  const services = [
-    {
-      title: getContentValue('services', 'card_1_title', 'High-conviction websites'),
-      description: getContentValue('services', 'card_1_desc', 'Marketing sites with strong information hierarchy, custom visuals, and a CMS handoff your team can actually maintain.'),
-    },
-    {
-      title: getContentValue('services', 'card_2_title', 'Operational web apps'),
-      description: getContentValue('services', 'card_2_desc', 'Internal tools, client dashboards, and workflow systems that reduce manual follow-up and keep teams aligned.'),
-    },
-    {
-      title: getContentValue('services', 'card_3_title', 'Commerce builds'),
-      description: getContentValue('services', 'card_3_desc', 'Stores and product funnels designed around clear merchandising, product storytelling, and mobile conversion paths.'),
-    },
-    {
-      title: getContentValue('services', 'card_4_title', 'Launch support'),
-      description: getContentValue('services', 'card_4_desc', 'Deployment, analytics, content updates, and post-launch improvements so the build keeps paying off after go-live.'),
-    },
-  ];
+  
+  const storedCardCount = Number(getContentValue('services', 'card_count', ''));
+  const cardCount = (!isNaN(storedCardCount) && storedCardCount > 0) ? storedCardCount : serviceDefaults.length;
+  
+  const services = Array.from({ length: cardCount }, (_, index) => {
+    const fallback = serviceDefaults[index];
+    return {
+      title: getContentValue('services', `card_${index + 1}_title`, fallback?.title || ''),
+      description: getContentValue('services', `card_${index + 1}_desc`, fallback?.description || ''),
+    };
+  }).filter(s => s.title);
 
   return (
     <section className="py-24 md:py-32">
@@ -38,7 +38,7 @@ export default function Services() {
         </motion.p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {services.map((service, index) => {
-            const Icon = iconComponents[index];
+            const Icon = iconComponents[index % iconComponents.length];
             return (
               <motion.div
                 key={service.title}

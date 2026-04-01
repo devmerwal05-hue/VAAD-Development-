@@ -30,8 +30,11 @@ const fallbackCategories = [
 export default function TechStack() {
   const { getContentValue } = useContent();
   const labelParts = getContentValue('techstack', 'label', '09 / Capabilities').split(' / ');
+  
+  const storedCategoryCount = Number(getContentValue('techstack', 'cat_count', ''));
+  const maxCategories = (!isNaN(storedCategoryCount) && storedCategoryCount > 0) ? storedCategoryCount : 10;
 
-  const categories = Array.from({ length: 10 }, (_, index) => {
+  const categories = Array.from({ length: maxCategories }, (_, index) => {
     const categoryNumber = index + 1;
     const fallback = fallbackCategories[index];
     const name = getContentValue('techstack', `cat_${categoryNumber}_name`, fallback?.name || '');

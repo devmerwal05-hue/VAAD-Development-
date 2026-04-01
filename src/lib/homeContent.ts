@@ -290,6 +290,7 @@ const heroFields: AdminFieldDefinition[] = [
   { key: 'subheadline', label: 'Subheadline', fallback: heroDefaults.subheadline, type: 'textarea' },
   { key: 'cta_primary', label: 'Primary button label', fallback: heroDefaults.cta_primary },
   { key: 'cta_secondary', label: 'Secondary button label', fallback: heroDefaults.cta_secondary },
+  { key: 'stat_count', label: 'Number of hero stats', fallback: '3', type: 'text', description: 'Set the number of stats in the hero section (1-5).' },
   { key: 'stat_1_number', label: 'Stat 1 value', fallback: heroDefaults.stat_1_number },
   { key: 'stat_1_label', label: 'Stat 1 label', fallback: heroDefaults.stat_1_label },
   { key: 'stat_2_number', label: 'Stat 2 value', fallback: heroDefaults.stat_2_number },
@@ -306,6 +307,7 @@ const serviceFields: AdminFieldDefinition[] = [
   { key: 'label', label: 'Section label', fallback: '01 / Services' },
   { key: 'title', label: 'Section title', fallback: 'What we build' },
   { key: 'subtitle', label: 'Section subtitle', fallback: 'Delivery is structured around what your team actually needs to launch, maintain, and extend after handoff.', type: 'textarea' },
+  { key: 'card_count', label: 'Number of service cards', fallback: String(serviceDefaults.length), type: 'text', description: 'Set the number of service cards to display (1-10).' },
   ...serviceDefaults.flatMap((service, index) => {
     const number = index + 1;
     return [
@@ -319,6 +321,7 @@ const techStackFields: AdminFieldDefinition[] = [
   { key: 'label', label: 'Section label', fallback: '09 / Capabilities' },
   { key: 'title', label: 'Section title', fallback: 'How we build' },
   { key: 'subtitle', label: 'Section subtitle', fallback: 'The stack is chosen around delivery speed, maintainability, and how much control your team needs after launch.', type: 'textarea' },
+  { key: 'cat_count', label: 'Number of capabilities', fallback: '10', type: 'text', description: 'Set the number of capability cards to display (1-10).' },
   ...Array.from({ length: 10 }, (_, index) => {
     const fallback = techStackDefaults[index];
     const number = index + 1;
@@ -333,6 +336,7 @@ const techStackFields: AdminFieldDefinition[] = [
 const statsFields: AdminFieldDefinition[] = [
   { key: 'label', label: 'Section label', fallback: '02 / Why Us' },
   { key: 'title', label: 'Section title', fallback: 'Why teams choose VAAD' },
+  { key: 'stat_count', label: 'Number of stats', fallback: String(statsDefaults.length), type: 'text', description: 'Set the number of stats to display (1-6).' },
   ...statsDefaults.flatMap((stat, index) => {
     const number = index + 1;
     return [
@@ -348,6 +352,7 @@ const statsFields: AdminFieldDefinition[] = [
 const processFields: AdminFieldDefinition[] = [
   { key: 'label', label: 'Section label', fallback: '03 / Process' },
   { key: 'title', label: 'Section title', fallback: 'How a project works' },
+  { key: 'step_count', label: 'Number of process steps', fallback: String(processDefaults.length), type: 'text', description: 'Set the number of process steps to display (1-6).' },
   ...processDefaults.flatMap((step, index) => {
     const number = index + 1;
     return [
@@ -375,6 +380,7 @@ const pricingFields: AdminFieldDefinition[] = [
   { key: 'subtitle', label: 'Section subtitle', fallback: 'Clear ranges for common scopes. Final pricing depends on content volume, integrations, and operational complexity.', type: 'textarea' },
   { key: 'popular_badge', label: 'Popular badge label', fallback: 'Popular' },
   { key: 'plan_button', label: 'Plan button label', fallback: 'Get Started' },
+  { key: 'plan_count', label: 'Number of pricing plans', fallback: String(pricingDefaults.length), type: 'text', description: 'Set the number of pricing plans to display (1-4).' },
   ...pricingDefaults.flatMap((plan, index) => {
     const number = index + 1;
     return [
@@ -392,6 +398,7 @@ const pricingFields: AdminFieldDefinition[] = [
 const faqFields: AdminFieldDefinition[] = [
   { key: 'label', label: 'Section label', fallback: '07 / FAQ' },
   { key: 'title', label: 'Section title', fallback: 'Common questions' },
+  { key: 'faq_count', label: 'Number of FAQs', fallback: String(faqDefaults.length), type: 'text', description: 'Set the number of FAQ items to display (1-10).' },
   ...Array.from({ length: 6 }, (_, index) => {
     const fallback = faqDefaults[index];
     const number = index + 1;

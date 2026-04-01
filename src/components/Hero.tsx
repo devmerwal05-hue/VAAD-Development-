@@ -13,20 +13,19 @@ export default function Hero() {
   const line1 = getContentValue('hero', 'headline_line1', 'Small teams need fast systems');
   const line2 = getContentValue('hero', 'headline_line2', 'not vague agency timelines.');
 
-  const stats = [
-    {
-      value: getContentValue('hero', 'stat_1_number', '5'),
-      label: getContentValue('hero', 'stat_1_label', 'Senior builders'),
-    },
-    {
-      value: getContentValue('hero', 'stat_2_number', '1-3'),
-      label: getContentValue('hero', 'stat_2_label', 'Week delivery'),
-    },
-    {
-      value: getContentValue('hero', 'stat_3_number', 'Always'),
-      label: getContentValue('hero', 'stat_3_label', 'Post-launch iteration'),
-    },
+  const statDefaults = [
+    { value: '5', label: 'Senior builders' },
+    { value: '1-3', label: 'Week delivery' },
+    { value: 'Always', label: 'Post-launch iteration' },
   ];
+  
+  const storedStatCount = Number(getContentValue('hero', 'stat_count', ''));
+  const statCount = (!isNaN(storedStatCount) && storedStatCount > 0) ? storedStatCount : statDefaults.length;
+
+  const stats = Array.from({ length: statCount }, (_, index) => ({
+    value: getContentValue('hero', `stat_${index + 1}_number`, statDefaults[index]?.value || ''),
+    label: getContentValue('hero', `stat_${index + 1}_label`, statDefaults[index]?.label || ''),
+  })).filter(s => s.value);
 
   return (
     <section className="relative min-h-[100svh] overflow-hidden px-5 pt-28 pb-16 md:pt-36 md:pb-24">

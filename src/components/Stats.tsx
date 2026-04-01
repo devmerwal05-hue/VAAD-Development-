@@ -42,18 +42,27 @@ function AnimatedStat({ value, suffix = '' }: { value: string; suffix?: string }
 export default function Stats() {
   const { getContentValue } = useContent();
   const labelParts = getContentValue('stats', 'label', '02 / Why Us').split(' / ');
-  const stats = [1, 2, 3, 4].map((index) => ({
-    value: getContentValue('stats', `stat_${index}_value`, ['7', '48', '90', '1'][index - 1]),
-    suffix: getContentValue('stats', `stat_${index}_suffix`, ['', 'h', '%', ''][index - 1]),
-    label: getContentValue('stats', `stat_${index}_label`, ['Days to first milestone', 'Typical response window', 'Mobile traffic share considered', 'Single accountable team'][index - 1]),
-    sublabel: getContentValue('stats', `stat_${index}_sublabel`, ['Delivery', 'Communication', 'Real usage', 'Ownership'][index - 1]),
-    description: getContentValue('stats', `stat_${index}_desc`, [
-      'Projects start with a clearly defined first ship target instead of an open-ended discovery loop.',
-      'You are not waiting days for a status update when decisions are blocking progress.',
-      'Layouts are designed around the traffic mix most small businesses actually see.',
-      'Design, development, and launch decisions are owned by the same small team.',
-    ][index - 1]),
-  }));
+  
+  const statDefaults = [
+    { value: '7', suffix: '', label: 'Days to first milestone', sublabel: 'Delivery', description: 'Projects start with a clearly defined first ship target instead of an open-ended discovery loop.' },
+    { value: '48', suffix: 'h', label: 'Typical response window', sublabel: 'Communication', description: 'You are not waiting days for a status update when decisions are blocking progress.' },
+    { value: '90', suffix: '%', label: 'Mobile traffic share considered', sublabel: 'Real usage', description: 'Layouts are designed around the traffic mix most small businesses actually see.' },
+    { value: '1', suffix: '', label: 'Single accountable team', sublabel: 'Ownership', description: 'Design, development, and launch decisions are owned by the same small team.' },
+  ];
+  
+  const storedStatCount = Number(getContentValue('stats', 'stat_count', ''));
+  const statCount = (!isNaN(storedStatCount) && storedStatCount > 0) ? storedStatCount : statDefaults.length;
+  
+  const stats = Array.from({ length: statCount }, (_, index) => {
+    const fallback = statDefaults[index];
+    return {
+      value: getContentValue('stats', `stat_${index + 1}_value`, fallback?.value || ''),
+      suffix: getContentValue('stats', `stat_${index + 1}_suffix`, fallback?.suffix || ''),
+      label: getContentValue('stats', `stat_${index + 1}_label`, fallback?.label || ''),
+      sublabel: getContentValue('stats', `stat_${index + 1}_sublabel`, fallback?.sublabel || ''),
+      description: getContentValue('stats', `stat_${index + 1}_desc`, fallback?.description || ''),
+    };
+  }).filter(s => s.label);
 
   return (
     <section className="py-24 md:py-32 relative">
@@ -61,7 +70,7 @@ export default function Stats() {
       <div className="max-w-[1280px] mx-auto px-6 relative">
         <SectionLabel number={labelParts[0] || '02'} label={labelParts[1] || 'Why Us'} />
         <SectionTitle>{getContentValue('stats', 'title', 'Why teams choose VAAD')}</SectionTitle>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div className={`grid grid-cols-1 ${statCount <= 2 ? 'sm:grid-cols-2' : 'sm:grid-cols-2 lg:grid-cols-4'} gap-5`}>
           {stats.map((stat, index) => (
             <motion.div
               key={stat.label}

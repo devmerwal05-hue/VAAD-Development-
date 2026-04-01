@@ -6,23 +6,26 @@ import SectionTitle from './SectionTitle';
 import { useContent } from '../lib/useContent';
 
 const ease: [number, number, number, number] = [0.16, 0.77, 0.47, 0.97];
-const fallbackFaqs = [
-  { q: 'How fast can a project start?', a: 'Once scope is agreed, work can usually start within a few days instead of waiting through a long intake cycle.' },
-  { q: 'Do you also handle content updates?', a: 'Yes. We can structure the CMS, migrate content, or hand your team a workflow for ongoing edits.' },
-  { q: 'Will the site be editable after launch?', a: 'That is a default expectation. Content models and admin editing should not depend on a developer for routine changes.' },
-  { q: 'Can you work with an existing brand?', a: 'Yes. The design direction can extend an existing system or sharpen a rough one without forcing a full rebrand.' },
-];
 
 export default function FAQ() {
   const [open, setOpen] = useState<number | null>(null);
   const { getContentValue } = useContent();
   const labelParts = getContentValue('faq', 'label', '07 / FAQ').split(' / ');
-  const faqs = [1, 2, 3, 4, 5, 6]
-    .map((index) => ({
-      q: getContentValue('faq', `q_${index}`, fallbackFaqs[index - 1]?.q || ''),
-      a: getContentValue('faq', `a_${index}`, fallbackFaqs[index - 1]?.a || ''),
-    }))
-    .filter((faq) => faq.q);
+  
+  const faqDefaults = [
+    { q: 'How fast can a project start?', a: 'Once scope is agreed, work can usually start within a few days instead of waiting through a long intake cycle.' },
+    { q: 'Do you also handle content updates?', a: 'Yes. We can structure the CMS, migrate content, or hand your team a workflow for ongoing edits.' },
+    { q: 'Will the site be editable after launch?', a: 'That is a default expectation. Content models and admin editing should not depend on a developer for routine changes.' },
+    { q: 'Can you work with an existing brand?', a: 'Yes. The design direction can extend an existing system or sharpen a rough one without forcing a full rebrand.' },
+  ];
+  
+  const storedFaqCount = Number(getContentValue('faq', 'faq_count', ''));
+  const faqCount = (!isNaN(storedFaqCount) && storedFaqCount > 0) ? storedFaqCount : faqDefaults.length;
+  
+  const faqs = Array.from({ length: faqCount }, (_, index) => ({
+    q: getContentValue('faq', `q_${index + 1}`, faqDefaults[index]?.q || ''),
+    a: getContentValue('faq', `a_${index + 1}`, faqDefaults[index]?.a || ''),
+  })).filter(faq => faq.q);
 
   return (
     <section className="py-24 md:py-32">

@@ -10,21 +10,26 @@ const ease: [number, number, number, number] = [0.16, 0.77, 0.47, 0.97];
 export default function Pricing() {
   const { getContentValue } = useContent();
   const labelParts = getContentValue('pricing', 'label', '06 / Pricing').split(' / ');
-  const plans = [1, 2, 3].map((index) => ({
-    name: getContentValue('pricing', `plan_${index}_name`, ['Starter site', 'Growth build', 'Operational system'][index - 1]),
-    price: getContentValue('pricing', `plan_${index}_price`, ['900', '1900', '3900'][index - 1]),
-    description: getContentValue('pricing', `plan_${index}_desc`, [
-      'For focused marketing sites that need clarity, speed, and a CMS handoff.',
-      'For businesses that need a stronger funnel, more pages, and clearer conversion flows.',
-      'For teams replacing manual workflows with a tailored internal or client-facing system.',
-    ][index - 1]),
-    features: getContentValue('pricing', `plan_${index}_features`, [
-      'Strategy workshop|Custom UI direction|CMS setup|Vercel deployment',
-      'Multi-page build|Analytics setup|Structured content model|Launch QA',
-      'Workflow mapping|Admin dashboard|Role-aware logic|Post-launch support',
-    ][index - 1]).split('|').filter(Boolean),
-    highlighted: getContentValue('pricing', `plan_${index}_highlighted`, index === 2 ? 'true' : 'false') === 'true',
-  }));
+  
+  const planDefaults = [
+    { name: 'Starter site', price: '900', description: 'For focused marketing sites that need clarity, speed, and a CMS handoff.', features: 'Strategy workshop|Custom UI direction|CMS setup|Vercel deployment', highlighted: 'false' },
+    { name: 'Growth build', price: '1900', description: 'For businesses that need a stronger funnel, more pages, and clearer conversion flows.', features: 'Multi-page build|Analytics setup|Structured content model|Launch QA', highlighted: 'true' },
+    { name: 'Operational system', price: '3900', description: 'For teams replacing manual workflows with a tailored internal or client-facing system.', features: 'Workflow mapping|Admin dashboard|Role-aware logic|Post-launch support', highlighted: 'false' },
+  ];
+  
+  const storedPlanCount = Number(getContentValue('pricing', 'plan_count', ''));
+  const planCount = (!isNaN(storedPlanCount) && storedPlanCount > 0) ? storedPlanCount : planDefaults.length;
+  
+  const plans = Array.from({ length: planCount }, (_, index) => {
+    const fallback = planDefaults[index];
+    return {
+      name: getContentValue('pricing', `plan_${index + 1}_name`, fallback?.name || ''),
+      price: getContentValue('pricing', `plan_${index + 1}_price`, fallback?.price || ''),
+      description: getContentValue('pricing', `plan_${index + 1}_desc`, fallback?.description || ''),
+      features: getContentValue('pricing', `plan_${index + 1}_features`, fallback?.features || '').split('|').filter(Boolean),
+      highlighted: getContentValue('pricing', `plan_${index + 1}_highlighted`, fallback?.highlighted || 'false') === 'true',
+    };
+  }).filter(p => p.name);
 
   return (
     <section className="py-24 md:py-32 relative">
@@ -34,7 +39,7 @@ export default function Pricing() {
         <motion.p initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, ease }} className="text-[15px] text-text-secondary mb-12 -mt-6" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>
           {getContentValue('pricing', 'subtitle', 'Clear ranges for common scopes. Final pricing depends on content volume, integrations, and operational complexity.')}
         </motion.p>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        <div className={`grid grid-cols-1 ${planCount <= 2 ? 'sm:grid-cols-2 max-w-3xl mx-auto' : 'lg:grid-cols-3'} gap-5`}>
           {plans.map((plan, index) => (
             <motion.div key={plan.name} initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.2 }} transition={{ duration: 0.5, delay: index * 0.06 }} className={`relative bg-surface-1 rounded-2xl p-8 flex flex-col border transition-all duration-300 overflow-hidden ${plan.highlighted ? 'border-[rgba(124,111,247,0.3)] shadow-[0_0_50px_rgba(124,111,247,0.06)]' : 'border-[rgba(255,255,255,0.04)] hover:border-[rgba(255,255,255,0.08)]'}`}>
               {plan.highlighted && <div className="absolute top-0 left-0 w-full h-[2px] gradient-bg" />}
