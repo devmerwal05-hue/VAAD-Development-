@@ -27,8 +27,11 @@ export default function Process() {
   }).filter(s => s.title);
 
   return (
-    <section className="py-24 md:py-32">
-      <div className="max-w-[1280px] mx-auto px-6">
+    <section className="py-24 md:py-32 relative">
+      {/* Background pattern */}
+      <div className="absolute inset-0 dot-pattern opacity-30" />
+      
+      <div className="max-w-[1280px] mx-auto px-6 relative z-10">
         <SectionLabel number={labelParts[0] || '03'} label={labelParts[1] || 'Process'} />
         <SectionTitle>{getContentValue('process', 'title', 'How a project works')}</SectionTitle>
         <div className={`grid grid-cols-1 ${stepCount === 2 ? 'sm:grid-cols-2' : stepCount === 3 ? 'sm:grid-cols-3 lg:grid-cols-3' : 'lg:grid-cols-4'} gap-0`}>
@@ -38,12 +41,13 @@ export default function Process() {
               initial={{ opacity: 0, y: 24 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.2 }}
-              transition={{ duration: 0.5, delay: index * 0.08 }}
-              className="group relative p-6 lg:p-8"
+              transition={{ duration: 0.5, delay: index * 0.1 }}
+              className="group relative p-6 lg:p-8 glass card-hover rounded-2xl"
               style={{ borderLeft: index > 0 ? '1px solid rgba(124,111,247,0.1)' : 'none' }}
             >
-              <span className="text-[64px] leading-none font-[800] block mb-4" style={{ fontFamily: 'Syne', background: 'linear-gradient(180deg, rgba(124,111,247,0.2), rgba(124,111,247,0.02))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>{step.number}</span>
-              <h3 className="text-[20px] text-text-primary mb-3 group-hover:text-accent transition-colors duration-300" style={{ fontFamily: 'Syne', fontWeight: 700 }}>{step.title}</h3>
+              <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(124,111,247,0.08), transparent 70%)' }} />
+              <span className="text-[64px] leading-none font-[800] block mb-4 gradient-text-enhanced" style={{ fontFamily: 'Syne' }}>{step.number}</span>
+              <h3 className="text-[20px] text-text-primary mb-3 group-hover:text-accent-light transition-colors duration-300" style={{ fontFamily: 'Syne', fontWeight: 700 }}>{step.title}</h3>
               <p className="text-[14px] text-text-secondary leading-[1.7]" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>{step.description}</p>
             </motion.div>
           ))}
