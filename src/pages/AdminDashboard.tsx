@@ -130,6 +130,172 @@ async function api<T>(url: string, init?: RequestInit): Promise<T> {
   return payload as T;
 }
 
+interface ContentFieldEditorProps {
+  item: ContentItem;
+  onUpdate: (updated: ContentItem) => void;
+  onDelete: (id: number, label: string) => void;
+  setError: (msg: string) => void;
+}
+
+function ContentFieldEditor({ item, onUpdate, onDelete, setError }: ContentFieldEditorProps) {
+  const [localValue, setLocalValue] = useState(item.value);
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Update local value if external item changes
+  useEffect(() => {
+    setLocalValue(item.value);
+  }, [item.value]);
+
+  const fieldDefinition = homeSectionDefinitions[item.section]?.fields.find((f) => f.key === item.key);
+  const isModified = localValue !== item.value;
+
+  const usesImageUploader = fieldDefinition?.type === 'image' || isImageField(item);
+  const usesBooleanSelect = fieldDefinition?.type === 'boolean';
+  const usesUrlInput = fieldDefinition?.type === 'url' || isUrlField(item);
+  const usesGalleryEditor = (fieldDefinition?.type === 'list' && item.key.includes('gallery')) || isGalleryField(item);
+  const usesTextarea = fieldDefinition?.type === 'textarea' || fieldDefinition?.type === 'list' || isLongField(item, localValue);
+  const galleryValues = localValue.split(',').map((entry) => entry.trim()).filter(Boolean);
+
+  const handleSave = async () => {
+    if (localValue !== item.value) {
+      setIsSaving(true);
+      try {
+        const updated = await api<ContentItem>('/api/content', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: item.id, value: localValue }),
+        });
+        onUpdate(updated);
+      } catch (requestError) {
+        setError(getErrorMessage(requestError));
+      } finally {
+        setIsSaving(false);
+      }
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault();
+      void handleSave();
+    }
+  };
+
+  const handlePaste = async (e: React.ClipboardEvent) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+
+    for (const clipboardItem of items) {
+      if (clipboardItem.type.startsWith('image/')) {
+        e.preventDefault();
+        const file = clipboardItem.getAsFile();
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = async (event) => {
+            const base64Data = event.target?.result as string;
+            try {
+              const response = await fetch('/api/upload', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  filename: `paste-${Date.now()}.png`,
+                  content_type: 'image/png',
+                  data: base64Data
+                }),
+              });
+              const data = await response.json();
+              if (data.url) {
+                setLocalValue(data.url);
+              }
+            } catch (err) {
+              console.error('Upload failed:', err);
+              setError('Failed to upload pasted image');
+            }
+          };
+          reader.readAsDataURL(file);
+        }
+        break;
+      }
+    }
+  };
+
+  return (
+    <div className="bg-surface-1 rounded-2xl border border-[rgba(255,255,255,0.06)] p-5 flex flex-col gap-4">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <p className="text-[14px] text-text-primary font-medium">{fieldDefinition?.label || labelForKey(item.key)}</p>
+          <p className="text-[11px] text-text-tertiary" style={{ fontFamily: 'JetBrains Mono' }}>{item.section}.{item.key}</p>
+          {fieldDefinition?.description && <p className="text-[12px] text-text-tertiary mt-2">{fieldDefinition.description}</p>}
+        </div>
+        <div className="flex items-center gap-2">
+          {isModified && !isSaving && (
+            <button type="button" onClick={() => void handleSave()} className="text-[12px] text-accent inline-flex items-center gap-1 hover:text-accent-light">
+              <Save size={12} /> Save
+            </button>
+          )}
+          {isSaving && <span className="text-[11px] text-text-tertiary inline-flex items-center gap-1"><Loader2 size={12} className="animate-spin" /> Saving</span>}
+          <button type="button" onClick={() => onDelete(item.id, item.key)} className="text-[12px] text-red-400 inline-flex items-center gap-1 hover:text-red-300"><Trash2 size={12} /> Delete</button>
+        </div>
+      </div>
+
+      {usesImageUploader ? (
+        <ImageUploader value={localValue} onChange={(url) => setLocalValue(url)} />
+      ) : usesBooleanSelect ? (
+        <select
+          value={localValue === 'true' ? 'true' : 'false'}
+          onChange={(event) => setLocalValue(event.target.value)}
+          onBlur={() => void handleSave()}
+          className={`w-full bg-[rgba(255,255,255,0.03)] text-text-primary text-[14px] px-3 py-2.5 rounded-[10px] border outline-none ${isModified ? 'border-[rgba(124,111,247,0.4)]' : 'border-[rgba(255,255,255,0.06)]'} focus:border-[rgba(124,111,247,0.5)]`}
+        >
+          <option value="false">False</option>
+          <option value="true">True</option>
+        </select>
+      ) : (
+        <>
+          {usesTextarea ? (
+            <textarea
+              rows={Math.min(8, Math.max(3, Math.ceil(localValue.length / 90)))}
+              value={localValue}
+              onChange={(event) => setLocalValue(event.target.value)}
+              onBlur={() => void handleSave()}
+              onKeyDown={handleKeyDown}
+              onPaste={handlePaste}
+              className={`w-full bg-[rgba(255,255,255,0.03)] text-text-primary text-[14px] px-3 py-2.5 rounded-[10px] border outline-none resize-y ${isModified ? 'border-[rgba(124,111,247,0.4)]' : 'border-[rgba(255,255,255,0.06)]'} focus:border-[rgba(124,111,247,0.5)]`}
+              style={{ fontFamily: usesGalleryEditor ? 'JetBrains Mono' : 'DM Sans' }}
+              placeholder="Type here... Paste image with Ctrl+V"
+            />
+          ) : (
+            <input
+              type={usesUrlInput ? 'url' : 'text'}
+              value={localValue}
+              onChange={(event) => setLocalValue(event.target.value)}
+              onBlur={() => void handleSave()}
+              onKeyDown={handleKeyDown}
+              onPaste={handlePaste}
+              className={`w-full bg-[rgba(255,255,255,0.03)] text-[14px] px-3 py-2.5 rounded-[10px] border outline-none ${isModified ? 'border-[rgba(124,111,247,0.4)]' : 'border-[rgba(255,255,255,0.06)]'} focus:border-[rgba(124,111,247,0.5)] ${usesUrlInput ? 'text-cyan' : 'text-text-primary'}`}
+              style={{ fontFamily: usesUrlInput ? 'JetBrains Mono' : 'DM Sans' }}
+              placeholder="Type here... Paste image with Ctrl+V"
+            />
+          )}
+
+          {usesGalleryEditor && (
+            <>
+              {galleryValues.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {galleryValues.map((imgUrl, idx) => (
+                    <img key={`${item.id}-${idx}`} src={imgUrl} alt={`Gallery ${idx + 1}`} className="h-[72px] w-auto rounded-lg border border-[rgba(255,255,255,0.06)] object-cover" loading="lazy" decoding="async" />
+                  ))}
+                </div>
+              )}
+              <ImageUploader value="" compact onChange={(url) => setLocalValue([...galleryValues, url].join(','))} />
+            </>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
 export default function AdminDashboard() {
   usePageMetadata({
     title: 'VAAD Development | Admin',
@@ -221,10 +387,6 @@ export default function AdminDashboard() {
 
   function findContentItem(section: string, key: string) {
     return content.find((item) => item.section === section && item.key === key);
-  }
-
-  function getFieldDefinition(section: string, key: string) {
-    return homeSectionDefinitions[section]?.fields.find((field) => field.key === key);
   }
 
   async function upsertField(section: string, key: string, value: string) {
@@ -812,152 +974,15 @@ export default function AdminDashboard() {
             {activeItems.length === 0 && activeTab !== 'portfolio' && activeTab !== 'team' ? (
               <div className="bg-surface-1 rounded-2xl border border-[rgba(255,255,255,0.06)] p-10 text-center text-text-tertiary">No fields in this section yet.</div>
             ) : activeItems.length > 0 ? (
-              activeItems.map((item) => {
-                const fieldDefinition = getFieldDefinition(item.section, item.key);
-                const [localValue, setLocalValue] = useState(item.value);
-                const isModified = localValue !== item.value;
-                const isSaving = savingIds.has(item.id);
-                
-                const usesImageUploader = fieldDefinition?.type === 'image' || isImageField(item);
-                const usesBooleanSelect = fieldDefinition?.type === 'boolean';
-                const usesUrlInput = fieldDefinition?.type === 'url' || isUrlField(item);
-                const usesGalleryEditor = (fieldDefinition?.type === 'list' && item.key.includes('gallery')) || isGalleryField(item);
-                const usesTextarea = fieldDefinition?.type === 'textarea' || fieldDefinition?.type === 'list' || isLongField(item, localValue);
-                const galleryValues = localValue.split(',').map((entry) => entry.trim()).filter(Boolean);
-
-                const handleChange = (value: string) => {
-                  setLocalValue(value);
-                };
-
-                const handleSave = async () => {
-                  if (localValue !== item.value) {
-                    setSavingIds((current) => new Set(current).add(item.id));
-                    try {
-                      const updated = await api<ContentItem>('/api/content', {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ id: item.id, value: localValue }),
-                      });
-                      setContent((current) => current.map((entry) => (entry.id === item.id ? updated : entry)));
-                    } catch (requestError) {
-                      setError(getErrorMessage(requestError));
-                    } finally {
-                      setSavingIds((current) => {
-                        const next = new Set(current);
-                        next.delete(item.id);
-                        return next;
-                      });
-                    }
-                  }
-                };
-
-                const handleKeyDown = (e: React.KeyboardEvent) => {
-                  if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
-                    e.preventDefault();
-                    handleSave();
-                  }
-                };
-
-                const handlePaste = async (e: React.ClipboardEvent) => {
-                  const items = e.clipboardData?.items;
-                  if (!items) return;
-                  
-                  for (const item of items) {
-                    if (item.type.startsWith('image/')) {
-                      e.preventDefault();
-                      const file = item.getAsFile();
-                      if (file) {
-                        const formData = new FormData();
-                        formData.append('file', file);
-                        
-                        try {
-                          const response = await fetch('/api/upload', {
-                            method: 'POST',
-                            body: formData,
-                          });
-                          const data = await response.json();
-                          if (data.url) {
-                            setLocalValue(data.url);
-                          }
-                        } catch (err) {
-                          console.error('Upload failed:', err);
-                        }
-                      }
-                      break;
-                    }
-                  }
-                };
-
-                return (
-                  <div key={item.id} className="bg-surface-1 rounded-2xl border border-[rgba(255,255,255,0.06)] p-5 flex flex-col gap-4">
-                    <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                      <div>
-                        <p className="text-[14px] text-text-primary font-medium">{fieldDefinition?.label || labelForKey(item.key)}</p>
-                        <p className="text-[11px] text-text-tertiary" style={{ fontFamily: 'JetBrains Mono' }}>{item.section}.{item.key}</p>
-                        {fieldDefinition?.description && <p className="text-[12px] text-text-tertiary mt-2">{fieldDefinition.description}</p>}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {isModified && !isSaving && (
-                          <button type="button" onClick={handleSave} className="text-[12px] text-accent inline-flex items-center gap-1 hover:text-accent-light">
-                            <Save size={12} /> Save
-                          </button>
-                        )}
-                        {isSaving && <span className="text-[11px] text-text-tertiary inline-flex items-center gap-1"><Loader2 size={12} className="animate-spin" /> Saving</span>}
-                        <button type="button" onClick={() => setConfirmTarget({ kind: 'field', id: item.id, label: item.key })} className="text-[12px] text-red-400 inline-flex items-center gap-1 hover:text-red-300"><Trash2 size={12} /> Delete</button>
-                      </div>
-                    </div>
-
-                    {usesImageUploader ? (
-                      <ImageUploader value={localValue} onChange={(url) => setLocalValue(url)} />
-                    ) : usesBooleanSelect ? (
-                      <select
-                        value={localValue === 'true' ? 'true' : 'false'}
-                        onChange={(event) => handleChange(event.target.value)}
-                        onBlur={handleSave}
-                        className={`w-full bg-[rgba(255,255,255,0.03)] text-text-primary text-[14px] px-3 py-2.5 rounded-[10px] border outline-none ${isModified ? 'border-[rgba(124,111,247,0.4)]' : 'border-[rgba(255,255,255,0.06)]'} focus:border-[rgba(124,111,247,0.5)]`}
-                      >
-                        <option value="false">False</option>
-                        <option value="true">True</option>
-                      </select>
-                    ) : (
-                      <>
-                        {usesTextarea ? (
-                          <textarea 
-                            rows={Math.min(8, Math.max(3, Math.ceil(localValue.length / 90)))} 
-                            value={localValue} 
-                            onChange={(event) => handleChange(event.target.value)}
-                            onBlur={handleSave}
-                            onKeyDown={handleKeyDown}
-                            onPaste={handlePaste}
-                            className={`w-full bg-[rgba(255,255,255,0.03)] text-text-primary text-[14px] px-3 py-2.5 rounded-[10px] border outline-none resize-y ${isModified ? 'border-[rgba(124,111,247,0.4)]' : 'border-[rgba(255,255,255,0.06)]'} focus:border-[rgba(124,111,247,0.5)]`} 
-                            style={{ fontFamily: usesGalleryEditor ? 'JetBrains Mono' : 'DM Sans' }} 
-                            placeholder="Type here... Paste image with Ctrl+V"
-                          />
-                        ) : (
-                          <input 
-                            type={usesUrlInput ? 'url' : 'text'} 
-                            value={localValue} 
-                            onChange={(event) => handleChange(event.target.value)}
-                            onBlur={handleSave}
-                            onKeyDown={handleKeyDown}
-                            onPaste={handlePaste}
-                            className={`w-full bg-[rgba(255,255,255,0.03)] text-[14px] px-3 py-2.5 rounded-[10px] border outline-none ${isModified ? 'border-[rgba(124,111,247,0.4)]' : 'border-[rgba(255,255,255,0.06)]'} focus:border-[rgba(124,111,247,0.5)] ${usesUrlInput ? 'text-cyan' : 'text-text-primary'}`} 
-                            style={{ fontFamily: usesUrlInput ? 'JetBrains Mono' : 'DM Sans' }} 
-                            placeholder="Type here... Paste image with Ctrl+V"
-                          />
-                        )}
-
-                        {usesGalleryEditor && (
-                          <>
-                            {galleryValues.length > 0 && <div className="flex flex-wrap gap-2">{galleryValues.map((imgUrl: string, idx: number) => <img key={`${item.id}-${idx}`} src={imgUrl} alt={`Gallery ${idx + 1}`} className="h-[72px] w-auto rounded-lg border border-[rgba(255,255,255,0.06)] object-cover" loading="lazy" decoding="async" />)}</div>}
-                            <ImageUploader value="" compact onChange={(url: string) => setLocalValue([...galleryValues, url].join(','))} />
-                          </>
-                        )}
-                      </>
-                    )}
-                  </div>
-                );
-              })
+              activeItems.map((item) => (
+                <ContentFieldEditor
+                  key={item.id}
+                  item={item}
+                  onUpdate={(updated) => setContent((curr) => curr.map((entry) => (entry.id === item.id ? updated : entry)))}
+                  onDelete={(id, label) => setConfirmTarget({ kind: 'field', id, label })}
+                  setError={setError}
+                />
+              ))
             ) : null}
           </div>
         )}

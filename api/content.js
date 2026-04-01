@@ -153,7 +153,7 @@ const defaultContent = [
   { section: 'contact', key: 'success_desc', value: 'Thanks. We will review the scope and reply with next steps.' },
   { section: 'contact', key: 'submit_button', value: 'Send project brief' },
   { section: 'footer', key: 'cta_title', value: 'Need a site or app that can ship fast?' },
-  { section: 'footer', key: 'cta_description', value: 'Share the scope, timeline, and blockers. We will reply with a clear build path instead of a vague pitch deck.' },
+  { section: 'footer', key: 'cta_description', value: 'Share the scope, timeline, and blockers. We will reply with a clear build path instead of a placeholder message.' },
   { section: 'footer', key: 'cta_button', value: 'Start a project' },
   { section: 'footer', key: 'tagline', value: 'VAAD Development builds launch-ready websites and internal tools for small teams that need clarity, speed, and a maintainable handoff.' },
   { section: 'footer', key: 'eyebrow', value: 'Design, build, deploy, maintain' },
@@ -240,13 +240,7 @@ async function seedDefaultContent(supabase) {
 }
 
 export default async function handler(req, res) {
-  // Set CORS headers
-  res.setHeader('Access-Control-Allow-Origin', 'https://vaad-development.vercel.app');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  
-  if (req.method === 'OPTIONS') {
-    return res.status(204).end();
-  }
+  if (!applySecurity(req, res)) return;
 
   try {
     if (!hasSupabaseConfig()) {
