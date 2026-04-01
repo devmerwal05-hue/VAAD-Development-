@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState, useCallback } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Archive, Check, ExternalLink, GripVertical, Loader2, LogOut, Plus, RefreshCw, Save, Search, Shield, Sparkles, Trash2 } from 'lucide-react';
+import { Archive, Check, ExternalLink, GripVertical, Loader2, LogOut, Plus, RefreshCw, Save, Search, Shield, Trash2 } from 'lucide-react';
 import ConfirmDialog from '../components/ConfirmDialog';
 import ImageUploader from '../components/ImageUploader';
 import { usePageMetadata } from '../hooks/usePageMetadata';
@@ -155,8 +155,6 @@ export default function AdminDashboard() {
   const [collectionBusy, setCollectionBusy] = useState<ManagedCollectionSection | null>(null);
   const [dragState, setDragState] = useState<DragState | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [autoSaveTimers, setAutoSaveTimers] = useState<Record<number, ReturnType<typeof setTimeout>>>({});
-  const [unsavedCount, setUnsavedCount] = useState(0);
 
   const sections = useMemo(() => {
     const available = [...new Set(content.map((item) => item.section))];
@@ -257,28 +255,6 @@ export default function AdminDashboard() {
       body: JSON.stringify({ id }),
     });
     setContent((current) => current.filter((item) => item.id !== id));
-  }
-
-  async function seedSection(section: string) {
-    const definition = homeSectionDefinitions[section];
-    if (!definition) return;
-
-    setLoading(true);
-    setError('');
-    try {
-      if (section === 'portfolio' || section === 'team') {
-        await persistCollection(section, getCollectionEntries(section));
-      }
-      for (const field of definition.fields) {
-        if (!findContentItem(section, field.key)) {
-          await upsertField(section, field.key, field.fallback);
-        }
-      }
-    } catch (requestError) {
-      setError(getErrorMessage(requestError));
-    } finally {
-      setLoading(false);
-    }
   }
 
   function getCollectionEntries(section: ManagedCollectionSection) {
@@ -457,7 +433,6 @@ export default function AdminDashboard() {
         delete next[item.id];
         return next;
       });
-      setUnsavedCount((current) => Math.max(0, current - 1));
     } catch (requestError) {
       setError(getErrorMessage(requestError));
     } finally {
@@ -468,22 +443,6 @@ export default function AdminDashboard() {
       });
     }
   }
-
-  const autoSaveField = useCallback((item: ContentItem, value: string) => {
-    const existingTimer = autoSaveTimers[item.id];
-    if (existingTimer) clearTimeout(existingTimer);
-
-    const timer = setTimeout(() => {
-      setAutoSaveTimers((current) => {
-        const next = { ...current };
-        delete next[item.id];
-        return next;
-      });
-      void saveField(item, value);
-    }, 1500);
-
-    setAutoSaveTimers((current) => ({ ...current, [item.id]: timer }));
-  }, [autoSaveTimers]);
 
   async function createField() {
     if (activeTab === SUBMISSIONS_TAB || !newFieldKey.trim()) return;
@@ -587,14 +546,7 @@ export default function AdminDashboard() {
       <div className="max-w-[1180px] mx-auto">
         <header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6">
           <div>
-            <div className="flex items-center gap-3">
-              <h1 className="text-[28px] text-text-primary" style={{ fontFamily: 'Syne', fontWeight: 700 }}>VAAD admin</h1>
-              {unsavedCount > 0 && (
-                <span className="px-2 py-1 rounded-full bg-[rgba(251,146,60,0.15)] text-orange-400 text-[11px] font-medium">
-                  {unsavedCount} unsaved
-                </span>
-              )}
-            </div>
+            <h1 className="text-[28px] text-text-primary" style={{ fontFamily: 'Syne', fontWeight: 700 }}>VAAD admin</h1>
             <p className="text-[14px] text-text-secondary">Content and submissions, backed by secure cookie auth.</p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -671,11 +623,6 @@ export default function AdminDashboard() {
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
-                {homeSectionDefinitions[activeTab] && (
-                  <button type="button" onClick={() => void seedSection(activeTab)} disabled={loading} className="px-3 py-2 rounded-xl border border-[rgba(255,255,255,0.1)] text-text-secondary inline-flex items-center gap-2 disabled:opacity-50">
-                    <Sparkles size={14} /> Load starter fields
-                  </button>
-                )}
                 {activeTab === 'portfolio' && <button type="button" onClick={() => void createProject()} disabled={Boolean(collectionBusy)} className="px-3 py-2 rounded-xl border border-[rgba(124,111,247,0.2)] text-accent inline-flex items-center gap-2 disabled:opacity-50"><Plus size={14} /> Add project</button>}
                 {activeTab === 'team' && <button type="button" onClick={() => void createTeamMember()} disabled={Boolean(collectionBusy)} className="px-3 py-2 rounded-xl border border-[rgba(124,111,247,0.2)] text-accent inline-flex items-center gap-2 disabled:opacity-50"><Plus size={14} /> Add team member</button>}
               </div>
@@ -873,12 +820,15 @@ export default function AdminDashboard() {
                 const dirty = editedValues[item.id] !== undefined && editedValues[item.id] !== item.value;
                 const saving = savingIds.has(item.id);
                 const galleryValues = currentValue.split(',').map((entry) => entry.trim()).filter(Boolean);
-                const hasAutoSave = Boolean(autoSaveTimers[item.id]);
 
                 const handleChange = (value: string) => {
                   setEditedValues((current) => ({ ...current, [item.id]: value }));
-                  if (!dirty) setUnsavedCount((c) => c + 1);
-                  autoSaveField(item, value);
+                };
+
+                const handleBlur = () => {
+                  if (dirty && editedValues[item.id] !== undefined) {
+                    void saveField(item, editedValues[item.id]);
+                  }
                 };
 
                 return (
@@ -890,8 +840,7 @@ export default function AdminDashboard() {
                         {fieldDefinition?.description && <p className="text-[12px] text-text-tertiary mt-2">{fieldDefinition.description}</p>}
                       </div>
                       <div className="flex items-center gap-2">
-                        {hasAutoSave && <span className="text-[11px] text-orange-400 inline-flex items-center gap-1"><Loader2 size={10} className="animate-spin" /> Auto-saving</span>}
-                        {dirty && !saving && !hasAutoSave && <button type="button" onClick={() => void saveField(item, currentValue)} className="text-[12px] text-accent inline-flex items-center gap-1"><Save size={12} /> Save</button>}
+                        {dirty && !saving && <button type="button" onClick={() => void saveField(item, currentValue)} className="text-[12px] text-accent inline-flex items-center gap-1"><Save size={12} /> Save</button>}
                         {saving && <span className="text-[11px] text-text-tertiary inline-flex items-center gap-1"><Loader2 size={12} className="animate-spin" /> Saving</span>}
                         <button type="button" onClick={() => setConfirmTarget({ kind: 'field', id: item.id, label: item.key })} className="text-[12px] text-red-400 inline-flex items-center gap-1"><Trash2 size={12} /> Delete</button>
                       </div>
@@ -903,6 +852,7 @@ export default function AdminDashboard() {
                       <select
                         value={currentValue === 'true' ? 'true' : 'false'}
                         onChange={(event) => handleChange(event.target.value)}
+                        onBlur={handleBlur}
                         className={`w-full bg-[rgba(255,255,255,0.03)] text-text-primary text-[14px] px-3 py-2.5 rounded-[10px] border outline-none ${dirty ? 'border-[rgba(124,111,247,0.4)]' : 'border-[rgba(255,255,255,0.06)]'} focus:border-[rgba(124,111,247,0.5)]`}
                       >
                         <option value="false">False</option>
@@ -911,9 +861,23 @@ export default function AdminDashboard() {
                     ) : (
                       <>
                         {usesTextarea ? (
-                          <textarea rows={Math.min(8, Math.max(3, Math.ceil(currentValue.length / 90)))} value={currentValue} onChange={(event) => handleChange(event.target.value)} className={`w-full bg-[rgba(255,255,255,0.03)] text-text-primary text-[14px] px-3 py-2.5 rounded-[10px] border outline-none resize-y ${dirty ? 'border-[rgba(124,111,247,0.4)]' : 'border-[rgba(255,255,255,0.06)]'} focus:border-[rgba(124,111,247,0.5)]`} style={{ fontFamily: usesGalleryEditor ? 'JetBrains Mono' : 'DM Sans' }} />
+                          <textarea 
+                            rows={Math.min(8, Math.max(3, Math.ceil(currentValue.length / 90)))} 
+                            value={currentValue} 
+                            onChange={(event) => handleChange(event.target.value)}
+                            onBlur={handleBlur}
+                            className={`w-full bg-[rgba(255,255,255,0.03)] text-text-primary text-[14px] px-3 py-2.5 rounded-[10px] border outline-none resize-y ${dirty ? 'border-[rgba(124,111,247,0.4)]' : 'border-[rgba(255,255,255,0.06)]'} focus:border-[rgba(124,111,247,0.5)]`} 
+                            style={{ fontFamily: usesGalleryEditor ? 'JetBrains Mono' : 'DM Sans' }} 
+                          />
                         ) : (
-                          <input type={usesUrlInput ? 'url' : 'text'} value={currentValue} onChange={(event) => handleChange(event.target.value)} className={`w-full bg-[rgba(255,255,255,0.03)] text-[14px] px-3 py-2.5 rounded-[10px] border outline-none ${dirty ? 'border-[rgba(124,111,247,0.4)]' : 'border-[rgba(255,255,255,0.06)]'} focus:border-[rgba(124,111,247,0.5)] ${usesUrlInput ? 'text-cyan' : 'text-text-primary'}`} style={{ fontFamily: usesUrlInput ? 'JetBrains Mono' : 'DM Sans' }} />
+                          <input 
+                            type={usesUrlInput ? 'url' : 'text'} 
+                            value={currentValue} 
+                            onChange={(event) => handleChange(event.target.value)}
+                            onBlur={handleBlur}
+                            className={`w-full bg-[rgba(255,255,255,0.03)] text-[14px] px-3 py-2.5 rounded-[10px] border outline-none ${dirty ? 'border-[rgba(124,111,247,0.4)]' : 'border-[rgba(255,255,255,0.06)]'} focus:border-[rgba(124,111,247,0.5)] ${usesUrlInput ? 'text-cyan' : 'text-text-primary'}`} 
+                            style={{ fontFamily: usesUrlInput ? 'JetBrains Mono' : 'DM Sans' }} 
+                          />
                         )}
 
                         {usesGalleryEditor && (
