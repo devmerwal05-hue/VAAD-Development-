@@ -349,8 +349,11 @@ export default function AdminDashboard() {
       ]);
       setSubmissions(nextSubmissions);
       setContent(nextContent);
+      setError('');
     } catch (requestError) {
-      setError(getErrorMessage(requestError));
+      console.error('Load dashboard error:', requestError);
+      const msg = getErrorMessage(requestError);
+      setError(msg || 'Failed to load. Please refresh.');
     } finally {
       setLoading(false);
     }
