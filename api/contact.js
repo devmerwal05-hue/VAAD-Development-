@@ -4,7 +4,13 @@ import { getSupabaseAdmin } from './_supabase.js';
 import { applySecurity, getErrorMessage, sanitize, verifyAdminSession } from './_security.js';
 
 export default async function handler(req, res) {
-  if (!applySecurity(req, res, { scope: req.method === 'POST' ? 'public' : 'admin' })) return;
+  // Set CORS headers
+  res.setHeader('Access-Control-Allow-Origin', 'https://vaad-development.vercel.app');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  
+  if (req.method === 'OPTIONS') {
+    return res.status(204).end();
+  }
 
   try {
     if (!hasSupabaseConfig()) {

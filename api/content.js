@@ -240,7 +240,13 @@ async function seedDefaultContent(supabase) {
 }
 
 export default async function handler(req, res) {
-  if (!applySecurity(req, res, { scope: req.method === 'GET' ? 'public' : 'admin' })) return;
+  // Set CORS headers
+  res.setHeader('Access-Control-Allow-Origin', 'https://vaad-development.vercel.app');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  
+  if (req.method === 'OPTIONS') {
+    return res.status(204).end();
+  }
 
   try {
     if (!hasSupabaseConfig()) {
