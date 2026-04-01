@@ -22,7 +22,7 @@ export default defineConfig(async () => {
         '/api': {
           target: 'http://localhost:3000',
           changeOrigin: true,
-          rewrite: (path) => path
+          rewrite: (path: string) => path
         }
       }
     }
