@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Archive, Check, ExternalLink, GripVertical, Loader2, LogOut, Plus, RefreshCw, Save, Shield, Sparkles, Trash2 } from 'lucide-react';
+import { Archive, Check, ExternalLink, GripVertical, Loader2, LogOut, Plus, RefreshCw, Save, Search, Shield, Sparkles, Trash2 } from 'lucide-react';
 import ConfirmDialog from '../components/ConfirmDialog';
 import ImageUploader from '../components/ImageUploader';
 import { usePageMetadata } from '../hooks/usePageMetadata';
@@ -154,6 +154,9 @@ export default function AdminDashboard() {
   const [newFieldValue, setNewFieldValue] = useState('');
   const [collectionBusy, setCollectionBusy] = useState<ManagedCollectionSection | null>(null);
   const [dragState, setDragState] = useState<DragState | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [autoSaveTimers, setAutoSaveTimers] = useState<Record<number, ReturnType<typeof setTimeout>>>({});
+  const [unsavedCount, setUnsavedCount] = useState(0);
 
   const sections = useMemo(() => {
     const available = [...new Set(content.map((item) => item.section))];
@@ -167,7 +170,7 @@ export default function AdminDashboard() {
       (homeSectionDefinitions[activeTab]?.fields || []).map((field, index) => [field.key, index]),
     );
 
-    return content
+    let items = content
       .filter((item) => item.section === activeTab)
       .filter((item) => {
         if (activeTab === 'portfolio') return !/^project_\d+_/.test(item.key) && item.key !== collectionEditors.portfolio.countKey;
@@ -184,7 +187,17 @@ export default function AdminDashboard() {
 
         return left.key.localeCompare(right.key, undefined, { numeric: true });
       });
-  }, [activeTab, content]);
+
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      items = items.filter((item) => 
+        item.key.toLowerCase().includes(query) || 
+        item.value.toLowerCase().includes(query)
+      );
+    }
+
+    return items;
+  }, [activeTab, content, searchQuery]);
 
   useEffect(() => {
     void (async () => {
@@ -444,6 +457,7 @@ export default function AdminDashboard() {
         delete next[item.id];
         return next;
       });
+      setUnsavedCount((current) => Math.max(0, current - 1));
     } catch (requestError) {
       setError(getErrorMessage(requestError));
     } finally {
@@ -454,6 +468,22 @@ export default function AdminDashboard() {
       });
     }
   }
+
+  const autoSaveField = useCallback((item: ContentItem, value: string) => {
+    const existingTimer = autoSaveTimers[item.id];
+    if (existingTimer) clearTimeout(existingTimer);
+
+    const timer = setTimeout(() => {
+      setAutoSaveTimers((current) => {
+        const next = { ...current };
+        delete next[item.id];
+        return next;
+      });
+      void saveField(item, value);
+    }, 1500);
+
+    setAutoSaveTimers((current) => ({ ...current, [item.id]: timer }));
+  }, [autoSaveTimers]);
 
   async function createField() {
     if (activeTab === SUBMISSIONS_TAB || !newFieldKey.trim()) return;
@@ -557,7 +587,14 @@ export default function AdminDashboard() {
       <div className="max-w-[1180px] mx-auto">
         <header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6">
           <div>
-            <h1 className="text-[28px] text-text-primary" style={{ fontFamily: 'Syne', fontWeight: 700 }}>VAAD admin</h1>
+            <div className="flex items-center gap-3">
+              <h1 className="text-[28px] text-text-primary" style={{ fontFamily: 'Syne', fontWeight: 700 }}>VAAD admin</h1>
+              {unsavedCount > 0 && (
+                <span className="px-2 py-1 rounded-full bg-[rgba(251,146,60,0.15)] text-orange-400 text-[11px] font-medium">
+                  {unsavedCount} unsaved
+                </span>
+              )}
+            </div>
             <p className="text-[14px] text-text-secondary">Content and submissions, backed by secure cookie auth.</p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -642,6 +679,26 @@ export default function AdminDashboard() {
                 {activeTab === 'portfolio' && <button type="button" onClick={() => void createProject()} disabled={Boolean(collectionBusy)} className="px-3 py-2 rounded-xl border border-[rgba(124,111,247,0.2)] text-accent inline-flex items-center gap-2 disabled:opacity-50"><Plus size={14} /> Add project</button>}
                 {activeTab === 'team' && <button type="button" onClick={() => void createTeamMember()} disabled={Boolean(collectionBusy)} className="px-3 py-2 rounded-xl border border-[rgba(124,111,247,0.2)] text-accent inline-flex items-center gap-2 disabled:opacity-50"><Plus size={14} /> Add team member</button>}
               </div>
+            </div>
+
+            <div className="relative">
+              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary" />
+              <input
+                type="text"
+                placeholder="Search fields by key or value..."
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                className="w-full bg-surface-1 text-text-primary text-[14px] pl-10 pr-4 py-2.5 rounded-xl border border-[rgba(255,255,255,0.06)] outline-none focus:border-[rgba(124,111,247,0.5)]"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary hover:text-text-primary"
+                >
+                  <Trash2 size={14} />
+                </button>
+              )}
             </div>
 
             <div className="bg-surface-1 rounded-2xl border border-[rgba(255,255,255,0.06)] p-5 flex flex-col gap-3">
@@ -816,6 +873,13 @@ export default function AdminDashboard() {
                 const dirty = editedValues[item.id] !== undefined && editedValues[item.id] !== item.value;
                 const saving = savingIds.has(item.id);
                 const galleryValues = currentValue.split(',').map((entry) => entry.trim()).filter(Boolean);
+                const hasAutoSave = Boolean(autoSaveTimers[item.id]);
+
+                const handleChange = (value: string) => {
+                  setEditedValues((current) => ({ ...current, [item.id]: value }));
+                  if (!dirty) setUnsavedCount((c) => c + 1);
+                  autoSaveField(item, value);
+                };
 
                 return (
                   <div key={item.id} className="bg-surface-1 rounded-2xl border border-[rgba(255,255,255,0.06)] p-5 flex flex-col gap-4">
@@ -826,7 +890,8 @@ export default function AdminDashboard() {
                         {fieldDefinition?.description && <p className="text-[12px] text-text-tertiary mt-2">{fieldDefinition.description}</p>}
                       </div>
                       <div className="flex items-center gap-2">
-                        {dirty && !saving && <button type="button" onClick={() => void saveField(item, currentValue)} className="text-[12px] text-accent inline-flex items-center gap-1"><Save size={12} /> Save</button>}
+                        {hasAutoSave && <span className="text-[11px] text-orange-400 inline-flex items-center gap-1"><Loader2 size={10} className="animate-spin" /> Auto-saving</span>}
+                        {dirty && !saving && !hasAutoSave && <button type="button" onClick={() => void saveField(item, currentValue)} className="text-[12px] text-accent inline-flex items-center gap-1"><Save size={12} /> Save</button>}
                         {saving && <span className="text-[11px] text-text-tertiary inline-flex items-center gap-1"><Loader2 size={12} className="animate-spin" /> Saving</span>}
                         <button type="button" onClick={() => setConfirmTarget({ kind: 'field', id: item.id, label: item.key })} className="text-[12px] text-red-400 inline-flex items-center gap-1"><Trash2 size={12} /> Delete</button>
                       </div>
@@ -837,7 +902,7 @@ export default function AdminDashboard() {
                     ) : usesBooleanSelect ? (
                       <select
                         value={currentValue === 'true' ? 'true' : 'false'}
-                        onChange={(event) => setEditedValues((current) => ({ ...current, [item.id]: event.target.value }))}
+                        onChange={(event) => handleChange(event.target.value)}
                         className={`w-full bg-[rgba(255,255,255,0.03)] text-text-primary text-[14px] px-3 py-2.5 rounded-[10px] border outline-none ${dirty ? 'border-[rgba(124,111,247,0.4)]' : 'border-[rgba(255,255,255,0.06)]'} focus:border-[rgba(124,111,247,0.5)]`}
                       >
                         <option value="false">False</option>
@@ -846,9 +911,9 @@ export default function AdminDashboard() {
                     ) : (
                       <>
                         {usesTextarea ? (
-                          <textarea rows={Math.min(8, Math.max(3, Math.ceil(currentValue.length / 90)))} value={currentValue} onChange={(event) => setEditedValues((current) => ({ ...current, [item.id]: event.target.value }))} className={`w-full bg-[rgba(255,255,255,0.03)] text-text-primary text-[14px] px-3 py-2.5 rounded-[10px] border outline-none resize-y ${dirty ? 'border-[rgba(124,111,247,0.4)]' : 'border-[rgba(255,255,255,0.06)]'} focus:border-[rgba(124,111,247,0.5)]`} style={{ fontFamily: usesGalleryEditor ? 'JetBrains Mono' : 'DM Sans' }} />
+                          <textarea rows={Math.min(8, Math.max(3, Math.ceil(currentValue.length / 90)))} value={currentValue} onChange={(event) => handleChange(event.target.value)} className={`w-full bg-[rgba(255,255,255,0.03)] text-text-primary text-[14px] px-3 py-2.5 rounded-[10px] border outline-none resize-y ${dirty ? 'border-[rgba(124,111,247,0.4)]' : 'border-[rgba(255,255,255,0.06)]'} focus:border-[rgba(124,111,247,0.5)]`} style={{ fontFamily: usesGalleryEditor ? 'JetBrains Mono' : 'DM Sans' }} />
                         ) : (
-                          <input type={usesUrlInput ? 'url' : 'text'} value={currentValue} onChange={(event) => setEditedValues((current) => ({ ...current, [item.id]: event.target.value }))} className={`w-full bg-[rgba(255,255,255,0.03)] text-[14px] px-3 py-2.5 rounded-[10px] border outline-none ${dirty ? 'border-[rgba(124,111,247,0.4)]' : 'border-[rgba(255,255,255,0.06)]'} focus:border-[rgba(124,111,247,0.5)] ${usesUrlInput ? 'text-cyan' : 'text-text-primary'}`} style={{ fontFamily: usesUrlInput ? 'JetBrains Mono' : 'DM Sans' }} />
+                          <input type={usesUrlInput ? 'url' : 'text'} value={currentValue} onChange={(event) => handleChange(event.target.value)} className={`w-full bg-[rgba(255,255,255,0.03)] text-[14px] px-3 py-2.5 rounded-[10px] border outline-none ${dirty ? 'border-[rgba(124,111,247,0.4)]' : 'border-[rgba(255,255,255,0.06)]'} focus:border-[rgba(124,111,247,0.5)] ${usesUrlInput ? 'text-cyan' : 'text-text-primary'}`} style={{ fontFamily: usesUrlInput ? 'JetBrains Mono' : 'DM Sans' }} />
                         )}
 
                         {usesGalleryEditor && (
