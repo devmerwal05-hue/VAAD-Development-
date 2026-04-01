@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Clock, Globe, Mail } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Clock, Globe, Mail, Copy, Check } from 'lucide-react';
 import { useContent } from '../lib/useContent';
 import { getErrorMessage } from '../lib/getErrorMessage';
 import { BUDGET_RANGE_OPTIONS, PROJECT_TYPE_OPTIONS } from '../lib/contactOptions';
@@ -52,8 +52,19 @@ export default function Contact() {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [serverError, setServerError] = useState('');
+  const [copied, setCopied] = useState(false);
 
   const contactEmail = getContentValue('contact', 'email', 'hello@vaad.dev');
+
+  const handleCopyEmail = async () => {
+    try {
+      await navigator.clipboard.writeText(contactEmail);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy: ', err);
+    }
+  };
 
   function setField<K extends keyof FormData>(field: K, value: FormData[K]) {
     setForm((current) => ({ ...current, [field]: value }));
@@ -165,15 +176,61 @@ export default function Contact() {
                   {getContentValue('contact', 'timezone', 'Based in India, working with remote teams globally')}
                 </span>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 group/email">
                 <Mail size={15} className="text-accent" />
-                <a
-                  href={`mailto:${contactEmail}`}
-                  className="text-[14px] text-accent hover:text-accent-light transition-colors"
-                  style={{ fontFamily: 'DM Sans', fontWeight: 400 }}
-                >
-                  {contactEmail}
-                </a>
+                <div className="relative flex items-center gap-3">
+                  <a
+                    href={`mailto:${contactEmail}`}
+                    className="text-[14px] text-accent hover:text-accent-light transition-colors"
+                    style={{ fontFamily: 'DM Sans', fontWeight: 400 }}
+                  >
+                    {contactEmail}
+                  </a>
+                  <button
+                    type="button"
+                    onClick={handleCopyEmail}
+                    className="p-1.5 rounded-lg bg-[rgba(124,111,247,0.08)] text-accent opacity-0 group-hover/email:opacity-100 focus-visible:opacity-100 transition-all duration-200 hover:bg-[rgba(124,111,247,0.15)]"
+                    aria-label="Copy email address"
+                    title="Copy email address"
+                  >
+                    <AnimatePresence mode="wait" initial={false}>
+                      {copied ? (
+                        <motion.div
+                          key="check"
+                          initial={{ scale: 0.5, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          exit={{ scale: 0.5, opacity: 0 }}
+                          transition={{ duration: 0.15 }}
+                        >
+                          <Check size={13} />
+                        </motion.div>
+                      ) : (
+                        <motion.div
+                          key="copy"
+                          initial={{ scale: 0.5, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          exit={{ scale: 0.5, opacity: 0 }}
+                          transition={{ duration: 0.15 }}
+                        >
+                          <Copy size={13} />
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </button>
+                  <AnimatePresence>
+                    {copied && (
+                      <motion.span
+                        initial={{ opacity: 0, x: 10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 10 }}
+                        className="absolute left-full ml-3 text-[12px] text-text-tertiary whitespace-nowrap"
+                        style={{ fontFamily: 'DM Sans' }}
+                      >
+                        Copied!
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+                </div>
               </div>
             </div>
           </motion.div>
