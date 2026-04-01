@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Archive, Check, ExternalLink, GripVertical, Loader2, LogOut, Plus, RefreshCw, Save, Search, Shield, Trash2 } from 'lucide-react';
 import ConfirmDialog from '../components/ConfirmDialog';
 import ImageUploader from '../components/ImageUploader';
@@ -155,6 +155,7 @@ export default function AdminDashboard() {
   const [collectionBusy, setCollectionBusy] = useState<ManagedCollectionSection | null>(null);
   const [dragState, setDragState] = useState<DragState | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [savedFieldIds, setSavedFieldIds] = useState<Set<number>>(new Set());
 
   const sections = useMemo(() => {
     const available = [...new Set(content.map((item) => item.section))];
@@ -436,6 +437,12 @@ export default function AdminDashboard() {
         delete next[item.id];
         return next;
       });
+      setSavedFieldIds((prev) => new Set(prev).add(item.id));
+      setTimeout(() => setSavedFieldIds((prev) => {
+        const next = new Set(prev);
+        next.delete(item.id);
+        return next;
+      }), 2000);
     } catch (requestError) {
       setError(getErrorMessage(requestError));
     } finally {
@@ -723,6 +730,7 @@ export default function AdminDashboard() {
                             const currentValue = editedValues[fieldItem?.id || -1] ?? entry.values[field.key];
                             const dirty = Boolean(fieldItem && editedValues[fieldItem.id] !== undefined && editedValues[fieldItem.id] !== fieldItem.value);
                             const saving = Boolean(fieldItem && savingIds.has(fieldItem.id));
+                            const saved = Boolean(fieldItem && savedFieldIds.has(fieldItem.id));
 
                             return (
                               <div key={`${setup.prefix}-${entry.index}-${field.key}`} className={`flex flex-col gap-3 ${field.type === 'textarea' || field.type === 'image' ? 'xl:col-span-2' : ''}`}>
@@ -735,6 +743,13 @@ export default function AdminDashboard() {
                                     <button type="button" onClick={() => void saveField(fieldItem, currentValue)} className="text-[12px] text-accent inline-flex items-center gap-1"><Save size={12} /> Save</button>
                                   )}
                                   {saving && <span className="text-[11px] text-text-tertiary inline-flex items-center gap-1"><Loader2 size={12} className="animate-spin" /> Saving</span>}
+                                  <AnimatePresence>
+                                    {saved && !saving && (
+                                      <motion.span initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} className="text-[11px] text-green-400 inline-flex items-center gap-1">
+                                        <Check size={12} /> Saved
+                                      </motion.span>
+                                    )}
+                                  </AnimatePresence>
                                 </div>
 
                                 {field.type === 'image' ? (
@@ -814,31 +829,43 @@ export default function AdminDashboard() {
             ) : activeItems.length > 0 ? (
               activeItems.map((item) => {
                 const fieldDefinition = getFieldDefinition(item.section, item.key);
-                const [localValue, setLocalValue] = useState(item.value);
-                const isModified = localValue !== item.value;
+                const currentValue = editedValues[item.id] ?? item.value;
+                const isModified = editedValues[item.id] !== undefined && editedValues[item.id] !== item.value;
                 const isSaving = savingIds.has(item.id);
-                
+                const isSaved = savedFieldIds.has(item.id);
+
                 const usesImageUploader = fieldDefinition?.type === 'image' || isImageField(item);
                 const usesBooleanSelect = fieldDefinition?.type === 'boolean';
                 const usesUrlInput = fieldDefinition?.type === 'url' || isUrlField(item);
                 const usesGalleryEditor = (fieldDefinition?.type === 'list' && item.key.includes('gallery')) || isGalleryField(item);
-                const usesTextarea = fieldDefinition?.type === 'textarea' || fieldDefinition?.type === 'list' || isLongField(item, localValue);
-                const galleryValues = localValue.split(',').map((entry) => entry.trim()).filter(Boolean);
+                const usesTextarea = fieldDefinition?.type === 'textarea' || fieldDefinition?.type === 'list' || isLongField(item, currentValue);
+                const galleryValues = currentValue.split(',').map((entry) => entry.trim()).filter(Boolean);
 
                 const handleChange = (value: string) => {
-                  setLocalValue(value);
+                  setEditedValues((prev) => ({ ...prev, [item.id]: value }));
                 };
 
                 const handleSave = async () => {
-                  if (localValue !== item.value) {
+                  if (isModified) {
                     setSavingIds((current) => new Set(current).add(item.id));
                     try {
                       const updated = await api<ContentItem>('/api/content', {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ id: item.id, value: localValue }),
+                        body: JSON.stringify({ id: item.id, value: currentValue }),
                       });
                       setContent((current) => current.map((entry) => (entry.id === item.id ? updated : entry)));
+                      setEditedValues((current) => {
+                        const next = { ...current };
+                        delete next[item.id];
+                        return next;
+                      });
+                      setSavedFieldIds((prev) => new Set(prev).add(item.id));
+                      setTimeout(() => setSavedFieldIds((prev) => {
+                        const next = new Set(prev);
+                        next.delete(item.id);
+                        return next;
+                      }), 2000);
                     } catch (requestError) {
                       setError(getErrorMessage(requestError));
                     } finally {
@@ -861,7 +888,7 @@ export default function AdminDashboard() {
                 const handlePaste = async (e: React.ClipboardEvent) => {
                   const items = e.clipboardData?.items;
                   if (!items) return;
-                  
+
                   for (const item of items) {
                     if (item.type.startsWith('image/')) {
                       e.preventDefault();
@@ -869,7 +896,7 @@ export default function AdminDashboard() {
                       if (file) {
                         const formData = new FormData();
                         formData.append('file', file);
-                        
+
                         try {
                           const response = await fetch('/api/upload', {
                             method: 'POST',
@@ -877,7 +904,7 @@ export default function AdminDashboard() {
                           });
                           const data = await response.json();
                           if (data.url) {
-                            setLocalValue(data.url);
+                            handleChange(data.url);
                           }
                         } catch (err) {
                           console.error('Upload failed:', err);
@@ -903,15 +930,22 @@ export default function AdminDashboard() {
                           </button>
                         )}
                         {isSaving && <span className="text-[11px] text-text-tertiary inline-flex items-center gap-1"><Loader2 size={12} className="animate-spin" /> Saving</span>}
+                        <AnimatePresence>
+                          {isSaved && !isSaving && (
+                            <motion.span initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} className="text-[11px] text-green-400 inline-flex items-center gap-1">
+                              <Check size={12} /> Saved
+                            </motion.span>
+                          )}
+                        </AnimatePresence>
                         <button type="button" onClick={() => setConfirmTarget({ kind: 'field', id: item.id, label: item.key })} className="text-[12px] text-red-400 inline-flex items-center gap-1 hover:text-red-300"><Trash2 size={12} /> Delete</button>
                       </div>
                     </div>
 
                     {usesImageUploader ? (
-                      <ImageUploader value={localValue} onChange={(url) => setLocalValue(url)} />
+                      <ImageUploader value={currentValue} onChange={(url) => handleChange(url)} />
                     ) : usesBooleanSelect ? (
                       <select
-                        value={localValue === 'true' ? 'true' : 'false'}
+                        value={currentValue === 'true' ? 'true' : 'false'}
                         onChange={(event) => handleChange(event.target.value)}
                         onBlur={handleSave}
                         className={`w-full bg-[rgba(255,255,255,0.03)] text-text-primary text-[14px] px-3 py-2.5 rounded-[10px] border outline-none ${isModified ? 'border-[rgba(124,111,247,0.4)]' : 'border-[rgba(255,255,255,0.06)]'} focus:border-[rgba(124,111,247,0.5)]`}
@@ -922,27 +956,27 @@ export default function AdminDashboard() {
                     ) : (
                       <>
                         {usesTextarea ? (
-                          <textarea 
-                            rows={Math.min(8, Math.max(3, Math.ceil(localValue.length / 90)))} 
-                            value={localValue} 
+                          <textarea
+                            rows={Math.min(8, Math.max(3, Math.ceil(currentValue.length / 90)))}
+                            value={currentValue}
                             onChange={(event) => handleChange(event.target.value)}
                             onBlur={handleSave}
                             onKeyDown={handleKeyDown}
                             onPaste={handlePaste}
-                            className={`w-full bg-[rgba(255,255,255,0.03)] text-text-primary text-[14px] px-3 py-2.5 rounded-[10px] border outline-none resize-y ${isModified ? 'border-[rgba(124,111,247,0.4)]' : 'border-[rgba(255,255,255,0.06)]'} focus:border-[rgba(124,111,247,0.5)]`} 
-                            style={{ fontFamily: usesGalleryEditor ? 'JetBrains Mono' : 'DM Sans' }} 
+                            className={`w-full bg-[rgba(255,255,255,0.03)] text-text-primary text-[14px] px-3 py-2.5 rounded-[10px] border outline-none resize-y ${isModified ? 'border-[rgba(124,111,247,0.4)]' : 'border-[rgba(255,255,255,0.06)]'} focus:border-[rgba(124,111,247,0.5)]`}
+                            style={{ fontFamily: usesGalleryEditor ? 'JetBrains Mono' : 'DM Sans' }}
                             placeholder="Type here... Paste image with Ctrl+V"
                           />
                         ) : (
-                          <input 
-                            type={usesUrlInput ? 'url' : 'text'} 
-                            value={localValue} 
+                          <input
+                            type={usesUrlInput ? 'url' : 'text'}
+                            value={currentValue}
                             onChange={(event) => handleChange(event.target.value)}
                             onBlur={handleSave}
                             onKeyDown={handleKeyDown}
                             onPaste={handlePaste}
-                            className={`w-full bg-[rgba(255,255,255,0.03)] text-[14px] px-3 py-2.5 rounded-[10px] border outline-none ${isModified ? 'border-[rgba(124,111,247,0.4)]' : 'border-[rgba(255,255,255,0.06)]'} focus:border-[rgba(124,111,247,0.5)] ${usesUrlInput ? 'text-cyan' : 'text-text-primary'}`} 
-                            style={{ fontFamily: usesUrlInput ? 'JetBrains Mono' : 'DM Sans' }} 
+                            className={`w-full bg-[rgba(255,255,255,0.03)] text-[14px] px-3 py-2.5 rounded-[10px] border outline-none ${isModified ? 'border-[rgba(124,111,247,0.4)]' : 'border-[rgba(255,255,255,0.06)]'} focus:border-[rgba(124,111,247,0.5)] ${usesUrlInput ? 'text-cyan' : 'text-text-primary'}`}
+                            style={{ fontFamily: usesUrlInput ? 'JetBrains Mono' : 'DM Sans' }}
                             placeholder="Type here... Paste image with Ctrl+V"
                           />
                         )}
@@ -950,7 +984,7 @@ export default function AdminDashboard() {
                         {usesGalleryEditor && (
                           <>
                             {galleryValues.length > 0 && <div className="flex flex-wrap gap-2">{galleryValues.map((imgUrl: string, idx: number) => <img key={`${item.id}-${idx}`} src={imgUrl} alt={`Gallery ${idx + 1}`} className="h-[72px] w-auto rounded-lg border border-[rgba(255,255,255,0.06)] object-cover" loading="lazy" decoding="async" />)}</div>}
-                            <ImageUploader value="" compact onChange={(url: string) => setLocalValue([...galleryValues, url].join(','))} />
+                            <ImageUploader value="" compact onChange={(url: string) => handleChange([...galleryValues, url].join(','))} />
                           </>
                         )}
                       </>
