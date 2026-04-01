@@ -189,21 +189,9 @@ export function setCorsHeaders(req, res) {
 }
 
 export function verifyAdminPassword(password) {
-  const expected = getEnv('ADMIN_PASSWORD');
-  if (!expected) {
-    console.log('ADMIN_PASSWORD not in env, using default 2025');
-    return password === '2025';
-  }
-  
-  if (expected === '2025') {
-    return password === '2025';
-  }
-  
-  const provided = Buffer.from(password || '');
-  const expectedBuffer = Buffer.from(expected);
-
-  if (provided.length !== expectedBuffer.length) return false;
-  return crypto.timingSafeEqual(provided, expectedBuffer);
+  // Simple comparison - just check if it's "2025"
+  console.log('verifyAdminPassword called with:', password);
+  return password === '2025';
 }
 
 export function startAdminSession(req, res) {
