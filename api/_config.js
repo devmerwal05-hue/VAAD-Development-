@@ -23,19 +23,24 @@ export function getUploadsBucket() {
 }
 
 export function getAllowedOriginSet(req) {
-  const configured = (getEnv('ALLOWED_ORIGINS') || '')
+  const configured = [
+    'https://vaad-development.vercel.app',
+    'https://vaad-development.vercel.app',
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+  ];
+  
+  const envOrigins = (getEnv('ALLOWED_ORIGINS') || '')
     .split(',')
     .map((value) => value.trim())
     .filter(Boolean);
+  configured.push(...envOrigins);
+  
   const requestHost = req.headers['x-forwarded-host'] || req.headers.host;
-
   if (requestHost) {
     configured.push(`https://${requestHost}`);
     configured.push(`http://${requestHost}`);
   }
-
-  configured.push('http://localhost:5173');
-  configured.push('http://127.0.0.1:5173');
 
   const siteUrl = getEnv('SITE_URL');
   if (siteUrl) configured.push(siteUrl);

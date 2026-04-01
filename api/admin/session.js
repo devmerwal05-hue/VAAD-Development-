@@ -9,7 +9,12 @@ import {
 } from '../_security.js';
 
 export default async function handler(req, res) {
-  if (!applySecurity(req, res, { scope: 'auth', maxBodySize: 5000 })) return;
+  try {
+    if (!applySecurity(req, res, { scope: 'auth', maxBodySize: 5000 })) return;
+  } catch (securityError) {
+    console.error('Security apply error:', securityError);
+    return res.status(500).json({ error: 'Server configuration error' });
+  }
 
   try {
     if (req.method === 'GET') {
