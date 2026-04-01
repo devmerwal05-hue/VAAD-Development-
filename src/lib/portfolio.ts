@@ -30,8 +30,8 @@ const fallbackProjects = [
     subtitle: 'Inventory-aware storefront',
     description: 'Catalog, subscriptions, and repeat-order flows designed for a small team that ships fast.',
     url: '',
-    image: '/images/project-kofi.png',
-    gallery: ['/images/project-kofi.png'],
+    image: '/images/project-kofi.svg',
+    gallery: ['/images/project-kofi.svg'],
   },
   {
     tag: 'Ops Dashboard',
@@ -39,8 +39,8 @@ const fallbackProjects = [
     subtitle: 'Internal workflow system',
     description: 'Role-based admin workflows, analytics summaries, and task visibility built for daily operational use.',
     url: '',
-    image: '/images/project-novare.png',
-    gallery: ['/images/project-novare.png'],
+    image: '/images/project-novare.svg',
+    gallery: ['/images/project-novare.svg'],
   },
   {
     tag: 'Retail Experience',
@@ -48,8 +48,8 @@ const fallbackProjects = [
     subtitle: 'Launch-ready product site',
     description: 'A high-contrast product story with conversion-first merchandising and mobile-first browsing.',
     url: '',
-    image: '/images/project-solebound.png',
-    gallery: ['/images/project-solebound.png'],
+    image: '/images/project-solebound.svg',
+    gallery: ['/images/project-solebound.svg'],
   },
 ] as const;
 

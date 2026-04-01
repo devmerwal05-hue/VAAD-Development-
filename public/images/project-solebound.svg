@@ -1,0 +1,32 @@
+<svg width="1200" height="900" viewBox="0 0 1200 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="900" rx="48" fill="#110D0C"/>
+  <rect x="54" y="54" width="1092" height="792" rx="36" fill="url(#bg)"/>
+  <circle cx="932" cy="220" r="198" fill="#FB923C" fill-opacity="0.14"/>
+  <circle cx="248" cy="732" r="210" fill="#F59E0B" fill-opacity="0.08"/>
+  <rect x="118" y="132" width="964" height="610" rx="40" fill="#14100E" stroke="rgba(255,255,255,0.08)"/>
+  <rect x="118" y="132" width="964" height="126" rx="40" fill="#1B1512"/>
+  <rect x="168" y="178" width="112" height="20" rx="10" fill="#F59E0B" fill-opacity="0.85"/>
+  <rect x="832" y="176" width="200" height="22" rx="11" fill="#FFFFFF" fill-opacity="0.12"/>
+  <rect x="168" y="300" width="360" height="372" rx="28" fill="#181210"/>
+  <rect x="566" y="300" width="466" height="372" rx="28" fill="#181210"/>
+  <path d="M292 520C292 440 352 382 430 382C489 382 540 418 562 470C584 522 566 588 518 626C470 664 400 670 346 642C312 624 292 588 292 520Z" fill="#E7D9C8"/>
+  <path d="M326 520C326 456 374 408 438 408C481 408 518 430 538 464C500 480 462 500 426 524C392 546 362 574 338 606C330 590 326 570 326 520Z" fill="#C18A4A"/>
+  <path d="M484 472C442 486 400 506 360 532C341 544 323 557 306 572" stroke="#2B201C" stroke-width="18" stroke-linecap="round"/>
+  <rect x="626" y="350" width="180" height="18" rx="9" fill="#FB923C" fill-opacity="0.9"/>
+  <rect x="626" y="390" width="138" height="14" rx="7" fill="#FFFFFF" fill-opacity="0.16"/>
+  <rect x="626" y="446" width="346" height="110" rx="24" fill="#201714"/>
+  <rect x="658" y="478" width="114" height="14" rx="7" fill="#FFE7CF" fill-opacity="0.9"/>
+  <rect x="658" y="516" width="86" height="12" rx="6" fill="#FFFFFF" fill-opacity="0.16"/>
+  <rect x="828" y="478" width="110" height="46" rx="18" fill="#F59E0B" fill-opacity="0.28"/>
+  <rect x="626" y="580" width="160" height="18" rx="9" fill="#FFFFFF" fill-opacity="0.14"/>
+  <rect x="808" y="580" width="164" height="18" rx="9" fill="#FFFFFF" fill-opacity="0.08"/>
+  <text x="118" y="804" fill="#FFF7ED" font-family="Arial, sans-serif" font-size="64" font-weight="700">Solebound</text>
+  <text x="118" y="856" fill="#E0C1A6" font-family="Arial, sans-serif" font-size="26" letter-spacing="4">RETAIL EXPERIENCE / LAUNCH-READY PRODUCT SITE</text>
+  <defs>
+    <linearGradient id="bg" x1="104" y1="92" x2="1042" y2="802" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#140F0D"/>
+      <stop offset="0.52" stop-color="#1A1310"/>
+      <stop offset="1" stop-color="#110D0C"/>
+    </linearGradient>
+  </defs>
+</svg>

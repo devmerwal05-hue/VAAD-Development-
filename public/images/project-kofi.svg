@@ -1,0 +1,36 @@
+<svg width="1200" height="900" viewBox="0 0 1200 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="900" rx="48" fill="#0B0A12"/>
+  <rect x="56" y="56" width="1088" height="788" rx="36" fill="url(#bg)"/>
+  <circle cx="972" cy="190" r="170" fill="#F59E0B" fill-opacity="0.18"/>
+  <circle cx="264" cy="698" r="220" fill="#22D3EE" fill-opacity="0.1"/>
+  <rect x="132" y="160" width="332" height="420" rx="28" fill="#161222" stroke="rgba(255,255,255,0.08)"/>
+  <rect x="176" y="212" width="244" height="156" rx="22" fill="#201732"/>
+  <path d="M242 320H354C377.196 320 396 338.804 396 362V414C396 437.196 377.196 456 354 456H242C218.804 456 200 437.196 200 414V362C200 338.804 218.804 320 242 320Z" fill="#F6EFE7"/>
+  <path d="M230 352H308C331.196 352 350 370.804 350 394V408C350 431.196 331.196 450 308 450H230V352Z" fill="#6B3F21"/>
+  <path d="M350 372H372C392.987 372 410 389.013 410 410C410 430.987 392.987 448 372 448H350V372Z" fill="#EAD7C2"/>
+  <rect x="176" y="392" width="196" height="16" rx="8" fill="#4C365F"/>
+  <rect x="176" y="426" width="144" height="14" rx="7" fill="#31253E"/>
+  <rect x="176" y="476" width="244" height="18" rx="9" fill="#A855F7" fill-opacity="0.32"/>
+  <rect x="176" y="516" width="164" height="18" rx="9" fill="#FFFFFF" fill-opacity="0.12"/>
+  <rect x="520" y="188" width="548" height="508" rx="32" fill="#120F1C" stroke="rgba(255,255,255,0.08)"/>
+  <rect x="566" y="236" width="456" height="54" rx="16" fill="#1F1730"/>
+  <rect x="566" y="324" width="194" height="248" rx="24" fill="#171225"/>
+  <rect x="784" y="324" width="238" height="104" rx="24" fill="#15111F"/>
+  <rect x="784" y="452" width="238" height="120" rx="24" fill="#171225"/>
+  <rect x="606" y="360" width="114" height="16" rx="8" fill="#F59E0B" fill-opacity="0.84"/>
+  <rect x="606" y="396" width="96" height="14" rx="7" fill="#FFFFFF" fill-opacity="0.16"/>
+  <rect x="606" y="454" width="114" height="72" rx="18" fill="#2A1E3D"/>
+  <rect x="820" y="360" width="160" height="14" rx="7" fill="#22D3EE" fill-opacity="0.8"/>
+  <rect x="820" y="392" width="128" height="12" rx="6" fill="#FFFFFF" fill-opacity="0.14"/>
+  <rect x="820" y="488" width="160" height="14" rx="7" fill="#A855F7" fill-opacity="0.8"/>
+  <rect x="820" y="520" width="118" height="12" rx="6" fill="#FFFFFF" fill-opacity="0.14"/>
+  <text x="132" y="724" fill="#F4F3FF" font-family="Arial, sans-serif" font-size="64" font-weight="700">Kofi Supply</text>
+  <text x="132" y="776" fill="#C7BDE4" font-family="Arial, sans-serif" font-size="26" letter-spacing="4">COFFEE COMMERCE / INVENTORY-AWARE STOREFRONT</text>
+  <defs>
+    <linearGradient id="bg" x1="112" y1="108" x2="1034" y2="806" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0E0C17"/>
+      <stop offset="0.48" stop-color="#140F20"/>
+      <stop offset="1" stop-color="#0B0A12"/>
+    </linearGradient>
+  </defs>
+</svg>
