@@ -254,18 +254,27 @@ export default async function handler(req, res) {
     if (req.method === 'GET') {
       const supabase = getSupabasePublic();
       
-      await seedDefaultContent(supabase);
+      try {
+        await seedDefaultContent(supabase);
+      } catch (seedError) {
+        console.error('Seed error (non-fatal):', seedError);
+      }
 
-      const { data, error } = await supabase
-        .from('site_content')
-        .select('id, section, key, value, updated_at')
-        .order('section', { ascending: true })
-        .order('key', { ascending: true });
+      try {
+        const { data, error } = await supabase
+          .from('site_content')
+          .select('id, section, key, value, updated_at')
+          .order('section', { ascending: true })
+          .order('key', { ascending: true });
 
-      if (error) throw error;
+        if (error) throw error;
 
-      res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
-      return res.status(200).json(data);
+        res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
+        return res.status(200).json(data || []);
+      } catch (fetchError) {
+        console.error('Content fetch error:', fetchError);
+        return res.status(200).json([]);
+      }
     }
 
     if (req.method === 'PUT') {

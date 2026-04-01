@@ -2,6 +2,7 @@ import {
   applySecurity,
   clearAdminSession,
   getErrorMessage,
+  getEnv,
   hasAdminSession,
   startAdminSession,
   verifyAdminPassword,
@@ -25,7 +26,8 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Password is required.' });
       }
 
-      if (!verifyAdminPassword(password)) {
+      const isValid = verifyAdminPassword(password);
+      if (!isValid) {
         return res.status(401).json({ error: 'Invalid password.' });
       }
 
@@ -40,6 +42,7 @@ export default async function handler(req, res) {
 
     return res.status(405).json({ error: 'Method not allowed' });
   } catch (error) {
+    console.error('Session API error:', error);
     return res.status(500).json({ error: getErrorMessage(error) });
   }
 }
