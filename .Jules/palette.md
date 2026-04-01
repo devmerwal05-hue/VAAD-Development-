@@ -1,3 +1,3 @@
-## 2025-05-15 - [Reusable UX Pattern: Copy-to-Clipboard with Feedback]
-**Learning:** Adding a copy-to-clipboard button next to static contact info (like email) significantly improves utility for users who don't use default mail clients. Providing immediate visual feedback ("Copied!") using animations ensures the user is certain the action succeeded.
-**Action:** Use a hover/focus triggered button with `framer-motion` for the "Copied!" toast-like feedback.
+## 2025-05-15 - Visual Feedback for Auto-saving Admin Fields
+**Learning:** Admin interfaces that use auto-save on blur can leave users feeling uncertain about whether their changes were persisted. Adding a brief, animated "Saved!" indicator provides immediate reassurance and improves the overall sense of reliability. Using a surgical approach (state-based tracking in the parent) keeps the code maintainable without requiring a full component refactor for minor UI enhancements.
+**Action:** Always include a visual success state for auto-save interactions to bridge the gap between user action and server confirmation.
