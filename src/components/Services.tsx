@@ -29,8 +29,13 @@ export default function Services() {
   }).filter(s => s.title);
 
   return (
-    <section className="py-24 md:py-32">
-      <div className="max-w-[1280px] mx-auto px-6">
+    <section className="py-24 md:py-32 relative">
+      {/* Background glow */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] rounded-full pointer-events-none opacity-20">
+        <div className="absolute inset-0 bg-gradient-to-b from-[#7C6FF7] to-transparent rounded-full blur-[100px]" />
+      </div>
+      
+      <div className="max-w-[1280px] mx-auto px-6 relative z-10">
         <SectionLabel number={labelParts[0] || '01'} label={labelParts[1] || 'Services'} />
         <SectionTitle>{getContentValue('services', 'title', 'What we build')}</SectionTitle>
         <motion.p initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.55 }} className="text-[15px] md:text-[17px] text-text-secondary mb-12 -mt-6 max-w-[620px] leading-[1.75]" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>
@@ -48,16 +53,16 @@ export default function Services() {
                 transition={{ duration: 0.6, ease: [0.16, 0.77, 0.47, 0.97] as [number, number, number, number], delay: index * 0.08 }}
                 className="perspective-container"
               >
-                <div className="tilt-card bg-surface-1 rounded-2xl p-8 md:p-10 min-h-[240px] flex flex-col border border-[rgba(255,255,255,0.04)] card-hover relative overflow-hidden group">
+                <div className="tilt-card bg-surface-1 rounded-2xl p-8 md:p-10 min-h-[240px] flex flex-col border border-[rgba(255,255,255,0.04)] card-hover relative overflow-hidden group glass">
                   <span className="absolute top-4 right-6 text-[72px] font-[800] text-[rgba(255,255,255,0.015)] pointer-events-none select-none transition-all duration-500 group-hover:text-[rgba(124,111,247,0.04)]" style={{ fontFamily: 'Syne' }}>
                     0{index + 1}
                   </span>
                   <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" style={{ background: `radial-gradient(ellipse at ${index % 2 === 0 ? '20% 0%' : '80% 100%'}, rgba(124,111,247,0.06), transparent 60%)` }} />
                   <div className="relative z-10">
-                    <div className="w-12 h-12 rounded-xl bg-[rgba(124,111,247,0.08)] flex items-center justify-center mb-6 group-hover:bg-[rgba(124,111,247,0.14)] transition-colors duration-300">
+                    <div className="w-12 h-12 rounded-xl bg-[rgba(124,111,247,0.08)] flex items-center justify-center mb-6 group-hover:bg-[rgba(124,111,247,0.14)] transition-colors duration-300 glow-ring">
                       <Icon size={22} className="text-accent" />
                     </div>
-                    <h3 className="text-[22px] text-text-primary mb-3" style={{ fontFamily: 'Syne', fontWeight: 700 }}>{service.title}</h3>
+                    <h3 className="text-[22px] text-text-primary mb-3 gradient-text-enhanced" style={{ fontFamily: 'Syne', fontWeight: 700 }}>{service.title}</h3>
                     <p className="text-[15px] text-text-secondary leading-[1.75] flex-1" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>{service.description}</p>
                   </div>
                 </div>

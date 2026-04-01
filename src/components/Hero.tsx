@@ -34,6 +34,15 @@ export default function Hero() {
         <div className="hero-gradient-1 absolute inset-0" />
         <div className="hero-gradient-2 absolute inset-0" />
       </div>
+      
+      {/* Floating orbs */}
+      <div className="absolute top-20 left-[10%] w-[300px] h-[300px] rounded-full pointer-events-none opacity-30">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#7C6FF7] to-[#A855F7] rounded-full blur-[80px] float-orb" />
+      </div>
+      <div className="absolute bottom-20 right-[5%] w-[250px] h-[250px] rounded-full pointer-events-none opacity-20">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#22D3EE] to-[#7C6FF7] rounded-full blur-[60px] float-orb-slow" />
+      </div>
+      
       <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 50% 20%, rgba(255,255,255,0.04), transparent 35%), radial-gradient(ellipse at center, transparent 18%, #06060C 78%)' }} />
 
       <div className="relative z-10 max-w-[1360px] mx-auto grid grid-cols-1 xl:grid-cols-[1.08fr_0.92fr] gap-8 xl:gap-10 items-center">
@@ -42,10 +51,10 @@ export default function Hero() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.55, ease, delay: 0.05 }}
-            className="inline-flex items-center gap-2.5 mb-8 px-4 py-2 rounded-full"
-            style={{ background: 'rgba(124,111,247,0.08)', border: '1px solid rgba(124,111,247,0.16)' }}
+            className="inline-flex items-center gap-2.5 mb-8 px-4 py-2 rounded-full glass border-shimmer"
+            style={{ background: 'rgba(124,111,247,0.08)' }}
           >
-            <Sparkles size={13} className="text-accent-light" />
+            <Sparkles size={13} className="text-accent-light animate-pulse" />
             <span className="text-[10px] md:text-[11px] font-medium tracking-[0.14em] uppercase text-accent-light" style={{ fontFamily: 'DM Sans', fontWeight: 500 }}>
               {getContentValue('hero', 'eyebrow', 'Web Design + Web App Delivery')}
             </span>
@@ -59,7 +68,7 @@ export default function Hero() {
             style={{ fontFamily: 'Syne', fontWeight: 800, lineHeight: 0.88, letterSpacing: '-0.06em', fontSize: 'clamp(46px, 8vw, 118px)' }}
           >
             <span className="block">{line1}</span>
-            <span className="block gradient-text mt-2">{line2}</span>
+            <span className="block gradient-text-enhanced">{line2}</span>
           </motion.h1>
 
           <motion.p
@@ -78,10 +87,10 @@ export default function Hero() {
             transition={{ duration: 0.55, ease, delay: 0.4 }}
             className="flex flex-col sm:flex-row gap-3 mt-8"
           >
-            <Link to="/contact" className="shimmer-btn gradient-bg text-white px-7 md:px-8 py-4 rounded-2xl text-[14px] md:text-[15px] font-medium shadow-[0_8px_50px_rgba(124,111,247,0.28)] flex items-center gap-2.5 w-full sm:w-auto justify-center" style={{ fontFamily: 'DM Sans', fontWeight: 500 }}>
-              {getContentValue('hero', 'cta_primary', 'Start a project')} <ArrowRight size={16} />
+            <Link to="/contact" className="shimmer-btn gradient-bg text-white px-7 md:px-8 py-4 rounded-2xl text-[14px] md:text-[15px] font-medium shadow-[0_8px_50px_rgba(124,111,247,0.28)] flex items-center gap-2.5 w-full sm:w-auto justify-center btn-glow" style={{ fontFamily: 'DM Sans', fontWeight: 500 }}>
+              {getContentValue('hero', 'cta_primary', 'Start a project')} <ArrowRight size={16} className="btn-arrow-icon" />
             </Link>
-            <Link to="/work" className="text-text-primary px-7 md:px-8 py-4 rounded-2xl text-[14px] md:text-[15px] font-medium border border-[rgba(255,255,255,0.08)] hover:bg-[rgba(255,255,255,0.04)] transition-all duration-300 w-full sm:w-auto text-center" style={{ fontFamily: 'DM Sans', fontWeight: 500 }}>
+            <Link to="/work" className="text-text-primary px-7 md:px-8 py-4 rounded-2xl text-[14px] md:text-[15px] font-medium border border-[rgba(255,255,255,0.08)] hover:bg-[rgba(255,255,255,0.04)] transition-all duration-300 w-full sm:w-auto text-center btn-arrow" style={{ fontFamily: 'DM Sans', fontWeight: 500 }}>
               {getContentValue('hero', 'cta_secondary', 'See shipped work')}
             </Link>
           </motion.div>
@@ -93,8 +102,8 @@ export default function Hero() {
             className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-10"
           >
             {stats.map((stat, index) => (
-              <div key={stat.label + index} className="rounded-2xl border border-[rgba(255,255,255,0.06)] bg-[rgba(10,10,20,0.72)] px-4 py-4 backdrop-blur-sm">
-                <p className="text-[24px] md:text-[30px] text-text-primary" style={{ fontFamily: 'Syne', fontWeight: 800 }}>{stat.value}</p>
+              <div key={stat.label + index} className="rounded-2xl border border-[rgba(255,255,255,0.06)] bg-[rgba(10,10,20,0.72)] px-4 py-4 backdrop-blur-sm glass card-hover">
+                <p className="text-[24px] md:text-[30px] text-text-primary gradient-text-enhanced" style={{ fontFamily: 'Syne', fontWeight: 800 }}>{stat.value}</p>
                 <p className="text-[11px] uppercase tracking-[0.12em] text-text-tertiary mt-2">{stat.label}</p>
               </div>
             ))}
