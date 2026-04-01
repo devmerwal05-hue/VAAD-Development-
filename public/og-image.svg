@@ -1,0 +1,24 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="630" fill="#050509" />
+  <rect x="48" y="48" width="1104" height="534" rx="32" fill="url(#panel)" stroke="rgba(255,255,255,0.08)" />
+  <circle cx="188" cy="142" r="84" fill="url(#glow1)" />
+  <circle cx="1036" cy="486" r="120" fill="url(#glow2)" />
+  <text x="108" y="170" fill="#A89AF9" font-family="Arial, sans-serif" font-size="24" letter-spacing="0.24em">VAAD DEVELOPMENT</text>
+  <text x="108" y="292" fill="#F0EDE6" font-family="Arial, sans-serif" font-size="78" font-weight="700">Launch-ready</text>
+  <text x="108" y="378" fill="#F0EDE6" font-family="Arial, sans-serif" font-size="78" font-weight="700">websites and apps</text>
+  <text x="108" y="460" fill="#B5B0C8" font-family="Arial, sans-serif" font-size="30">Strategy, design, engineering, and launch support for small teams.</text>
+  <defs>
+    <linearGradient id="panel" x1="88" y1="88" x2="1112" y2="542" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0A0A14" />
+      <stop offset="1" stop-color="#121224" />
+    </linearGradient>
+    <radialGradient id="glow1" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(188 142) rotate(90) scale(84)">
+      <stop stop-color="#7C6FF7" stop-opacity="0.45" />
+      <stop offset="1" stop-color="#7C6FF7" stop-opacity="0" />
+    </radialGradient>
+    <radialGradient id="glow2" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(1036 486) rotate(90) scale(120)">
+      <stop stop-color="#EC4899" stop-opacity="0.28" />
+      <stop offset="1" stop-color="#EC4899" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+</svg>
