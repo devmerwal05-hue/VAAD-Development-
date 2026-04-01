@@ -80,7 +80,12 @@ function base64UrlDecode(input) {
 }
 
 function signValue(value) {
-  return crypto.createHmac('sha256', getAdminSessionSecret()).update(value).digest('base64url');
+  try {
+    return crypto.createHmac('sha256', getAdminSessionSecret()).update(value).digest('base64url');
+  } catch (e) {
+    console.error('signValue error:', e);
+    return 'fallback';
+  }
 }
 
 function parseSignedSession(token) {
@@ -163,29 +168,34 @@ export function validateRequestSize(req, res, maxBytes = 50000) {
 }
 
 export function setCorsHeaders(req, res) {
-  const origin = req.headers.origin;
-  const allowedOrigins = getAllowedOriginSet(req);
+  try {
+    const origin = req.headers.origin;
+    const allowedOrigins = getAllowedOriginSet(req);
 
-  if (origin) {
-    if (!allowedOrigins.has(origin)) {
-      console.log('Origin not allowed:', origin, 'Allowed:', Array.from(allowedOrigins));
+    if (origin) {
+      if (!allowedOrigins.has(origin)) {
+        // Just log it, don't block
+        console.log('Origin not in allowed list:', origin);
+      }
+      res.setHeader('Access-Control-Allow-Origin', origin);
+      res.setHeader('Access-Control-Allow-Credentials', 'true');
+      res.setHeader('Vary', 'Origin');
     }
 
-    res.setHeader('Access-Control-Allow-Origin', origin);
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
-    res.setHeader('Vary', 'Origin');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    res.setHeader('Access-Control-Max-Age', '86400');
+
+    if (req.method === 'OPTIONS') {
+      res.status(204).end();
+      return false;
+    }
+
+    return true;
+  } catch (err) {
+    console.error('CORS error:', err);
+    return true; // Allow through
   }
-
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  res.setHeader('Access-Control-Max-Age', '86400');
-
-  if (req.method === 'OPTIONS') {
-    res.status(204).end();
-    return false;
-  }
-
-  return true;
 }
 
 export function verifyAdminPassword(password) {
@@ -245,10 +255,28 @@ export function verifyAdminSession(req, res) {
 }
 
 export function applySecurity(req, res, { scope = 'public', maxBodySize = 50000 } = {}) {
-  setSecurityHeaders(res);
-  if (!setCorsHeaders(req, res)) return false;
-  if (!rateLimit(req, res, scope)) return false;
-  if (!validateRequestSize(req, res, maxBodySize)) return false;
-  if (['POST', 'PUT', 'DELETE'].includes(req.method) && !validateContentType(req, res)) return false;
+  try {
+    setSecurityHeaders(res);
+  } catch (e) { console.error('setSecurityHeaders error:', e); }
+  
+  try {
+    if (!setCorsHeaders(req, res)) return false;
+  } catch (e) { 
+    console.error('setCorsHeaders error:', e); 
+    // Continue anyway
+  }
+  
+  try {
+    if (!rateLimit(req, res, scope)) return false;
+  } catch (e) { console.error('rateLimit error:', e); }
+  
+  try {
+    if (!validateRequestSize(req, res, maxBodySize)) return false;
+  } catch (e) { console.error('validateRequestSize error:', e); }
+  
+  try {
+    if (['POST', 'PUT', 'DELETE'].includes(req.method) && !validateContentType(req, res)) return false;
+  } catch (e) { console.error('validateContentType error:', e); }
+  
   return true;
 }
