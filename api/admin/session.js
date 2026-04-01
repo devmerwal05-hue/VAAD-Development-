@@ -21,7 +21,7 @@ export default async function handler(req, res) {
 
     if (req.method === 'POST') {
       const { password } = req.body || {};
-      if (typeof password !== 'string' || password.length < 8) {
+      if (typeof password !== 'string' || password.length < 1) {
         return res.status(400).json({ error: 'Password is required.' });
       }
 
