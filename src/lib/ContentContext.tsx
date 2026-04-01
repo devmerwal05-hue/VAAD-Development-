@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { ContentContext, type ContentItem } from './content-context';
 import { getErrorMessage } from './getErrorMessage';
+import { getIndexedContentCount } from './repeatableContent';
 
 export function ContentProvider({ children }: { children: ReactNode }) {
   const [content, setContent] = useState<ContentItem[]>([]);
@@ -47,16 +48,19 @@ export function ContentProvider({ children }: { children: ReactNode }) {
   }, [contentMap]);
 
   const projectCount = useMemo(() => {
-    let count = 0;
-    for (let index = 1; index <= 50; index += 1) {
-      if (contentMap.has(`portfolio::project_${index}_name`)) count = index;
-      else break;
-    }
-    return count;
-  }, [contentMap]);
+    const storedCount = Number.parseInt(contentMap.get('portfolio::project_count') || '', 10);
+    if (!Number.isNaN(storedCount)) return Math.max(0, storedCount);
+    return getIndexedContentCount(content, 'portfolio', 'project');
+  }, [content, contentMap]);
+
+  const teamCount = useMemo(() => {
+    const storedCount = Number.parseInt(contentMap.get('team::member_count') || '', 10);
+    if (!Number.isNaN(storedCount)) return Math.max(0, storedCount);
+    return getIndexedContentCount(content, 'team', 'member');
+  }, [content, contentMap]);
 
   return (
-    <ContentContext.Provider value={{ content, getContentValue, loading, error, projectCount }}>
+    <ContentContext.Provider value={{ content, getContentValue, loading, error, projectCount, teamCount }}>
       {children}
     </ContentContext.Provider>
   );

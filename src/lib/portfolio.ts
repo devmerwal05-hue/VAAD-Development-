@@ -53,8 +53,8 @@ const fallbackProjects = [
   },
 ] as const;
 
-export function buildPortfolioProjects(getContentValue: ContentGetter, projectCount: number): PortfolioProject[] {
-  const totalProjects = Math.max(projectCount, fallbackProjects.length);
+export function buildPortfolioProjects(getContentValue: ContentGetter, projectCount: number, useFallbackCount = true): PortfolioProject[] {
+  const totalProjects = useFallbackCount ? Math.max(projectCount, fallbackProjects.length) : projectCount;
 
   return Array.from({ length: totalProjects }, (_, index) => {
     const projectNumber = index + 1;

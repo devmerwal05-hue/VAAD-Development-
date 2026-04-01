@@ -22,7 +22,7 @@ export default function Footer() {
 
   const columns: FooterColumn[] = [
     {
-      title: 'Explore',
+      title: getContentValue('footer', 'explore_title', 'Explore'),
       items: [
         { label: 'Home', href: '/' },
         { label: getContentValue('nav', 'link_1', 'Work'), href: getContentValue('nav', 'link_1_href', '/work') },
@@ -31,7 +31,7 @@ export default function Footer() {
       ],
     },
     {
-      title: 'What We Ship',
+      title: getContentValue('footer', 'work_title', 'What We Ship'),
       items: [
         { label: getContentValue('services', 'card_1_title', 'High-conviction websites'), href: '/services' },
         { label: getContentValue('services', 'card_2_title', 'Operational web apps'), href: '/services' },
@@ -40,16 +40,16 @@ export default function Footer() {
       ],
     },
     {
-      title: 'Working Model',
+      title: getContentValue('footer', 'model_title', 'Working Model'),
       items: [
-        { label: 'Discovery and scope in 24 hours' },
-        { label: 'Design and build handled by one team' },
-        { label: 'CMS handoff and launch support included' },
-        { label: 'Async-friendly collaboration for remote clients' },
+        { label: getContentValue('footer', 'model_1', 'Discovery and scope in 24 hours') },
+        { label: getContentValue('footer', 'model_2', 'Design and build handled by one team') },
+        { label: getContentValue('footer', 'model_3', 'CMS handoff and launch support included') },
+        { label: getContentValue('footer', 'model_4', 'Async-friendly collaboration for remote clients') },
       ],
     },
     {
-      title: 'Contact',
+      title: getContentValue('footer', 'contact_title', 'Contact'),
       items: [
         { label: contactEmail, href: `mailto:${contactEmail}` },
         { label: getContentValue('contact', 'response_time', 'Replies within one business day') },
@@ -77,20 +77,20 @@ export default function Footer() {
             className="text-[clamp(32px,6vw,60px)] text-text-primary mb-4"
             style={{ fontFamily: 'Syne', fontWeight: 800, lineHeight: 0.95, letterSpacing: '-0.04em' }}
           >
-            Need a site or app that can <span className="gradient-text">ship fast?</span>
+            {getContentValue('footer', 'cta_title', 'Need a site or app that can ship fast?')}
           </h2>
           <p
             className="text-[15px] md:text-[16px] text-text-secondary mb-8 max-w-[520px] mx-auto"
             style={{ fontFamily: 'DM Sans', fontWeight: 300 }}
           >
-            Share the scope, timeline, and blockers. We will reply with a clear build path instead of a vague pitch deck.
+            {getContentValue('footer', 'cta_description', 'Share the scope, timeline, and blockers. We will reply with a clear build path instead of a vague pitch deck.')}
           </p>
           <Link
             to="/contact"
             className="shimmer-btn inline-flex items-center gap-2.5 gradient-bg text-white px-8 py-4 rounded-2xl text-[15px] font-medium shadow-[0_4px_40px_rgba(124,111,247,0.3)] hover:shadow-[0_4px_60px_rgba(124,111,247,0.45)] hover:scale-[1.03] active:scale-[0.98] transition-all duration-300"
             style={{ fontFamily: 'DM Sans', fontWeight: 500 }}
           >
-            Start a project
+            {getContentValue('footer', 'cta_button', 'Start a project')}
             <ArrowUpRight size={16} />
           </Link>
         </motion.div>
@@ -117,7 +117,7 @@ export default function Footer() {
             </p>
           </div>
           <p className="text-[12px] uppercase tracking-[0.14em] text-text-tertiary" style={{ fontFamily: 'DM Sans', fontWeight: 500 }}>
-            Design, build, deploy, maintain
+            {getContentValue('footer', 'eyebrow', 'Design, build, deploy, maintain')}
           </p>
         </div>
 

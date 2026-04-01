@@ -1,111 +1,168 @@
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Sparkles } from 'lucide-react';
+import { buildPortfolioProjects } from '../lib/portfolio';
 import { useContent } from '../lib/useContent';
 
 const ease: [number, number, number, number] = [0.16, 0.77, 0.47, 0.97];
 
 export default function Hero() {
-  const { getContentValue } = useContent();
+  const { content, getContentValue, projectCount } = useContent();
+  const hasStoredCount = content.some((item) => item.section === 'portfolio' && item.key === 'project_count');
+  const featuredProject = buildPortfolioProjects(getContentValue, projectCount, !hasStoredCount)[0];
   const line1 = getContentValue('hero', 'headline_line1', 'Small teams need fast systems');
   const line2 = getContentValue('hero', 'headline_line2', 'not vague agency timelines.');
-  const words1 = line1.split(' ');
-  const words2 = line2.split(' ');
+
+  const stats = [
+    {
+      value: getContentValue('hero', 'stat_1_number', '5'),
+      label: getContentValue('hero', 'stat_1_label', 'Senior builders'),
+    },
+    {
+      value: getContentValue('hero', 'stat_2_number', '1-3'),
+      label: getContentValue('hero', 'stat_2_label', 'Week delivery'),
+    },
+    {
+      value: getContentValue('hero', 'stat_3_number', 'Always'),
+      label: getContentValue('hero', 'stat_3_label', 'Post-launch iteration'),
+    },
+  ];
 
   return (
-    <section className="relative min-h-[100svh] flex flex-col items-center justify-center overflow-hidden px-5">
-      <div className="absolute inset-0 grid-pattern opacity-25" />
+    <section className="relative min-h-[100svh] overflow-hidden px-5 pt-28 pb-16 md:pt-36 md:pb-24">
+      <div className="absolute inset-0 grid-pattern opacity-20" />
       <div className="absolute inset-0 pointer-events-none">
         <div className="hero-gradient-1 absolute inset-0" />
         <div className="hero-gradient-2 absolute inset-0" />
       </div>
-      <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at center, transparent 25%, #06060C 80%)' }} />
+      <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 50% 20%, rgba(255,255,255,0.04), transparent 35%), radial-gradient(ellipse at center, transparent 18%, #06060C 78%)' }} />
 
-      <div className="relative z-10 text-center w-full max-w-[1000px] mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease, delay: 0.1 }}
-          className="inline-flex items-center gap-2.5 mb-8 md:mb-10 px-4 py-2 rounded-full"
-          style={{ background: 'rgba(124,111,247,0.06)', border: '1px solid rgba(124,111,247,0.12)' }}
-        >
-          <span className="w-[6px] h-[6px] rounded-full bg-accent" />
-          <span className="text-[10px] md:text-[11px] font-medium tracking-[0.12em] uppercase text-accent-light" style={{ fontFamily: 'DM Sans', fontWeight: 500 }}>
-            {getContentValue('hero', 'eyebrow', 'Web Design + Web App Delivery')}
-          </span>
-        </motion.div>
-
-        <h1 style={{ fontFamily: 'Syne', fontWeight: 800, lineHeight: 0.88, letterSpacing: '-0.05em', fontSize: 'clamp(40px, 8vw, 110px)' }}>
-          <span className="flex flex-wrap justify-center gap-x-[0.18em] mb-1 md:mb-2">
-            {words1.map((word, index) => (
-              <motion.span
-                key={word + index}
-                initial={{ opacity: 0, y: 40 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.7, ease, delay: 0.2 + index * 0.07 }}
-                className="text-text-primary inline-block"
-              >
-                {word}
-              </motion.span>
-            ))}
-          </span>
-          <span className="flex flex-wrap justify-center gap-x-[0.18em]">
-            {words2.map((word, index) => (
-              <motion.span
-                key={word + index}
-                initial={{ opacity: 0, y: 40 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.7, ease, delay: 0.5 + index * 0.07 }}
-                className="gradient-text inline-block"
-              >
-                {word}
-              </motion.span>
-            ))}
-          </span>
-        </h1>
-
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, ease, delay: 0.95 }}
-          className="text-[14px] md:text-[17px] text-text-secondary max-w-[560px] mx-auto mt-7 mb-9 md:mt-10 md:mb-12 leading-[1.75]"
-          style={{ fontFamily: 'DM Sans', fontWeight: 300 }}
-        >
-          {getContentValue('hero', 'subheadline', 'Conversion-focused websites and operational web apps for teams that need a tight scope, a fast build window, and a handoff they can actually maintain.')}
-        </motion.p>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease, delay: 1.1 }}
-          className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mb-12 md:mb-16"
-        >
-          <Link to="/contact" className="shimmer-btn gradient-bg text-white px-7 md:px-8 py-3.5 md:py-4 rounded-2xl text-[14px] md:text-[15px] font-medium shadow-[0_4px_40px_rgba(124,111,247,0.3)] hover:shadow-[0_4px_60px_rgba(124,111,247,0.4)] transition-shadow duration-300 flex items-center gap-2.5 w-full sm:w-auto justify-center" style={{ fontFamily: 'DM Sans', fontWeight: 500 }}>
-            {getContentValue('hero', 'cta_primary', 'Start a project')} <ArrowRight size={16} />
-          </Link>
-          <Link to="/work" className="text-text-primary px-7 md:px-8 py-3.5 md:py-4 rounded-2xl text-[14px] md:text-[15px] font-medium border-2 transition-all duration-300 hover:bg-[rgba(124,111,247,0.06)] hover:border-accent/30 w-full sm:w-auto text-center" style={{ fontFamily: 'DM Sans', fontWeight: 500, borderColor: 'rgba(255,255,255,0.08)' }}>
-            {getContentValue('hero', 'cta_secondary', 'See shipped work')}
-          </Link>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease, delay: 1.3 }}
-          className="flex items-center justify-center gap-2 sm:gap-3"
-        >
-          {[
-            { val: getContentValue('hero', 'stat_1_number', '5'), label: getContentValue('hero', 'stat_1_label', 'Senior Builders') },
-            { val: getContentValue('hero', 'stat_2_number', '1-3'), label: getContentValue('hero', 'stat_2_label', 'Week Delivery') },
-            { val: '∞', label: getContentValue('hero', 'stat_3_label', 'Post-launch iteration'), gradient: true },
-          ].map((stat, index) => (
-            <span key={index} className="perspective-container">
-              <span className="tilt-card flex flex-col items-center px-3 sm:px-5 py-2.5 sm:py-3 rounded-xl block" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)' }}>
-                <span className={`text-[18px] sm:text-[24px] font-[800] ${stat.gradient ? 'gradient-text' : 'text-text-primary'}`} style={{ fontFamily: 'Syne' }}>{stat.val}</span>
-                <span className="text-[8px] sm:text-[10px] uppercase tracking-[0.08em] text-text-tertiary mt-0.5">{stat.label}</span>
-              </span>
+      <div className="relative z-10 max-w-[1360px] mx-auto grid grid-cols-1 xl:grid-cols-[1.08fr_0.92fr] gap-8 xl:gap-10 items-center">
+        <div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.55, ease, delay: 0.05 }}
+            className="inline-flex items-center gap-2.5 mb-8 px-4 py-2 rounded-full"
+            style={{ background: 'rgba(124,111,247,0.08)', border: '1px solid rgba(124,111,247,0.16)' }}
+          >
+            <Sparkles size={13} className="text-accent-light" />
+            <span className="text-[10px] md:text-[11px] font-medium tracking-[0.14em] uppercase text-accent-light" style={{ fontFamily: 'DM Sans', fontWeight: 500 }}>
+              {getContentValue('hero', 'eyebrow', 'Web Design + Web App Delivery')}
             </span>
-          ))}
+          </motion.div>
+
+          <motion.h1
+            initial={{ opacity: 0, y: 28 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.72, ease, delay: 0.12 }}
+            className="text-text-primary"
+            style={{ fontFamily: 'Syne', fontWeight: 800, lineHeight: 0.88, letterSpacing: '-0.06em', fontSize: 'clamp(46px, 8vw, 118px)' }}
+          >
+            <span className="block">{line1}</span>
+            <span className="block gradient-text mt-2">{line2}</span>
+          </motion.h1>
+
+          <motion.p
+            initial={{ opacity: 0, y: 22 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.62, ease, delay: 0.28 }}
+            className="text-[15px] md:text-[18px] text-text-secondary max-w-[620px] mt-7 leading-[1.8]"
+            style={{ fontFamily: 'DM Sans', fontWeight: 300 }}
+          >
+            {getContentValue('hero', 'subheadline', 'Conversion-focused websites and operational web apps for teams that need a tight scope, a fast build window, and a handoff they can actually maintain.')}
+          </motion.p>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.55, ease, delay: 0.4 }}
+            className="flex flex-col sm:flex-row gap-3 mt-8"
+          >
+            <Link to="/contact" className="shimmer-btn gradient-bg text-white px-7 md:px-8 py-4 rounded-2xl text-[14px] md:text-[15px] font-medium shadow-[0_8px_50px_rgba(124,111,247,0.28)] flex items-center gap-2.5 w-full sm:w-auto justify-center" style={{ fontFamily: 'DM Sans', fontWeight: 500 }}>
+              {getContentValue('hero', 'cta_primary', 'Start a project')} <ArrowRight size={16} />
+            </Link>
+            <Link to="/work" className="text-text-primary px-7 md:px-8 py-4 rounded-2xl text-[14px] md:text-[15px] font-medium border border-[rgba(255,255,255,0.08)] hover:bg-[rgba(255,255,255,0.04)] transition-all duration-300 w-full sm:w-auto text-center" style={{ fontFamily: 'DM Sans', fontWeight: 500 }}>
+              {getContentValue('hero', 'cta_secondary', 'See shipped work')}
+            </Link>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 22 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease, delay: 0.5 }}
+            className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-10"
+          >
+            {stats.map((stat, index) => (
+              <div key={stat.label + index} className="rounded-2xl border border-[rgba(255,255,255,0.06)] bg-[rgba(10,10,20,0.72)] px-4 py-4 backdrop-blur-sm">
+                <p className="text-[24px] md:text-[30px] text-text-primary" style={{ fontFamily: 'Syne', fontWeight: 800 }}>{stat.value}</p>
+                <p className="text-[11px] uppercase tracking-[0.12em] text-text-tertiary mt-2">{stat.label}</p>
+              </div>
+            ))}
+          </motion.div>
+        </div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 26 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.72, ease, delay: 0.2 }}
+          className="relative"
+        >
+          <div className="absolute -top-10 -right-6 w-36 h-36 rounded-full bg-[rgba(236,72,153,0.12)] blur-3xl" />
+          <div className="absolute -bottom-8 -left-4 w-44 h-44 rounded-full bg-[rgba(34,211,238,0.1)] blur-3xl" />
+
+          <div className="relative rounded-[32px] border border-[rgba(255,255,255,0.08)] bg-[rgba(8,8,14,0.86)] backdrop-blur-md overflow-hidden">
+            <div className="px-5 py-4 border-b border-[rgba(255,255,255,0.06)] flex items-center justify-between gap-4">
+              <div>
+                <p className="text-[11px] uppercase tracking-[0.16em] text-accent-light" style={{ fontFamily: 'JetBrains Mono' }}>
+                  {getContentValue('hero', 'proof_kicker', 'Live delivery board')}
+                </p>
+                <p className="text-[13px] text-text-secondary mt-1">
+                  {getContentValue('hero', 'proof_title', 'Creative builds that still respect real deadlines.')}
+                </p>
+              </div>
+              <span className="text-[12px] text-text-tertiary">Home</span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-[1.1fr_0.9fr]">
+              <div className="relative min-h-[320px]">
+                {featuredProject?.image ? (
+                  <img src={featuredProject.image} alt={featuredProject.name} loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover opacity-80" />
+                ) : (
+                  <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(124,111,247,0.32), rgba(34,211,238,0.12), rgba(236,72,153,0.18))' }} />
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-[rgba(5,5,9,0.95)] via-[rgba(5,5,9,0.24)] to-transparent" />
+                <div className="absolute left-5 right-5 bottom-5">
+                  <p className="text-[11px] uppercase tracking-[0.14em] text-accent-light mb-2">{featuredProject?.tag || 'Featured release'}</p>
+                  <h2 className="text-[28px] md:text-[36px] text-text-primary" style={{ fontFamily: 'Syne', fontWeight: 800, lineHeight: 0.95, letterSpacing: '-0.04em' }}>
+                    {featuredProject?.name || 'Launch-ready systems'}
+                  </h2>
+                  <p className="text-[14px] text-text-secondary mt-3 max-w-[40ch]" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>
+                    {getContentValue('hero', 'proof_description', 'Each release is scoped against launch pressure, content reality, and what your team can maintain after handoff.')}
+                  </p>
+                </div>
+              </div>
+
+              <div className="p-5 md:p-6 flex flex-col gap-4">
+                {stats.map((stat, index) => (
+                  <div key={`${stat.label}-${index}`} className="rounded-2xl border border-[rgba(255,255,255,0.06)] bg-[rgba(255,255,255,0.02)] p-4">
+                    <p className="text-[12px] uppercase tracking-[0.14em] text-text-tertiary" style={{ fontFamily: 'JetBrains Mono' }}>
+                      Panel {String(index + 1).padStart(2, '0')}
+                    </p>
+                    <p className="text-[26px] text-text-primary mt-3" style={{ fontFamily: 'Syne', fontWeight: 800 }}>
+                      {stat.value}
+                    </p>
+                    <p className="text-[13px] text-text-secondary mt-2">{stat.label}</p>
+                  </div>
+                ))}
+                <div className="rounded-2xl border border-[rgba(124,111,247,0.16)] bg-[rgba(124,111,247,0.08)] p-4">
+                  <p className="text-[12px] text-accent-light leading-[1.7]" style={{ fontFamily: 'DM Sans', fontWeight: 400 }}>
+                    {getContentValue('hero', 'proof_note', 'The homepage pulls from the same editable content system used by the admin panel.')}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
         </motion.div>
       </div>
 

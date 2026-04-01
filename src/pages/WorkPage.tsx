@@ -10,8 +10,9 @@ import { useContent } from '../lib/useContent';
 const ease: [number, number, number, number] = [0.22, 0.03, 0.26, 1];
 
 export default function WorkPage() {
-  const { getContentValue, projectCount } = useContent();
-  const projects = buildPortfolioProjects(getContentValue, projectCount);
+  const { content, getContentValue, projectCount } = useContent();
+  const hasStoredCount = content.some((item) => item.section === 'portfolio' && item.key === 'project_count');
+  const projects = buildPortfolioProjects(getContentValue, projectCount, !hasStoredCount);
 
   usePageMetadata({
     title: 'VAAD Development | Selected projects',
@@ -27,14 +28,14 @@ export default function WorkPage() {
             <div className="inline-flex items-center gap-2.5 mb-8 px-4 py-2 rounded-full" style={{ background: 'rgba(124,111,247,0.06)', border: '1px solid rgba(124,111,247,0.12)' }}>
               <span className="w-[5px] h-[5px] rounded-full bg-accent" />
               <span className="text-[11px] font-medium tracking-[0.12em] uppercase text-accent-light" style={{ fontFamily: 'DM Sans', fontWeight: 500 }}>
-                Selected Work
+                {getContentValue('work_page', 'eyebrow', 'Selected Work')}
               </span>
             </div>
             <h1 className="text-text-primary mb-5" style={{ fontFamily: 'Syne', fontWeight: 800, fontSize: 'clamp(44px, 7vw, 76px)', lineHeight: 0.95, letterSpacing: '-0.04em' }}>
-              Sites and products that had to <span className="gradient-text">ship on time</span>
+              {getContentValue('work_page', 'title_before', 'Sites and products that had to')} <span className="gradient-text">{getContentValue('work_page', 'title_highlight', 'ship on time')}</span>
             </h1>
             <p className="text-[18px] text-text-secondary leading-[1.65]" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>
-              These are the kinds of builds we take on: lean teams, real delivery pressure, and a clear need for design and engineering to move in the same sprint.
+              {getContentValue('work_page', 'description', 'These are the kinds of builds we take on: lean teams, real delivery pressure, and a clear need for design and engineering to move in the same sprint.')}
             </p>
           </motion.div>
         </div>
@@ -145,17 +146,17 @@ export default function WorkPage() {
               </p>
             )}
             <h2 className="text-[36px] text-text-primary mb-4" style={{ fontFamily: 'Syne', fontWeight: 800, letterSpacing: '-0.03em' }}>
-              Have a build that needs traction?
+              {getContentValue('work_page', 'cta_title', 'Have a build that needs traction?')}
             </h2>
             <p className="text-[16px] text-text-secondary mb-8" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>
-              We can scope the work, call out the risks, and tell you what should happen in the first release.
+              {getContentValue('work_page', 'cta_description', 'We can scope the work, call out the risks, and tell you what should happen in the first release.')}
             </p>
             <Link
               to="/contact"
               className="shimmer-btn gradient-bg text-white px-8 py-4 rounded-xl text-[15px] font-medium inline-block shadow-[0_0_40px_rgba(124,111,247,0.2)]"
               style={{ fontFamily: 'DM Sans', fontWeight: 500 }}
             >
-              Start the conversation
+              {getContentValue('work_page', 'cta_button', 'Start the conversation')}
             </Link>
           </motion.div>
         </div>

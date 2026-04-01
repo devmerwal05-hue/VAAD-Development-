@@ -33,6 +33,9 @@ export default function Services() {
       <div className="max-w-[1280px] mx-auto px-6">
         <SectionLabel number={labelParts[0] || '01'} label={labelParts[1] || 'Services'} />
         <SectionTitle>{getContentValue('services', 'title', 'What we build')}</SectionTitle>
+        <motion.p initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.55 }} className="text-[15px] md:text-[17px] text-text-secondary mb-12 -mt-6 max-w-[620px] leading-[1.75]" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>
+          {getContentValue('services', 'subtitle', 'Delivery is structured around what your team actually needs to launch, maintain, and extend after handoff.')}
+        </motion.p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {services.map((service, index) => {
             const Icon = iconComponents[index];

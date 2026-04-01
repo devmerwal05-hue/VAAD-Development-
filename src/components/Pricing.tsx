@@ -38,7 +38,7 @@ export default function Pricing() {
           {plans.map((plan, index) => (
             <motion.div key={plan.name} initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.2 }} transition={{ duration: 0.5, delay: index * 0.06 }} className={`relative bg-surface-1 rounded-2xl p-8 flex flex-col border transition-all duration-300 overflow-hidden ${plan.highlighted ? 'border-[rgba(124,111,247,0.3)] shadow-[0_0_50px_rgba(124,111,247,0.06)]' : 'border-[rgba(255,255,255,0.04)] hover:border-[rgba(255,255,255,0.08)]'}`}>
               {plan.highlighted && <div className="absolute top-0 left-0 w-full h-[2px] gradient-bg" />}
-              {plan.highlighted && <span className="absolute top-4 right-4 text-[10px] uppercase tracking-[0.08em] px-3 py-1 rounded-full z-10" style={{ fontFamily: 'DM Sans', fontWeight: 500, background: 'rgba(124,111,247,0.12)', color: '#A89AF9' }}>Popular</span>}
+              {plan.highlighted && <span className="absolute top-4 right-4 text-[10px] uppercase tracking-[0.08em] px-3 py-1 rounded-full z-10" style={{ fontFamily: 'DM Sans', fontWeight: 500, background: 'rgba(124,111,247,0.12)', color: '#A89AF9' }}>{getContentValue('pricing', 'popular_badge', 'Popular')}</span>}
               <div className="relative z-10">
                 <h3 className="text-[18px] text-text-primary mb-3" style={{ fontFamily: 'Syne', fontWeight: 700 }}>{plan.name}</h3>
                 <div className="text-[42px] text-text-primary mb-1" style={{ fontFamily: 'Syne', fontWeight: 800 }}>
@@ -55,7 +55,7 @@ export default function Pricing() {
                   ))}
                 </ul>
                 <Link to="/contact" className={`w-full py-3.5 rounded-xl text-[15px] font-medium transition-all duration-300 text-center block ${plan.highlighted ? 'shimmer-btn gradient-bg text-white shadow-[0_0_30px_rgba(124,111,247,0.2)]' : 'border-2 border-[rgba(255,255,255,0.08)] text-text-primary hover:border-[rgba(255,255,255,0.2)] hover:bg-[rgba(255,255,255,0.03)]'}`} style={{ fontFamily: 'DM Sans', fontWeight: 500 }}>
-                  Get Started
+                  {getContentValue('pricing', 'plan_button', 'Get Started')}
                 </Link>
               </div>
             </motion.div>

@@ -1,15 +1,22 @@
 import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Archive, Check, ExternalLink, Loader2, LogOut, Plus, RefreshCw, Save, Shield, Trash2 } from 'lucide-react';
+import { Archive, Check, ExternalLink, GripVertical, Loader2, LogOut, Plus, RefreshCw, Save, Shield, Sparkles, Trash2 } from 'lucide-react';
 import ConfirmDialog from '../components/ConfirmDialog';
 import ImageUploader from '../components/ImageUploader';
 import { usePageMetadata } from '../hooks/usePageMetadata';
 import { BUDGET_RANGE_LABELS, PROJECT_TYPE_LABELS } from '../lib/contactOptions';
 import { getErrorMessage } from '../lib/getErrorMessage';
 import type { ContentItem } from '../lib/content-context';
+import {
+  homeSectionDefinitions,
+  portfolioCollectionDefinition,
+  teamCollectionDefinition,
+} from '../lib/homeContent';
+import { getIndexedContentCount, getIndexedContentGroups } from '../lib/repeatableContent';
 
 type SubmissionStatus = 'archived' | 'new' | 'reviewed';
 type TabId = 'submissions' | string;
+type ManagedCollectionSection = 'portfolio' | 'team';
 
 interface Submission {
   budget_range: keyof typeof BUDGET_RANGE_LABELS;
@@ -25,13 +32,27 @@ interface Submission {
 }
 
 interface ConfirmTarget {
-  id: number;
-  kind: 'field' | 'submission';
+  id?: number;
+  index?: number;
+  kind: 'field' | 'submission' | 'collection_item';
   label: string;
+  section?: ManagedCollectionSection;
+}
+
+interface CollectionEntry {
+  fields: Record<string, ContentItem | undefined>;
+  index: number;
+  label: string;
+  values: Record<string, string>;
+}
+
+interface DragState {
+  fromIndex: number;
+  section: ManagedCollectionSection;
 }
 
 const SUBMISSIONS_TAB = 'submissions';
-const SECTION_ORDER = ['nav', 'hero', 'marquee', 'services', 'techstack', 'stats', 'process', 'portfolio', 'team', 'pricing', 'faq', 'contact', 'footer'];
+const SECTION_ORDER = ['nav', 'hero', 'marquee', 'services', 'techstack', 'stats', 'process', 'portfolio', 'team', 'pricing', 'faq', 'contact', 'footer', 'work_page', 'services_page', 'process_page', 'team_page', 'pricing_page', 'contact_page'];
 const SECTION_LABELS: Record<string, string> = {
   nav: 'Navigation',
   hero: 'Hero',
@@ -46,10 +67,42 @@ const SECTION_LABELS: Record<string, string> = {
   faq: 'FAQ',
   contact: 'Contact',
   footer: 'Footer',
+  work_page: 'Work Page',
+  services_page: 'Services Page',
+  process_page: 'Process Page',
+  team_page: 'Team Page',
+  pricing_page: 'Pricing Page',
+  contact_page: 'Contact Page',
 };
+
+const collectionEditors = {
+  portfolio: {
+    countKey: 'project_count',
+    definition: portfolioCollectionDefinition,
+    prefix: 'project',
+  },
+  team: {
+    countKey: 'member_count',
+    definition: teamCollectionDefinition,
+    prefix: 'member',
+  },
+} as const;
 
 function labelForKey(key: string) {
   return key.replace(/_/g, ' ').replace(/\b\w/g, (character) => character.toUpperCase());
+}
+
+function getFallbackValue(item: unknown, key: string) {
+  const value = (item as Record<string, string | string[] | undefined>)[key];
+  if (Array.isArray(value)) return value.join(',');
+  return value || '';
+}
+
+function moveItem<T>(items: T[], fromIndex: number, toIndex: number) {
+  const next = [...items];
+  const [moved] = next.splice(fromIndex, 1);
+  next.splice(toIndex, 0, moved);
+  return next;
 }
 
 function isImageField(item: ContentItem) {
@@ -99,19 +152,38 @@ export default function AdminDashboard() {
   const [confirmTarget, setConfirmTarget] = useState<ConfirmTarget | null>(null);
   const [newFieldKey, setNewFieldKey] = useState('');
   const [newFieldValue, setNewFieldValue] = useState('');
+  const [collectionBusy, setCollectionBusy] = useState<ManagedCollectionSection | null>(null);
+  const [dragState, setDragState] = useState<DragState | null>(null);
 
   const sections = useMemo(() => {
     const available = [...new Set(content.map((item) => item.section))];
-    const ordered = SECTION_ORDER.filter((section) => available.includes(section));
     const extras = available.filter((section) => !SECTION_ORDER.includes(section)).sort();
-    return [...ordered, ...extras];
+    return [...SECTION_ORDER, ...extras];
   }, [content]);
 
   const activeItems = useMemo(() => {
     if (activeTab === SUBMISSIONS_TAB) return [];
+    const fieldOrder = new Map(
+      (homeSectionDefinitions[activeTab]?.fields || []).map((field, index) => [field.key, index]),
+    );
+
     return content
       .filter((item) => item.section === activeTab)
-      .sort((left, right) => left.key.localeCompare(right.key, undefined, { numeric: true }));
+      .filter((item) => {
+        if (activeTab === 'portfolio') return !/^project_\d+_/.test(item.key) && item.key !== collectionEditors.portfolio.countKey;
+        if (activeTab === 'team') return !/^member_\d+_/.test(item.key) && item.key !== collectionEditors.team.countKey;
+        return true;
+      })
+      .sort((left, right) => {
+        const leftIndex = fieldOrder.get(left.key);
+        const rightIndex = fieldOrder.get(right.key);
+
+        if (leftIndex !== undefined || rightIndex !== undefined) {
+          return (leftIndex ?? Number.MAX_SAFE_INTEGER) - (rightIndex ?? Number.MAX_SAFE_INTEGER);
+        }
+
+        return left.key.localeCompare(right.key, undefined, { numeric: true });
+      });
   }, [activeTab, content]);
 
   useEffect(() => {
@@ -135,6 +207,148 @@ export default function AdminDashboard() {
       setActiveTab(sections[0] || SUBMISSIONS_TAB);
     }
   }, [activeTab, sections]);
+
+  function findContentItem(section: string, key: string) {
+    return content.find((item) => item.section === section && item.key === key);
+  }
+
+  function getFieldDefinition(section: string, key: string) {
+    return homeSectionDefinitions[section]?.fields.find((field) => field.key === key);
+  }
+
+  async function upsertField(section: string, key: string, value: string) {
+    const existing = findContentItem(section, key);
+    if (existing) {
+      const updated = await api<ContentItem>('/api/content', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: existing.id, value }),
+      });
+      setContent((current) => current.map((entry) => (entry.id === existing.id ? updated : entry)));
+      return updated;
+    }
+
+    const created = await api<ContentItem>('/api/content', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ section, key, value }),
+    });
+    setContent((current) => [...current, created]);
+    return created;
+  }
+
+  async function removeFieldById(id: number) {
+    await api('/api/content', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id }),
+    });
+    setContent((current) => current.filter((item) => item.id !== id));
+  }
+
+  async function seedSection(section: string) {
+    const definition = homeSectionDefinitions[section];
+    if (!definition) return;
+
+    setLoading(true);
+    setError('');
+    try {
+      if (section === 'portfolio' || section === 'team') {
+        await persistCollection(section, getCollectionEntries(section));
+      }
+      for (const field of definition.fields) {
+        if (!findContentItem(section, field.key)) {
+          await upsertField(section, field.key, field.fallback);
+        }
+      }
+    } catch (requestError) {
+      setError(getErrorMessage(requestError));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function getCollectionEntries(section: ManagedCollectionSection) {
+    const setup = collectionEditors[section];
+    const groups = getIndexedContentGroups(content, section, setup.prefix);
+    const explicitCountItem = findContentItem(section, setup.countKey);
+    const explicitCount = Number.parseInt(explicitCountItem?.value || '', 10);
+    const fallbackCount = Math.max(
+      getIndexedContentCount(content, section, setup.prefix),
+      setup.definition.defaultCount,
+    );
+    const totalCount = Number.isNaN(explicitCount) ? fallbackCount : Math.max(0, explicitCount);
+
+    return Array.from({ length: totalCount }, (_, index) => {
+      const group = groups.find((entry) => entry.index === index + 1);
+      const fallback = setup.definition.getFallback(index);
+      const values = Object.fromEntries(
+        setup.definition.fields.map((field) => {
+          const item = group?.fields[field.key];
+          return [field.key, item?.value ?? getFallbackValue(fallback, field.key)];
+        }),
+      );
+
+      return {
+        fields: Object.fromEntries(setup.definition.fields.map((field) => [field.key, group?.fields[field.key]])),
+        index: index + 1,
+        label: values[setup.definition.primaryField] || `${setup.definition.itemLabel} ${index + 1}`,
+        values,
+      } satisfies CollectionEntry;
+    });
+  }
+
+  async function persistCollection(section: ManagedCollectionSection, entries: CollectionEntry[]) {
+    const setup = collectionEditors[section];
+    setCollectionBusy(section);
+    setError('');
+    try {
+      for (let index = 0; index < entries.length; index += 1) {
+        const entry = entries[index];
+        for (const field of setup.definition.fields) {
+          await upsertField(section, `${setup.prefix}_${index + 1}_${field.key}`, entry.values[field.key] || '');
+        }
+      }
+
+      const groups = getIndexedContentGroups(content, section, setup.prefix);
+      for (const group of groups) {
+        if (group.index <= entries.length) continue;
+        for (const item of Object.values(group.fields)) {
+          if (item) await removeFieldById(item.id);
+        }
+      }
+
+      await upsertField(section, setup.countKey, String(entries.length));
+    } catch (requestError) {
+      setError(getErrorMessage(requestError));
+    } finally {
+      setCollectionBusy(null);
+    }
+  }
+
+  async function addCollectionEntry(section: ManagedCollectionSection) {
+    const setup = collectionEditors[section];
+    const currentEntries = getCollectionEntries(section);
+    const fallback = setup.definition.getFallback(currentEntries.length);
+    const nextEntry: CollectionEntry = {
+      fields: {},
+      index: currentEntries.length + 1,
+      label: getFallbackValue(fallback, setup.definition.primaryField) || `${setup.definition.itemLabel} ${currentEntries.length + 1}`,
+      values: Object.fromEntries(setup.definition.fields.map((field) => [field.key, getFallbackValue(fallback, field.key)])),
+    };
+
+    await persistCollection(section, [...currentEntries, nextEntry]);
+  }
+
+  async function deleteCollectionEntry(section: ManagedCollectionSection, index: number) {
+    await persistCollection(section, getCollectionEntries(section).filter((entry) => entry.index !== index));
+  }
+
+  async function reorderCollection(section: ManagedCollectionSection, fromIndex: number, toIndex: number) {
+    if (fromIndex === toIndex) return;
+    const currentEntries = getCollectionEntries(section);
+    await persistCollection(section, moveItem(currentEntries, fromIndex - 1, toIndex - 1));
+  }
 
   async function loadDashboard() {
     setLoading(true);
@@ -258,34 +472,16 @@ export default function AdminDashboard() {
   }
 
   async function createProject() {
-    const nextNumber = content.reduce((highest, item) => {
-      const match = item.key.match(/^project_(\d+)_/);
-      return match ? Math.max(highest, Number.parseInt(match[1], 10)) : highest;
-    }, 0) + 1;
-    const fields = ['name', 'subtitle', 'tag', 'desc', 'url', 'image', 'gallery'];
-    try {
-      const created: ContentItem[] = [];
-      for (const field of fields) {
-        created.push(await api<ContentItem>('/api/content', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ section: 'portfolio', key: `project_${nextNumber}_${field}`, value: field === 'name' ? `Project ${nextNumber}` : '' }),
-        }));
-      }
-      setContent((current) => [...current, ...created]);
-    } catch (requestError) {
-      setError(getErrorMessage(requestError));
-    }
+    await addCollectionEntry('portfolio');
+  }
+
+  async function createTeamMember() {
+    await addCollectionEntry('team');
   }
 
   async function deleteField(id: number) {
     try {
-      await api('/api/content', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id }),
-      });
-      setContent((current) => current.filter((item) => item.id !== id));
+      await removeFieldById(id);
     } catch (requestError) {
       setError(getErrorMessage(requestError));
     }
@@ -293,10 +489,16 @@ export default function AdminDashboard() {
 
   async function confirmDelete() {
     if (!confirmTarget) return;
-    if (confirmTarget.kind === 'submission') await deleteSubmission(confirmTarget.id);
-    if (confirmTarget.kind === 'field') await deleteField(confirmTarget.id);
+    if (confirmTarget.kind === 'submission' && confirmTarget.id) await deleteSubmission(confirmTarget.id);
+    if (confirmTarget.kind === 'field' && confirmTarget.id) await deleteField(confirmTarget.id);
+    if (confirmTarget.kind === 'collection_item' && confirmTarget.section && confirmTarget.index) {
+      await deleteCollectionEntry(confirmTarget.section, confirmTarget.index);
+    }
     setConfirmTarget(null);
   }
+
+  const portfolioEntries = activeTab === 'portfolio' ? getCollectionEntries('portfolio') : [];
+  const teamEntries = activeTab === 'team' ? getCollectionEntries('team') : [];
 
   if (checkingSession) {
     return <div className="min-h-screen bg-page-bg flex items-center justify-center text-text-secondary">Checking admin session...</div>;
@@ -336,8 +538,18 @@ export default function AdminDashboard() {
     <div className="min-h-screen bg-page-bg px-4 md:px-6 py-6 md:py-8" style={{ fontFamily: 'DM Sans' }}>
       <ConfirmDialog
         open={Boolean(confirmTarget)}
-        title={confirmTarget?.kind === 'submission' ? 'Delete submission?' : 'Delete content field?'}
-        message={`This will permanently remove ${confirmTarget?.label || 'this item'}.`}
+        title={
+          confirmTarget?.kind === 'submission'
+            ? 'Delete submission?'
+            : confirmTarget?.kind === 'collection_item'
+              ? `Delete ${confirmTarget.label}?`
+              : 'Delete content field?'
+        }
+        message={
+          confirmTarget?.kind === 'collection_item'
+            ? 'This will remove the card from the live website and shift the remaining items up.'
+            : `This will permanently remove ${confirmTarget?.label || 'this item'}.`
+        }
         onCancel={() => setConfirmTarget(null)}
         onConfirm={() => void confirmDelete()}
       />
@@ -417,10 +629,18 @@ export default function AdminDashboard() {
             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <div>
                 <h2 className="text-[22px] text-text-primary" style={{ fontFamily: 'Syne', fontWeight: 700 }}>{SECTION_LABELS[activeTab] || labelForKey(activeTab)}</h2>
-                <p className="text-[13px] text-text-tertiary">{activeItems.length} fields in this section.</p>
+                <p className="text-[13px] text-text-tertiary">
+                  {homeSectionDefinitions[activeTab]?.description || `${activeItems.length} fields in this section.`}
+                </p>
               </div>
               <div className="flex flex-wrap gap-2">
-                {activeTab === 'portfolio' && <button type="button" onClick={() => void createProject()} className="px-3 py-2 rounded-xl border border-[rgba(124,111,247,0.2)] text-accent inline-flex items-center gap-2"><Plus size={14} /> Add project</button>}
+                {homeSectionDefinitions[activeTab] && (
+                  <button type="button" onClick={() => void seedSection(activeTab)} disabled={loading} className="px-3 py-2 rounded-xl border border-[rgba(255,255,255,0.1)] text-text-secondary inline-flex items-center gap-2 disabled:opacity-50">
+                    <Sparkles size={14} /> Load starter fields
+                  </button>
+                )}
+                {activeTab === 'portfolio' && <button type="button" onClick={() => void createProject()} disabled={Boolean(collectionBusy)} className="px-3 py-2 rounded-xl border border-[rgba(124,111,247,0.2)] text-accent inline-flex items-center gap-2 disabled:opacity-50"><Plus size={14} /> Add project</button>}
+                {activeTab === 'team' && <button type="button" onClick={() => void createTeamMember()} disabled={Boolean(collectionBusy)} className="px-3 py-2 rounded-xl border border-[rgba(124,111,247,0.2)] text-accent inline-flex items-center gap-2 disabled:opacity-50"><Plus size={14} /> Add team member</button>}
               </div>
             </div>
 
@@ -432,11 +652,167 @@ export default function AdminDashboard() {
               </div>
             </div>
 
-            {activeItems.length === 0 ? (
+            {(activeTab === 'portfolio' || activeTab === 'team') && (
+              <div className="flex flex-col gap-4">
+                <div className="bg-surface-1 rounded-2xl border border-[rgba(255,255,255,0.06)] p-5">
+                  <p className="text-[14px] text-text-primary font-medium mb-2">
+                    {activeTab === 'portfolio' ? 'Portfolio cards' : 'Team cards'}
+                  </p>
+                  <p className="text-[13px] text-text-secondary">
+                    Drag cards to reorder them. Upload images directly or use image URLs. Deleting a card shifts the remaining items up.
+                  </p>
+                </div>
+
+                {(activeTab === 'portfolio' ? portfolioEntries : teamEntries).length === 0 ? (
+                  <div className="bg-surface-1 rounded-2xl border border-[rgba(255,255,255,0.06)] p-10 text-center text-text-tertiary">
+                    No {activeTab === 'portfolio' ? 'projects' : 'team members'} yet.
+                  </div>
+                ) : (
+                  (activeTab === 'portfolio' ? portfolioEntries : teamEntries).map((entry) => {
+                    const setup = collectionEditors[activeTab as ManagedCollectionSection];
+                    const galleryValues = (entry.values.gallery || '').split(',').map((value) => value.trim()).filter(Boolean);
+
+                    return (
+                      <div
+                        key={`${activeTab}-${entry.index}`}
+                        draggable={!collectionBusy}
+                        onDragStart={() => setDragState({ fromIndex: entry.index, section: activeTab as ManagedCollectionSection })}
+                        onDragOver={(event) => {
+                          if (dragState?.section === activeTab) event.preventDefault();
+                        }}
+                        onDrop={(event) => {
+                          event.preventDefault();
+                          if (dragState?.section === activeTab) {
+                            void reorderCollection(activeTab as ManagedCollectionSection, dragState.fromIndex, entry.index);
+                          }
+                          setDragState(null);
+                        }}
+                        onDragEnd={() => setDragState(null)}
+                        className={`bg-surface-1 rounded-2xl border p-5 flex flex-col gap-4 ${dragState?.section === activeTab && dragState.fromIndex === entry.index ? 'border-[rgba(124,111,247,0.3)] opacity-70' : 'border-[rgba(255,255,255,0.06)]'}`}
+                      >
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                          <div className="flex items-start gap-3">
+                            <span className="text-text-tertiary mt-0.5"><GripVertical size={16} /></span>
+                            <div>
+                              <p className="text-[15px] text-text-primary font-medium">{entry.label}</p>
+                              <p className="text-[11px] text-text-tertiary" style={{ fontFamily: 'JetBrains Mono' }}>
+                                {setup.prefix}_{entry.index}
+                              </p>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setConfirmTarget({ kind: 'collection_item', section: activeTab as ManagedCollectionSection, index: entry.index, label: entry.label })}
+                            className="px-3 py-2 rounded-xl border border-[rgba(239,68,68,0.2)] text-red-400 inline-flex items-center gap-2"
+                          >
+                            <Trash2 size={14} />
+                            Delete
+                          </button>
+                        </div>
+
+                        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                          {setup.definition.fields.filter((field) => field.key !== 'gallery').map((field) => {
+                            const fieldItem = entry.fields[field.key];
+                            const currentValue = editedValues[fieldItem?.id || -1] ?? entry.values[field.key];
+                            const dirty = Boolean(fieldItem && editedValues[fieldItem.id] !== undefined && editedValues[fieldItem.id] !== fieldItem.value);
+                            const saving = Boolean(fieldItem && savingIds.has(fieldItem.id));
+
+                            return (
+                              <div key={`${setup.prefix}-${entry.index}-${field.key}`} className={`flex flex-col gap-3 ${field.type === 'textarea' || field.type === 'image' ? 'xl:col-span-2' : ''}`}>
+                                <div className="flex items-center justify-between gap-3">
+                                  <div>
+                                    <p className="text-[13px] text-text-primary font-medium">{field.label}</p>
+                                    {field.description && <p className="text-[11px] text-text-tertiary mt-1">{field.description}</p>}
+                                  </div>
+                                  {fieldItem && dirty && !saving && (
+                                    <button type="button" onClick={() => void saveField(fieldItem, currentValue)} className="text-[12px] text-accent inline-flex items-center gap-1"><Save size={12} /> Save</button>
+                                  )}
+                                  {saving && <span className="text-[11px] text-text-tertiary inline-flex items-center gap-1"><Loader2 size={12} className="animate-spin" /> Saving</span>}
+                                </div>
+
+                                {field.type === 'image' ? (
+                                  <ImageUploader value={currentValue} onChange={(url) => void (fieldItem ? saveField(fieldItem, url) : upsertField(activeTab, `${setup.prefix}_${entry.index}_${field.key}`, url))} />
+                                ) : field.type === 'textarea' ? (
+                                  <textarea
+                                    rows={4}
+                                    value={currentValue}
+                                    onChange={(event) => {
+                                      if (fieldItem) setEditedValues((current) => ({ ...current, [fieldItem.id]: event.target.value }));
+                                    }}
+                                    className={`w-full bg-[rgba(255,255,255,0.03)] text-text-primary text-[14px] px-3 py-2.5 rounded-[10px] border outline-none resize-y ${dirty ? 'border-[rgba(124,111,247,0.4)]' : 'border-[rgba(255,255,255,0.06)]'} focus:border-[rgba(124,111,247,0.5)]`}
+                                  />
+                                ) : (
+                                  <input
+                                    type={field.type === 'url' ? 'url' : 'text'}
+                                    value={currentValue}
+                                    onChange={(event) => {
+                                      if (fieldItem) setEditedValues((current) => ({ ...current, [fieldItem.id]: event.target.value }));
+                                    }}
+                                    className={`w-full bg-[rgba(255,255,255,0.03)] text-[14px] px-3 py-2.5 rounded-[10px] border outline-none ${dirty ? 'border-[rgba(124,111,247,0.4)]' : 'border-[rgba(255,255,255,0.06)]'} focus:border-[rgba(124,111,247,0.5)] ${field.type === 'url' ? 'text-cyan' : 'text-text-primary'}`}
+                                    style={{ fontFamily: field.type === 'url' ? 'JetBrains Mono' : 'DM Sans' }}
+                                  />
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        {activeTab === 'portfolio' && (
+                          <div className="flex flex-col gap-3 pt-3 border-t border-[rgba(255,255,255,0.05)]">
+                            <div>
+                              <p className="text-[13px] text-text-primary font-medium">Gallery images</p>
+                              <p className="text-[12px] text-text-secondary mt-1">Add more screenshots for the project card.</p>
+                            </div>
+                            {galleryValues.length > 0 && (
+                              <div className="flex flex-wrap gap-2">
+                                {galleryValues.map((imageUrl, index) => (
+                                  <div key={`${entry.index}-${index}`} className="relative group">
+                                    <img src={imageUrl} alt="" className="h-[72px] w-[96px] rounded-lg border border-[rgba(255,255,255,0.06)] object-cover" loading="lazy" decoding="async" />
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        const fieldItem = entry.fields.gallery;
+                                        if (fieldItem) {
+                                          void saveField(fieldItem, galleryValues.filter((_, galleryIndex) => galleryIndex !== index).join(','));
+                                        }
+                                      }}
+                                      className="absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-md bg-[rgba(0,0,0,0.7)] text-red-400"
+                                      aria-label="Remove gallery image"
+                                    >
+                                      <Trash2 size={12} />
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                            <ImageUploader
+                              value=""
+                              compact
+                              onChange={(url) => {
+                                const fieldItem = entry.fields.gallery;
+                                if (fieldItem) void saveField(fieldItem, [...galleryValues, url].join(','));
+                              }}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            )}
+
+            {activeItems.length === 0 && activeTab !== 'portfolio' && activeTab !== 'team' ? (
               <div className="bg-surface-1 rounded-2xl border border-[rgba(255,255,255,0.06)] p-10 text-center text-text-tertiary">No fields in this section yet.</div>
-            ) : (
+            ) : activeItems.length > 0 ? (
               activeItems.map((item) => {
+                const fieldDefinition = getFieldDefinition(item.section, item.key);
                 const currentValue = editedValues[item.id] ?? item.value;
+                const usesImageUploader = fieldDefinition?.type === 'image' || isImageField(item);
+                const usesBooleanSelect = fieldDefinition?.type === 'boolean';
+                const usesUrlInput = fieldDefinition?.type === 'url' || isUrlField(item);
+                const usesGalleryEditor = (fieldDefinition?.type === 'list' && item.key.includes('gallery')) || isGalleryField(item);
+                const usesTextarea = fieldDefinition?.type === 'textarea' || fieldDefinition?.type === 'list' || isLongField(item, currentValue);
                 const dirty = editedValues[item.id] !== undefined && editedValues[item.id] !== item.value;
                 const saving = savingIds.has(item.id);
                 const galleryValues = currentValue.split(',').map((entry) => entry.trim()).filter(Boolean);
@@ -445,8 +821,9 @@ export default function AdminDashboard() {
                   <div key={item.id} className="bg-surface-1 rounded-2xl border border-[rgba(255,255,255,0.06)] p-5 flex flex-col gap-4">
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                       <div>
-                        <p className="text-[14px] text-text-primary font-medium">{labelForKey(item.key)}</p>
+                        <p className="text-[14px] text-text-primary font-medium">{fieldDefinition?.label || labelForKey(item.key)}</p>
                         <p className="text-[11px] text-text-tertiary" style={{ fontFamily: 'JetBrains Mono' }}>{item.section}.{item.key}</p>
+                        {fieldDefinition?.description && <p className="text-[12px] text-text-tertiary mt-2">{fieldDefinition.description}</p>}
                       </div>
                       <div className="flex items-center gap-2">
                         {dirty && !saving && <button type="button" onClick={() => void saveField(item, currentValue)} className="text-[12px] text-accent inline-flex items-center gap-1"><Save size={12} /> Save</button>}
@@ -455,17 +832,26 @@ export default function AdminDashboard() {
                       </div>
                     </div>
 
-                    {isImageField(item) ? (
+                    {usesImageUploader ? (
                       <ImageUploader value={currentValue} onChange={(url) => void saveField(item, url)} />
+                    ) : usesBooleanSelect ? (
+                      <select
+                        value={currentValue === 'true' ? 'true' : 'false'}
+                        onChange={(event) => setEditedValues((current) => ({ ...current, [item.id]: event.target.value }))}
+                        className={`w-full bg-[rgba(255,255,255,0.03)] text-text-primary text-[14px] px-3 py-2.5 rounded-[10px] border outline-none ${dirty ? 'border-[rgba(124,111,247,0.4)]' : 'border-[rgba(255,255,255,0.06)]'} focus:border-[rgba(124,111,247,0.5)]`}
+                      >
+                        <option value="false">False</option>
+                        <option value="true">True</option>
+                      </select>
                     ) : (
                       <>
-                        {isLongField(item, currentValue) ? (
-                          <textarea rows={Math.min(8, Math.max(3, Math.ceil(currentValue.length / 90)))} value={currentValue} onChange={(event) => setEditedValues((current) => ({ ...current, [item.id]: event.target.value }))} className={`w-full bg-[rgba(255,255,255,0.03)] text-text-primary text-[14px] px-3 py-2.5 rounded-[10px] border outline-none resize-y ${dirty ? 'border-[rgba(124,111,247,0.4)]' : 'border-[rgba(255,255,255,0.06)]'} focus:border-[rgba(124,111,247,0.5)]`} style={{ fontFamily: isGalleryField(item) ? 'JetBrains Mono' : 'DM Sans' }} />
+                        {usesTextarea ? (
+                          <textarea rows={Math.min(8, Math.max(3, Math.ceil(currentValue.length / 90)))} value={currentValue} onChange={(event) => setEditedValues((current) => ({ ...current, [item.id]: event.target.value }))} className={`w-full bg-[rgba(255,255,255,0.03)] text-text-primary text-[14px] px-3 py-2.5 rounded-[10px] border outline-none resize-y ${dirty ? 'border-[rgba(124,111,247,0.4)]' : 'border-[rgba(255,255,255,0.06)]'} focus:border-[rgba(124,111,247,0.5)]`} style={{ fontFamily: usesGalleryEditor ? 'JetBrains Mono' : 'DM Sans' }} />
                         ) : (
-                          <input type={isUrlField(item) ? 'url' : 'text'} value={currentValue} onChange={(event) => setEditedValues((current) => ({ ...current, [item.id]: event.target.value }))} className={`w-full bg-[rgba(255,255,255,0.03)] text-[14px] px-3 py-2.5 rounded-[10px] border outline-none ${dirty ? 'border-[rgba(124,111,247,0.4)]' : 'border-[rgba(255,255,255,0.06)]'} focus:border-[rgba(124,111,247,0.5)] ${isUrlField(item) ? 'text-cyan' : 'text-text-primary'}`} style={{ fontFamily: isUrlField(item) ? 'JetBrains Mono' : 'DM Sans' }} />
+                          <input type={usesUrlInput ? 'url' : 'text'} value={currentValue} onChange={(event) => setEditedValues((current) => ({ ...current, [item.id]: event.target.value }))} className={`w-full bg-[rgba(255,255,255,0.03)] text-[14px] px-3 py-2.5 rounded-[10px] border outline-none ${dirty ? 'border-[rgba(124,111,247,0.4)]' : 'border-[rgba(255,255,255,0.06)]'} focus:border-[rgba(124,111,247,0.5)] ${usesUrlInput ? 'text-cyan' : 'text-text-primary'}`} style={{ fontFamily: usesUrlInput ? 'JetBrains Mono' : 'DM Sans' }} />
                         )}
 
-                        {isGalleryField(item) && (
+                        {usesGalleryEditor && (
                           <>
                             {galleryValues.length > 0 && <div className="flex flex-wrap gap-2">{galleryValues.map((imageUrl, index) => <img key={`${item.id}-${index}`} src={imageUrl} alt={`Gallery ${index + 1}`} className="h-[72px] w-auto rounded-lg border border-[rgba(255,255,255,0.06)] object-cover" loading="lazy" decoding="async" />)}</div>}
                             <ImageUploader value="" compact onChange={(url) => void saveField(item, [...galleryValues, url].join(','))} />
@@ -476,7 +862,7 @@ export default function AdminDashboard() {
                   </div>
                 );
               })
-            )}
+            ) : null}
           </div>
         )}
       </div>

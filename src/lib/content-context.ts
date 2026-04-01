@@ -16,6 +16,7 @@ export interface ContentContextType {
   loading: boolean;
   error: string | null;
   projectCount: number;
+  teamCount: number;
 }
 
 export const ContentContext = createContext<ContentContextType>({
@@ -24,4 +25,5 @@ export const ContentContext = createContext<ContentContextType>({
   loading: true,
   error: null,
   projectCount: 0,
+  teamCount: 0,
 });
