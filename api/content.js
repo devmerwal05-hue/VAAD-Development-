@@ -223,12 +223,18 @@ async function seedDefaultContent(supabase) {
   console.log('Seeding default content...');
   const { error: insertError } = await supabase
     .from('site_content')
-    .insert(defaultContent.map(item => ({
-      section: item.section,
-      key: item.key,
-      value: item.value,
-      updated_at: new Date().toISOString()
-    })));
+    .upsert(
+      defaultContent.map(item => ({
+        section: item.section,
+        key: item.key,
+        value: item.value,
+        updated_at: new Date().toISOString(),
+      })),
+      {
+        onConflict: 'section,key',
+        ignoreDuplicates: true,
+      }
+    );
 
   if (insertError) {
     console.error('Error seeding content:', insertError);
@@ -256,7 +262,8 @@ export default async function handler(req, res) {
       const supabase = getSupabasePublic();
       
       try {
-        await seedDefaultContent(supabase);
+        // Seed using the service-role client (RLS blocks inserts on the public/anon client).
+        await seedDefaultContent(getSupabaseAdmin());
       } catch (seedError) {
         console.error('Seed error (non-fatal):', seedError);
       }
