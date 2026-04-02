@@ -982,7 +982,7 @@ function PreviewPane({
   }, [activeSection]);
 
   const deviceButtons: DeviceMode[] = ["desktop", "tablet", "mobile"];
-  const deviceIcons: Record<DeviceMode, JSX.Element> = {
+  const deviceIcons: Record<DeviceMode, React.ReactNode> = {
     desktop: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect width="20" height="14" x="2" y="3" rx="2" /><path d="M8 21h8M12 17v4" /></svg>,
     tablet: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect width="16" height="20" x="4" y="2" rx="2" /><line x1="12" y1="18" x2="12.01" y2="18" /></svg>,
     mobile: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect width="12" height="20" x="6" y="2" rx="2" /><line x1="12" y1="18" x2="12.01" y2="18" /></svg>,
@@ -1174,9 +1174,6 @@ export default function AdminDashboard() {
   // Fields for the current section
   const sectionFields = useMemo(() => {
     if (activeSection === SUBMISSIONS_TAB || COLLECTION_SECTIONS.includes(activeSection as CollectionSection)) return [];
-    const meta = COLLECTION_META as any;
-    const isCollection = COLLECTION_SECTIONS.some(s => activeSection === s);
-    if (isCollection) return [];
 
     let fields = content.filter(c => c.section === activeSection);
 
