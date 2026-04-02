@@ -1588,7 +1588,7 @@ export default function AdminDashboard() {
 
   const isCollection = COLLECTION_SECTIONS.includes(activeSection as CollectionSection);
   const collectionItems = isCollection ? getCollectionItems(activeSection as CollectionSection) : [];
-  const missingDefaultsCount = useMemo(() => {
+  const missingDefaultsCount = (() => {
     if (activeSection === SUBMISSIONS_TAB) return 0;
     const definition = homeSectionDefinitions[activeSection];
     if (!definition) return 0;
@@ -1597,7 +1597,7 @@ export default function AdminDashboard() {
       if (!lookupContent(contentMap, activeSection, field.key)) missing += 1;
     }
     return missing;
-  }, [activeSection, contentMap]);
+  })();
 
   const showSeedDefaults = activeSection !== SUBMISSIONS_TAB
     && !!homeSectionDefinitions[activeSection]
