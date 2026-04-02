@@ -1237,6 +1237,29 @@ export default function AdminDashboard() {
   const [showDebug, setShowDebug] = useState(false);
   const [seeding, setSeeding] = useState(false);
 
+  // Responsive: disable inline preview on small screens.
+  const [isMobileViewport, setIsMobileViewport] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return window.matchMedia('(max-width: 767px)').matches;
+  });
+
+  useEffect(() => {
+    const media = window.matchMedia('(max-width: 767px)');
+    const handleChange = () => setIsMobileViewport(media.matches);
+    handleChange();
+
+    if (typeof media.addEventListener === 'function') {
+      media.addEventListener('change', handleChange);
+      return () => media.removeEventListener('change', handleChange);
+    }
+
+    // Safari fallback
+    media.addListener(handleChange);
+    return () => media.removeListener(handleChange);
+  }, []);
+
+  const previewEnabled = showPreview && !isMobileViewport;
+
   // Confirm modal
   const [confirm, setConfirm] = useState<{
     kind: "submission" | "field" | "collection_item";
@@ -1701,15 +1724,17 @@ export default function AdminDashboard() {
               {error}
             </span>
           )}
-          {/* Preview toggle */}
-          <button type="button" onClick={() => setShowPreview(v => !v)}
-            className={`px-3 py-1.5 rounded-lg border text-[12px] flex items-center gap-1.5 transition-all
-              ${showPreview ? "border-accent/30 text-accent bg-accent/10" : "border-white/10 text-white/40 hover:text-white/70"}`}>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <rect width="18" height="14" x="3" y="5" rx="2" /><path d="M3 10h18" />
-            </svg>
-            Preview
-          </button>
+          {/* Preview toggle (hidden on mobile) */}
+          {!isMobileViewport && (
+            <button type="button" onClick={() => setShowPreview(v => !v)}
+              className={`px-3 py-1.5 rounded-lg border text-[12px] flex items-center gap-1.5 transition-all
+                ${showPreview ? "border-accent/30 text-accent bg-accent/10" : "border-white/10 text-white/40 hover:text-white/70"}`}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <rect width="18" height="14" x="3" y="5" rx="2" /><path d="M3 10h18" />
+              </svg>
+              Preview
+            </button>
+          )}
           {/* Debug toggle */}
           <button type="button" onClick={() => setShowDebug(v => !v)}
             className={`px-3 py-1.5 rounded-lg border text-[12px] flex items-center gap-1.5 transition-all
@@ -1740,9 +1765,9 @@ export default function AdminDashboard() {
       </header>
 
       {/* ── MAIN BODY ────────────────────────────────────────────────── */}
-      <div className="flex flex-1 overflow-hidden" style={{ height: showDebug ? "calc(100vh - 52px - 200px)" : "calc(100vh - 52px)" }}>
+      <div className="flex flex-1 overflow-hidden flex-col md:flex-row" style={{ height: showDebug ? "calc(100vh - 52px - 200px)" : "calc(100vh - 52px)" }}>
         {/* Sidebar */}
-        <aside className="w-[220px] border-r border-white/6 bg-[#08080f] shrink-0 overflow-hidden flex flex-col">
+        <aside className="w-full md:w-[220px] h-[240px] md:h-auto border-b md:border-b-0 md:border-r border-white/6 bg-[#08080f] shrink-0 overflow-hidden flex flex-col">
           <SectionSidebar
             sections={filteredSections}
             activeSection={activeSection}
@@ -1754,7 +1779,7 @@ export default function AdminDashboard() {
         </aside>
 
         {/* Editor panel */}
-        <main className={`flex flex-col overflow-hidden ${showPreview ? "w-[440px]" : "flex-1"} border-r border-white/6`}>
+        <main className={`flex flex-col overflow-hidden flex-1 ${previewEnabled ? "md:flex-none md:w-[440px]" : ""} border-b md:border-b-0 md:border-r border-white/6`}>
           {/* Section header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-white/6 shrink-0">
             <div>
@@ -1900,8 +1925,8 @@ export default function AdminDashboard() {
         </main>
 
         {/* Preview pane */}
-        {showPreview && (
-          <div className="flex-1 overflow-hidden">
+        {previewEnabled && (
+          <div className="flex-1 overflow-hidden hidden md:block">
             <PreviewPane activeSection={activeSection} content={content} />
           </div>
         )}
