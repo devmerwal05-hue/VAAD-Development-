@@ -1,32 +1,17 @@
-import { getAllowedOriginSet, hasSupabaseConfig, getEnv } from './_config.js';
+import { hasSupabaseConfig } from './_config.js';
 import { BUDGET_RANGE_VALUES, CONTACT_STATUS, PROJECT_TYPE_VALUES } from './_constants.js';
 import { getSupabaseAdmin } from './_supabase.js';
 import { applySecurity, getErrorMessage, sanitize, verifyAdminSession } from './_security.js';
 
 export default async function handler(req, res) {
-  const allowedOrigins = getAllowedOriginSet(req);
-  const origin = req.headers.origin;
-  
-  if (origin && allowedOrigins.has(origin)) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
-  }
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  
-  if (req.method === 'OPTIONS') {
-    return res.status(204).end();
-  }
+  if (!applySecurity(req, res)) return;
 
   try {
-    const supabaseUrl = getEnv('SUPABASE_URL');
-    const serviceKey = getEnv('SUPABASE_SERVICE_ROLE_KEY');
-    
-    if (!supabaseUrl || !serviceKey) {
-      console.warn('Supabase not configured');
+    if (!hasSupabaseConfig()) {
       if (req.method === 'GET') {
         return res.status(200).json([]);
       }
-      return res.status(503).json({ error: 'Supabase is not configured. Please add SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in Vercel environment variables.' });
+      return res.status(503).json({ error: 'Supabase is not configured yet.' });
     }
 
     if (req.method === 'POST') {

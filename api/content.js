@@ -1,4 +1,4 @@
-import { getAllowedOriginSet, hasSupabaseConfig, getEnv } from './_config.js';
+import { hasSupabaseConfig } from './_config.js';
 import { getSupabaseAdmin, getSupabasePublic } from './_supabase.js';
 import { applySecurity, getErrorMessage, sanitize, verifyAdminSession } from './_security.js';
 
@@ -153,7 +153,7 @@ const defaultContent = [
   { section: 'contact', key: 'success_desc', value: 'Thanks. We will review the scope and reply with next steps.' },
   { section: 'contact', key: 'submit_button', value: 'Send project brief' },
   { section: 'footer', key: 'cta_title', value: 'Need a site or app that can ship fast?' },
-  { section: 'footer', key: 'cta_description', value: 'Share the scope, timeline, and blockers. We will reply with a clear build path instead of a vague pitch deck.' },
+  { section: 'footer', key: 'cta_description', value: 'Share the scope, timeline, and blockers. We will reply with a clear build path instead of a placeholder message.' },
   { section: 'footer', key: 'cta_button', value: 'Start a project' },
   { section: 'footer', key: 'tagline', value: 'VAAD Development builds launch-ready websites and internal tools for small teams that need clarity, speed, and a maintainable handoff.' },
   { section: 'footer', key: 'eyebrow', value: 'Design, build, deploy, maintain' },
@@ -240,30 +240,15 @@ async function seedDefaultContent(supabase) {
 }
 
 export default async function handler(req, res) {
-  const allowedOrigins = getAllowedOriginSet(req);
-  const origin = req.headers.origin;
-  
-  if (origin && allowedOrigins.has(origin)) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
-  }
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  
-  if (req.method === 'OPTIONS') {
-    return res.status(204).end();
-  }
+  if (!applySecurity(req, res)) return;
 
   try {
-    const supabaseUrl = getEnv('SUPABASE_URL');
-    const anonKey = getEnv('SUPABASE_ANON_KEY');
-    
-    if (!supabaseUrl || !anonKey) {
-      console.warn('Supabase not configured, serving empty content');
+    if (!hasSupabaseConfig()) {
       if (req.method === 'GET') {
         res.setHeader('Cache-Control', 'no-store');
         return res.status(200).json([]);
       }
-      return res.status(503).json({ error: 'Supabase is not configured. Please add SUPABASE_URL and SUPABASE_ANON_KEY in Vercel environment variables.' });
+      return res.status(503).json({ error: 'Supabase is not configured yet.' });
     }
 
     if (req.method === 'GET') {

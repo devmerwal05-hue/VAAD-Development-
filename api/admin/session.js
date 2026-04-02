@@ -1,37 +1,19 @@
-import { getAllowedOriginSet } from '../_config.js';
-import { hasAdminSession, startAdminSession, clearAdminSession, verifyAdminPassword } from '../_security.js';
+import { applySecurity, clearAdminSession, hasAdminSession, startAdminSession, verifyAdminPassword } from '../_security.js';
 
 export default async function handler(req, res) {
-  const allowedOrigins = getAllowedOriginSet(req);
-  const origin = req.headers.origin;
-  
-  if (origin && allowedOrigins.has(origin)) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
-  }
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  
-  if (req.method === 'OPTIONS') {
-    return res.status(204).end();
-  }
+  if (!applySecurity(req, res, { scope: 'auth' })) return;
 
   if (req.method === 'GET') {
-    const authenticated = hasAdminSession(req);
-    return res.status(200).json({ authenticated });
+    return res.status(200).json({ authenticated: hasAdminSession(req) });
   }
 
   if (req.method === 'POST') {
     const { password } = req.body || {};
-    if (!password) {
-      return res.status(400).json({ error: 'Password is required' });
+    if (verifyAdminPassword(password)) {
+      startAdminSession(req, res);
+      return res.status(200).json({ authenticated: true });
     }
-    
-    if (!verifyAdminPassword(password)) {
-      return res.status(401).json({ error: 'Invalid password' });
-    }
-    
-    startAdminSession(req, res);
-    return res.status(200).json({ authenticated: true });
+    return res.status(401).json({ error: 'Invalid password' });
   }
 
   if (req.method === 'DELETE') {

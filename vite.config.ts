@@ -15,5 +15,16 @@ export default defineConfig(async () => {
   } catch {
     // Source tags are optional in local development.
   }
-  return { plugins };
+  return {
+    plugins,
+    server: {
+      proxy: {
+        '/api': {
+          target: 'http://localhost:3000',
+          changeOrigin: true,
+          rewrite: (path: string) => path
+        }
+      }
+    }
+  };
 })
