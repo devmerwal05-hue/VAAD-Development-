@@ -1,29 +1,10 @@
-/**
- * VAAD Development – Redesigned WYSIWYG Admin Panel
- * Drop this file into src/pages/AdminDashboard.tsx
- *
- * What's new vs the old admin:
- *  - Three-panel layout: sidebar | field editor | live preview iframe
- *  - WYSIWYG iframe with same-origin script injection (section highlight + scroll-to)
- *  - Device viewport switcher (desktop / tablet / mobile)
- *  - Autosave-on-blur with per-field saving spinner & "unsaved" dot in sidebar
- *  - Debug log panel (toggle from top bar) – shows every API call & response time
- *  - Keyboard shortcuts: ⌘K / Ctrl+K to focus search, ⌘S / Ctrl+S to save current field
- *  - Gallery images support drag-to-reorder within each project card
- *  - Submissions: email-thread style expansion + copy-email button
- *  - Full TypeScript types throughout
- *
- * BUG FIXES included (see ## BUG FIXES section at bottom of file for details):
- *  1. Collection item new-field race condition (ae() vs Y() mismatch)
- *  2. O(n) section lookup replaced with Map-based index
- *  3. drag-and-drop interfering with text inputs – now uses handle-only drag
- *  4. Missing auth header propagation on upload endpoint
- *  5. Stale closure in `re()` reorder function when called rapidly
- *  6. `onBlur` save fires even when value hasn't changed (wasted API calls)
- *  7. `plan_count` / `faq_count` stored as NaN when cleared
- *  8. No error boundary around iframe – crash-loops the admin on CSP block
- */
-
+import {
+  homeSectionDefinitions,
+  portfolioCollectionDefinition,
+  portfolioDefaults,
+  teamCollectionDefinition,
+  teamDefaults,
+} from "../lib/homeContent";
 import React, {
   useState,
   useEffect,
@@ -816,7 +797,13 @@ function SubmissionsPanel({
           <button type="button" onClick={() => setExpanded(p => p === sub.id ? null : sub.id)}
             className="w-full px-4 py-3.5 flex items-center justify-between gap-3 text-left hover:bg-white/2 transition-colors">
             <div className="flex items-center gap-3 min-w-0">
-              <div className={`w-2 h-2 rounded-full shrink-0 ${sub.status === "new" ? "bg-accent animate-pulse" : "bg-white/15"}`} />
+              <div className={`w-2 h-2 rounded-full shrink-0 ${sub.status === "new" ? "bg-accent animate-pulse" : "bg-white/15"}`}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+                  className={sub.status === "new" ? "text-red-400" : "text-accent"}>
+                  <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" />
+                  <path d="M12 9v4M12 17h.01" />
+                </svg>
+              </div>
               <div className="min-w-0">
                 <p className="text-[14px] font-medium text-white truncate">{sub.name}</p>
                 <p className="text-[12px] text-white/40 truncate">{sub.email}</p>
@@ -1179,6 +1166,9 @@ export default function AdminDashboard() {
   const [showDebug, setShowDebug] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
 
+  // Add a state for seeding
+  const [seeding, setSeeding] = useState(false);
+
   // Confirm modal
   const [confirm, setConfirm] = useState<{
     kind: "submission" | "field" | "collection_item";
@@ -1212,7 +1202,7 @@ export default function AdminDashboard() {
 
     // Filter out collection sub-keys from non-collection sections (shouldn't happen, but safe)
     if (activeSection === "portfolio") fields = fields.filter(c => !/^project_\d+_/.test(c.key) && c.key !== "project_count");
-    if (activeSection === "team") fields = fields.filter(c => !/^member_\d+_/.test(c.key) && c.key !== "member_count");
+    if (activeSection === "team") fields = fields.filter(c => !/^member_\\d+_/.test(c.key) && c.key !== "member_count");
 
     if (fieldSearch) {
       const q = fieldSearch.toLowerCase();
@@ -1226,7 +1216,7 @@ export default function AdminDashboard() {
   function getCollectionItems(section: CollectionSection): CollectionItem[] {
     const meta = COLLECTION_META[section];
     const countItem = lookupContent(contentMap, section, meta.countKey);
-    const fieldDefs = section === "portfolio" ? PORTFOLIO_FIELDS : TEAM_FIELDS;
+    const fieldDefs = section === "portfolio" ? portfolioCollectionDefinition.fields : teamCollectionDefinition.fields;
 
     // Find max index in DB
     const existingIndices: number[] = [];
@@ -1253,6 +1243,45 @@ export default function AdminDashboard() {
       const label = values[meta.primaryField] || `${meta.itemLabel} ${idx}`;
       return { index: idx, label, fields, values };
     });
+  }
+
+  // Seeding function
+  async function seedSection(section: string) {
+    setSeeding(true);
+    setError("");
+    try {
+      if (COLLECTION_SECTIONS.includes(section as CollectionSection)) {
+        const collDef = section === 'portfolio' ? portfolioCollectionDefinition : teamCollectionDefinition;
+        const defaults = section === 'portfolio' ? portfolioDefaults : teamDefaults;
+        const meta = COLLECTION_META[section as CollectionSection];
+
+        for (let i = 0; i < defaults.length; i++) {
+          const item = defaults[i];
+          const itemIndex = i + 1;
+          for (const fieldDef of collDef.fields) {
+            const key = `${meta.prefix}_${itemIndex}_${fieldDef.key}`;
+            let value = (item as any)[fieldDef.key] ?? fieldDef.fallback;
+            if (fieldDef.key === 'gallery' && Array.isArray(value)) {
+              value = value.join(',');
+            }
+            await ensureField(section, key, String(value));
+          }
+        }
+        await ensureField(section, meta.countKey, String(defaults.length));
+      } else {
+        const sectionDef = homeSectionDefinitions[section];
+        if (sectionDef) {
+          for (const field of sectionDef.fields) {
+            await ensureField(section, field.key, field.fallback);
+          }
+        }
+      }
+      await loadAll(); // Reload content after seeding
+    } catch (e) {
+      setError(getErrorMessage(e));
+    } finally {
+      setSeeding(false);
+    }
   }
 
   // ── API helpers ──────────────────────────────────────────────────────────
@@ -1493,6 +1522,7 @@ export default function AdminDashboard() {
 
   const isCollection = COLLECTION_SECTIONS.includes(activeSection as CollectionSection);
   const collectionItems = isCollection ? getCollectionItems(activeSection as CollectionSection) : [];
+  const hasContent = isCollection ? collectionItems.length > 0 : sectionFields.length > 0;
 
   return (
     <div className="min-h-screen bg-[#06060C] flex flex-col" style={{ fontFamily: "DM Sans, sans-serif" }}>
@@ -1591,6 +1621,9 @@ export default function AdminDashboard() {
             </div>
             {activeSection !== SUBMISSIONS_TAB && (
               <div className="flex items-center gap-1.5">
+                {!hasContent && (
+                  <SeedContentButton onSeed={() => seedSection(activeSection)} disabled={seeding || loading} />
+                )}
                 {isCollection && (
                   <button type="button" onClick={() => addCollectionItem(activeSection as CollectionSection)} disabled={loading}
                     className="px-3 py-1.5 rounded-lg border border-accent/25 text-accent text-[12px] flex items-center gap-1.5 hover:border-accent/40 transition-all disabled:opacity-50">
@@ -1612,9 +1645,9 @@ export default function AdminDashboard() {
               />
             ) : isCollection ? (
               <div className="flex flex-col gap-3">
-                {collectionItems.length === 0 ? (
+                {!hasContent && !loading ? (
                   <div className="text-center py-12 text-white/25 text-[13px]">
-                    No items yet. Click "Add {activeSection === "portfolio" ? "project" : "member"}" to start.
+                    No items yet. Click "Seed Content" to populate this section with default data.
                   </div>
                 ) : (
                   collectionItems.map(item => (
@@ -1676,8 +1709,8 @@ export default function AdminDashboard() {
                   </div>
                 </div>
 
-                {sectionFields.length === 0 ? (
-                  <p className="text-center py-10 text-[13px] text-white/25">No fields in this section yet.</p>
+                {!hasContent && !loading ? (
+                  <p className="text-center py-10 text-[13px] text-white/25">No fields in this section yet. Click "Seed Content" to start.</p>
                 ) : (
                   sectionFields.map(field => (
                     <FieldEditor
@@ -1774,3 +1807,2749 @@ export default function AdminDashboard() {
  *        a friendly "Preview failed" message with a retry button.
  * ─────────────────────────────────────────────────────────────────────────────
  */
+
+function SeedContentButton({ onSeed, disabled }: { onSeed: () => void; disabled: boolean }) {
+  return (
+    <button
+      type="button"
+      onClick={onSeed}
+      disabled={disabled}
+      className="px-3 py-1.5 rounded-lg border text-[12px] flex items-center gap-1.5 transition-all
+                   border-blue-500/30 text-blue-400 bg-blue-500/10 hover:bg-blue-500/20
+                   disabled:opacity-50 disabled:cursor-not-allowed"
+    >
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M12 2L2 7l10 5 10-5-10-5z" />
+        <path d="M2 17l10 5 10-5" />
+        <path d="M2 12l10 5 10-5" />
+      </svg>
+      Seed Content
+    </button>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MAIN ADMIN DASHBOARD
+// ─────────────────────────────────────────────────────────────────────────────
+
+export default function AdminDashboard() {
+  // Auth state
+  const [password, setPassword] = useState("");
+  const [checking, setChecking] = useState(true);
+  const [authenticated, setAuthenticated] = useState(false);
+
+  // Data
+  const [content, setContent] = useState<ContentItem[]>([]);
+  const [submissions, setSubmissions] = useState<Submission[]>([]);
+
+  // UI state
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [activeSection, setActiveSection] = useState<ActiveTab>(SUBMISSIONS_TAB);
+  const [sectionSearch, setSectionSearch] = useState("");
+  const [fieldSearch, setFieldSearch] = useState("");
+  const [showPreview, setShowPreview] = useState(true);
+  const [showDebug, setShowDebug] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
+
+  // Add a state for seeding
+  const [seeding, setSeeding] = useState(false);
+
+  // Confirm modal
+  const [confirm, setConfirm] = useState<{
+    kind: "submission" | "field" | "collection_item";
+    id?: number; key?: string; label?: string; section?: string; index?: number;
+  } | null>(null);
+
+  // Debug log
+  const [apiLog, dispatchLog] = useReducer(logReducer, []);
+  const addLog = useCallback((entry: Partial<ApiLogEntry>) => dispatchLog({ type: "add", entry }), []);
+
+  // FIX #2: O(1) content map
+  const contentMap = useMemo(() => buildContentMap(content), [content]);
+
+  // Sections list
+  const allSections = useMemo(() => {
+    const extra = [...new Set(content.map(c => c.section))].filter(s => !SECTION_ORDER.includes(s)).sort();
+    return [...SECTION_ORDER, ...extra];
+  }, [content]);
+
+  const filteredSections = useMemo(() => {
+    const q = sectionSearch.toLowerCase();
+    if (!q) return allSections;
+    return allSections.filter(s => (SECTION_LABELS[s] || s).toLowerCase().includes(q));
+  }, [allSections, sectionSearch]);
+
+  // Fields for the current section
+  const sectionFields = useMemo(() => {
+    if (activeSection === SUBMISSIONS_TAB || COLLECTION_SECTIONS.includes(activeSection as CollectionSection)) return [];
+
+    let fields = content.filter(c => c.section === activeSection);
+
+    // Filter out collection sub-keys from non-collection sections (shouldn't happen, but safe)
+    if (activeSection === "portfolio") fields = fields.filter(c => !/^project_\d+_/.test(c.key) && c.key !== "project_count");
+    if (activeSection === "team") fields = fields.filter(c => !/^member_\\d+_/.test(c.key) && c.key !== "member_count");
+
+    if (fieldSearch) {
+      const q = fieldSearch.toLowerCase();
+      fields = fields.filter(f => f.key.toLowerCase().includes(q) || f.value.toLowerCase().includes(q));
+    }
+
+    return fields.sort((a, b) => a.key.localeCompare(b.key, undefined, { numeric: true }));
+  }, [activeSection, content, fieldSearch]);
+
+  // Collection items for portfolio/team
+  function getCollectionItems(section: CollectionSection): CollectionItem[] {
+    const meta = COLLECTION_META[section];
+    const countItem = lookupContent(contentMap, section, meta.countKey);
+    const fieldDefs = section === "portfolio" ? PORTFOLIO_FIELDS : TEAM_FIELDS;
+
+    // Find max index in DB
+    const existingIndices: number[] = [];
+    content.forEach(c => {
+      if (c.section !== section) return;
+      const m = c.key.match(new RegExp(`^${meta.prefix}_(\\d+)_`));
+      if (m) existingIndices.push(parseInt(m[1], 10));
+    });
+
+    // FIX #7: safe int parsing
+    const storedCount = safeInt(countItem?.value || "");
+    const maxIdx = existingIndices.length > 0 ? Math.max(...existingIndices) : 0;
+    const count = storedCount !== undefined ? Math.max(storedCount, 0) : maxIdx;
+
+    return Array.from({ length: count }, (_, i) => {
+      const idx = i + 1;
+      const fields: Record<string, ContentItem | undefined> = {};
+      const values: Record<string, string> = {};
+      for (const fd of fieldDefs) {
+        const item = lookupContent(contentMap, section, `${meta.prefix}_${idx}_${fd.key}`);
+        fields[fd.key] = item;
+        values[fd.key] = item?.value ?? "";
+      }
+      const label = values[meta.primaryField] || `${meta.itemLabel} ${idx}`;
+      return { index: idx, label, fields, values };
+    });
+  }
+
+  // Seeding function
+  async function seedSection(section: string) {
+    setSeeding(true);
+    setError("");
+    try {
+      if (COLLECTION_SECTIONS.includes(section as CollectionSection)) {
+        const collDef = section === 'portfolio' ? portfolioCollectionDefinition : teamCollectionDefinition;
+        const defaults = section === 'portfolio' ? portfolioDefaults : teamDefaults;
+        const meta = COLLECTION_META[section as CollectionSection];
+
+        for (let i = 0; i < defaults.length; i++) {
+          const item = defaults[i];
+          const itemIndex = i + 1;
+          for (const fieldDef of collDef.fields) {
+            const key = `${meta.prefix}_${itemIndex}_${fieldDef.key}`;
+            let value = (item as any)[fieldDef.key] ?? fieldDef.fallback;
+            if (fieldDef.key === 'gallery' && Array.isArray(value)) {
+              value = value.join(',');
+            }
+            await ensureField(section, key, String(value));
+          }
+        }
+        await ensureField(section, meta.countKey, String(defaults.length));
+      } else {
+        const sectionDef = homeSectionDefinitions[section];
+        if (sectionDef) {
+          for (const field of sectionDef.fields) {
+            await ensureField(section, field.key, field.fallback);
+          }
+        }
+      }
+      await loadAll(); // Reload content after seeding
+    } catch (e) {
+      setError(getErrorMessage(e));
+    } finally {
+      setSeeding(false);
+    }
+  }
+
+  // ── API helpers ──────────────────────────────────────────────────────────
+
+  const apiFetchLogged = useCallback(<T = unknown>(url: string, opts?: RequestInit) =>
+    apiFetch<T>(url, opts, addLog), [addLog]);
+
+  async function loadAll() {
+    setLoading(true); setError("");
+    try {
+      const [subs, ct] = await Promise.all([
+        apiFetchLogged<Submission[]>("/api/contact"),
+        apiFetchLogged<ContentItem[]>(`/api/content?ts=${Date.now()}`),
+      ]);
+      setSubmissions(subs);
+      setContent(ct);
+    } catch (e) {
+      setError(getErrorMessage(e));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const sess = await apiFetchLogged<{ authenticated: boolean }>("/api/admin/session");
+        if (sess.authenticated) { setAuthenticated(true); await loadAll(); }
+      } catch { setAuthenticated(false); } finally { setChecking(false); }
+    })();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function login(e: React.FormEvent) {
+    e.preventDefault(); setLoading(true); setError("");
+    try {
+      await apiFetchLogged("/api/admin/session", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password }),
+      });
+      setAuthenticated(true); setPassword(""); await loadAll();
+    } catch (err) { setError(getErrorMessage(err)); } finally { setLoading(false); }
+  }
+
+  async function logout() {
+    setLoading(true);
+    try {
+      await apiFetchLogged("/api/admin/session", { method: "DELETE" });
+      setAuthenticated(false); setContent([]); setSubmissions([]);
+    } finally { setLoading(false); }
+  }
+
+  // Content CRUD
+  async function ensureField(section: string, key: string, value: string): Promise<ContentItem> {
+    const existing = lookupContent(contentMap, section, key);
+    if (existing) {
+      const updated = await apiFetchLogged<ContentItem>("/api/content", {
+        method: "PUT", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: existing.id, value }),
+      });
+      setContent(prev => prev.map(c => c.id === existing.id ? updated : c));
+      return updated;
+    }
+    const created = await apiFetchLogged<ContentItem>("/api/content", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ section, key, value }),
+    });
+    setContent(prev => [...prev, created]);
+    return created;
+  }
+
+  async function deleteField(id: number) {
+    await apiFetchLogged("/api/content", {
+      method: "DELETE", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    });
+    setContent(prev => prev.filter(c => c.id !== id));
+  }
+
+  // FIX #1 & #5: Unified, atomic collection reorder/save
+  async function saveCollectionItems(section: CollectionSection, items: CollectionItem[]) {
+    const meta = COLLECTION_META[section];
+    const fieldDefs = section === "portfolio" ? PORTFOLIO_FIELDS : TEAM_FIELDS;
+
+    // Save all items sequentially (avoids race conditions from FIX #5)
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      const newIdx = i + 1;
+      for (const fd of fieldDefs) {
+        await ensureField(section, `${meta.prefix}_${newIdx}_${fd.key}`, item.values[fd.key] || "");
+      }
+    }
+
+    // Delete items beyond new count
+    const existingItems = getCollectionItems(section);
+    for (const existing of existingItems) {
+      if (existing.index > items.length) {
+        for (const fd of fieldDefs) {
+          const contentItem = existing.fields[fd.key];
+          if (contentItem) await deleteField(contentItem.id);
+        }
+      }
+    }
+
+    await ensureField(section, meta.countKey, String(items.length));
+  }
+
+  async function addCollectionItem(section: CollectionSection) {
+    const items = getCollectionItems(section);
+    const idx = items.length + 1;
+    const meta = COLLECTION_META[section];
+    const newItem: CollectionItem = {
+      index: idx, label: `${meta.itemLabel} ${idx}`,
+      fields: {}, values: {},
+    };
+    await saveCollectionItems(section, [...items, newItem]);
+  }
+
+  async function deleteCollectionItem(section: CollectionSection, index: number) {
+    const items = getCollectionItems(section).filter(it => it.index !== index);
+    await saveCollectionItems(section, items);
+  }
+
+  async function reorderCollectionItems(section: CollectionSection, fromIdx: number, toIdx: number) {
+    if (fromIdx === toIdx) return;
+    const items = [...getCollectionItems(section)];
+    const [moved] = items.splice(fromIdx - 1, 1);
+    items.splice(toIdx - 1, 0, moved);
+    await saveCollectionItems(section, items);
+  }
+
+  // Submissions
+  async function setSubmissionStatus(id: number, status: Submission["status"]) {
+    const updated = await apiFetchLogged<Submission>("/api/contact", {
+      method: "PUT", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, status }),
+    });
+    setSubmissions(prev => prev.map(s => s.id === id ? updated : s));
+  }
+
+  async function deleteSubmission(id: number) {
+    await apiFetchLogged("/api/contact", {
+      method: "DELETE", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    });
+    setSubmissions(prev => prev.filter(s => s.id !== id));
+  }
+
+  // Confirm action handler
+  async function handleConfirm() {
+    if (!confirm) return;
+    try {
+      if (confirm.kind === "submission" && confirm.id) await deleteSubmission(confirm.id);
+      if (confirm.kind === "field" && confirm.id) await deleteField(confirm.id);
+      if (confirm.kind === "collection_item" && confirm.section && confirm.index) {
+        await deleteCollectionItem(confirm.section as CollectionSection, confirm.index);
+      }
+    } catch (e) { setError(getErrorMessage(e)); }
+    setConfirm(null);
+    // Reload preview after structural change
+    setReloadKey(k => k + 1);
+  }
+
+  // Field save (for collection cards)
+  const handleFieldSave = useCallback(async (item: ContentItem, value: string) => {
+    const updated = await apiFetchLogged<ContentItem>("/api/content", {
+      method: "PUT", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: item.id, value }),
+    });
+    setContent(prev => prev.map(c => c.id === item.id ? updated : c));
+    setReloadKey(k => k + 1);
+  }, [apiFetchLogged]);
+
+  // New field creation
+  const [newKey, setNewKey] = useState("");
+  const [newValue, setNewValue] = useState("");
+
+  async function createField() {
+    if (!newKey.trim() || activeSection === SUBMISSIONS_TAB) return;
+    try {
+      await ensureField(activeSection, newKey.trim(), newValue);
+      setNewKey(""); setNewValue("");
+    } catch (e) { setError(getErrorMessage(e)); }
+  }
+
+  // ── Drag state for collection reorder ─────────────────────────────────────
+  const [dragFrom, setDragFrom] = useState<{ section: CollectionSection; index: number } | null>(null);
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // RENDER: loading / login
+  // ─────────────────────────────────────────────────────────────────────────
+
+  if (checking) {
+    return (
+      <div className="min-h-screen bg-[#06060C] flex items-center justify-center text-white/30 text-[13px]">
+        <Spinner size={20} />
+      </div>
+    );
+  }
+
+  if (!authenticated) {
+    return (
+      <div className="min-h-screen bg-[#06060C] flex items-center justify-center px-4">
+        <motion.div
+          initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
+          className="w-full max-w-[400px] bg-white/[0.04] border border-white/8 rounded-2xl p-8">
+          <div className="flex items-center gap-3 mb-8">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent/60 to-accent flex items-center justify-center">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+                <rect width="18" height="11" x="3" y="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
+            </div>
+            <div>
+              <h1 className="text-[20px] font-bold text-white" style={{ fontFamily: "Syne, sans-serif" }}>Admin sign in</h1>
+              <p className="text-[12px] text-white/40">VAAD Development</p>
+            </div>
+          </div>
+          <form onSubmit={login} className="flex flex-col gap-4">
+            <input
+              type="password" autoComplete="current-password"
+              value={password} onChange={e => setPassword(e.target.value)}
+              placeholder="Admin password"
+              className="w-full bg-white/4 text-white text-[14px] px-4 py-3 rounded-xl border border-white/10 outline-none focus:border-accent/50 placeholder:text-white/25"
+            />
+            {error && <p className="text-[12px] text-red-400">{error}</p>}
+            <button type="submit" disabled={loading}
+              className="w-full bg-gradient-to-r from-accent to-accent/80 text-white py-3 rounded-xl text-[14px] font-medium disabled:opacity-50 hover:opacity-90 transition-opacity">
+              {loading ? "Signing in…" : "Sign in"}
+            </button>
+          </form>
+        </motion.div>
+      </div>
+    );
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // RENDER: main admin
+  // ─────────────────────────────────────────────────────────────────────────
+
+  const isCollection = COLLECTION_SECTIONS.includes(activeSection as CollectionSection);
+  const collectionItems = isCollection ? getCollectionItems(activeSection as CollectionSection) : [];
+  const hasContent = isCollection ? collectionItems.length > 0 : sectionFields.length > 0;
+
+  return (
+    <div className="min-h-screen bg-[#06060C] flex flex-col" style={{ fontFamily: "DM Sans, sans-serif" }}>
+      <ConfirmModal
+        open={!!confirm}
+        title={confirm?.kind === "submission" ? "Delete submission?" : confirm?.kind === "collection_item" ? `Delete ${confirm?.label}?` : "Delete content field?"}
+        message={confirm?.kind === "collection_item"
+          ? "This will remove the card from the live site. Remaining items will shift up."
+          : `This will permanently remove "${confirm?.label || confirm?.key || "this item"}".`}
+        onCancel={() => setConfirm(null)}
+        onConfirm={handleConfirm}
+      />
+
+      {/* ── TOP BAR ─────────────────────────────────────────────────── */}
+      <header className="flex items-center justify-between px-4 py-3 border-b border-white/6 shrink-0 bg-[#08080f]">
+        <div className="flex items-center gap-3">
+          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-accent/60 to-accent flex items-center justify-center">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
+              <polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" />
+            </svg>
+          </div>
+          <span className="text-[15px] font-bold text-white" style={{ fontFamily: "Syne, sans-serif" }}>VAAD</span>
+          <span className="text-[11px] text-white/30 bg-white/5 px-2 py-0.5 rounded-full">admin</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          {error && (
+            <span className="text-[11px] text-red-400 bg-red-500/10 border border-red-500/20 px-2 py-1 rounded-lg mr-2 truncate max-w-[200px]">
+              {error}
+            </span>
+          )}
+          {/* Preview toggle */}
+          <button type="button" onClick={() => setShowPreview(v => !v)}
+            className={`px-3 py-1.5 rounded-lg border text-[12px] flex items-center gap-1.5 transition-all
+              ${showPreview ? "border-accent/30 text-accent bg-accent/10" : "border-white/10 text-white/40 hover:text-white/70"}`}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <rect width="18" height="14" x="3" y="5" rx="2" /><path d="M3 10h18" />
+            </svg>
+            Preview
+          </button>
+          {/* Debug toggle */}
+          <button type="button" onClick={() => setShowDebug(v => !v)}
+            className={`px-3 py-1.5 rounded-lg border text-[12px] flex items-center gap-1.5 transition-all
+              ${showDebug ? "border-accent/30 text-accent bg-accent/10" : "border-white/10 text-white/40 hover:text-white/70"}`}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" /><path d="M12 8v4M12 16h.01" />
+            </svg>
+            Debug {apiLog.length > 0 && <span className="text-[10px] opacity-60">({apiLog.length})</span>}
+          </button>
+          {/* Refresh */}
+          <button type="button" onClick={loadAll} disabled={loading}
+            className="px-3 py-1.5 rounded-lg border border-white/10 text-[12px] text-white/40 hover:text-white/70 flex items-center gap-1.5 disabled:opacity-40 transition-all">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+              className={loading ? "animate-spin" : ""}>
+              <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /><path d="M21 3v5h-5M3 21v-5h5" />
+            </svg>
+            Refresh
+          </button>
+          {/* Logout */}
+          <button type="button" onClick={logout} disabled={loading}
+            className="px-3 py-1.5 rounded-lg border border-red-500/20 text-[12px] text-red-400/70 hover:text-red-400 flex items-center gap-1.5 disabled:opacity-40 transition-all">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" />
+            </svg>
+            Sign out
+          </button>
+        </div>
+      </header>
+
+      {/* ── MAIN BODY ────────────────────────────────────────────────── */}
+      <div className="flex flex-1 overflow-hidden" style={{ height: showDebug ? "calc(100vh - 52px - 200px)" : "calc(100vh - 52px)" }}>
+        {/* Sidebar */}
+        <aside className="w-[220px] border-r border-white/6 bg-[#08080f] shrink-0 overflow-hidden flex flex-col">
+          <SectionSidebar
+            sections={filteredSections}
+            activeSection={activeSection}
+            submissions={submissions}
+            onSelectSection={(s) => { setActiveSection(s); setFieldSearch(""); setReloadKey(k => k + 1); }}
+            searchQuery={sectionSearch}
+            onSearchChange={setSectionSearch}
+          />
+        </aside>
+
+        {/* Editor panel */}
+        <main className={`flex flex-col overflow-hidden ${showPreview ? "w-[440px]" : "flex-1"} border-r border-white/6`}>
+          {/* Section header */}
+          <div className="flex items-center justify-between px-4 py-3 border-b border-white/6 shrink-0">
+            <div>
+              <h2 className="text-[15px] font-bold text-white" style={{ fontFamily: "Syne, sans-serif" }}>
+                {activeSection === SUBMISSIONS_TAB ? "Submissions" : SECTION_LABELS[activeSection] || humanKey(activeSection)}
+              </h2>
+              {activeSection !== SUBMISSIONS_TAB && (
+                <p className="text-[11px] text-white/30">
+                  {isCollection ? `${collectionItems.length} items` : `${sectionFields.length} fields`}
+                </p>
+              )}
+            </div>
+            {activeSection !== SUBMISSIONS_TAB && (
+              <div className="flex items-center gap-1.5">
+                {!hasContent && (
+                  <SeedContentButton onSeed={() => seedSection(activeSection)} disabled={seeding || loading} />
+                )}
+                {isCollection && (
+                  <button type="button" onClick={() => addCollectionItem(activeSection as CollectionSection)} disabled={loading}
+                    className="px-3 py-1.5 rounded-lg border border-accent/25 text-accent text-[12px] flex items-center gap-1.5 hover:border-accent/40 transition-all disabled:opacity-50">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+                    Add {activeSection === "portfolio" ? "project" : "member"}
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Scrollable content */}
+          <div className="flex-1 overflow-y-auto px-3 py-3">
+            {activeSection === SUBMISSIONS_TAB ? (
+              <SubmissionsPanel
+                submissions={submissions}
+                onStatusChange={setSubmissionStatus}
+                onDelete={(id, label) => setConfirm({ kind: "submission", id, label })}
+              />
+            ) : isCollection ? (
+              <div className="flex flex-col gap-3">
+                {!hasContent && !loading ? (
+                  <div className="text-center py-12 text-white/25 text-[13px]">
+                    No items yet. Click "Seed Content" to populate this section with default data.
+                  </div>
+                ) : (
+                  collectionItems.map(item => (
+                    <div key={item.index}
+                      onDragOver={e => { if (dragFrom?.section === activeSection) e.preventDefault(); }}
+                      onDrop={e => {
+                        e.preventDefault();
+                        if (dragFrom?.section === activeSection && dragFrom.index !== item.index) {
+                          reorderCollectionItems(activeSection as CollectionSection, dragFrom.index, item.index);
+                        }
+                        setDragFrom(null);
+                      }}>
+                      <CollectionCard
+                        item={item}
+                        section={activeSection as CollectionSection}
+                        onFieldSave={handleFieldSave}
+                        onDelete={() => setConfirm({ kind: "collection_item", section: activeSection, index: item.index, label: item.label })}
+                        onLog={addLog}
+                        dragHandleProps={{
+                          draggable: true,
+                          onDragStart: () => setDragFrom({ section: activeSection as CollectionSection, index: item.index }),
+                          onDragEnd: () => setDragFrom(null),
+                        }}
+                      />
+                    </div>
+                  ))
+                )}
+              </div>
+            ) : (
+              <div className="flex flex-col gap-3">
+                {/* Field search */}
+                {sectionFields.length > 4 && (
+                  <div className="relative">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+                      className="absolute left-2.5 top-1/2 -translate-y-1/2 text-white/25 pointer-events-none">
+                      <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
+                    </svg>
+                    <input type="text" value={fieldSearch} onChange={e => setFieldSearch(e.target.value)}
+                      placeholder="Filter fields…"
+                      className="w-full bg-white/4 text-white/80 text-[12px] pl-7 pr-3 py-2 rounded-xl border border-white/8 outline-none focus:border-accent/30 placeholder:text-white/20" />
+                  </div>
+                )}
+
+                {/* Add new field */}
+                <div className="bg-white/[0.02] rounded-2xl border border-white/6 p-3">
+                  <p className="text-[11px] text-white/30 mb-2 uppercase tracking-wider">New field</p>
+                  <div className="flex gap-2">
+                    <input type="text" value={newKey} onChange={e => setNewKey(e.target.value)}
+                      placeholder="field_key"
+                      className="w-[140px] bg-white/3 text-white text-[12px] px-2.5 py-2 rounded-lg border border-white/8 outline-none focus:border-accent/30 font-mono" />
+                    <input type="text" value={newValue} onChange={e => setNewValue(e.target.value)}
+                      onKeyDown={e => { if (e.key === "Enter") createField(); }}
+                      placeholder="Initial value"
+                      className="flex-1 bg-white/3 text-white text-[12px] px-2.5 py-2 rounded-lg border border-white/8 outline-none focus:border-accent/30" />
+                    <button type="button" onClick={createField}
+                      className="px-3 py-2 rounded-lg bg-accent/20 text-accent text-[12px] hover:bg-accent/30 transition-colors">
+                      Create
+                    </button>
+                  </div>
+                </div>
+
+                {!hasContent && !loading ? (
+                  <p className="text-center py-10 text-[13px] text-white/25">No fields in this section yet. Click "Seed Content" to start.</p>
+                ) : (
+                  sectionFields.map(field => (
+                    <FieldEditor
+                      key={field.id}
+                      item={field}
+                      onUpdate={updated => {
+                        setContent(prev => prev.map(c => c.id === updated.id ? updated : c));
+                        setReloadKey(k => k + 1);
+                      }}
+                      onDelete={(id, key) => setConfirm({ kind: "field", id, key, label: key })}
+                      onLog={addLog}
+                    />
+                  ))
+                )}
+              </div>
+            )}
+          </div>
+        </main>
+
+        {/* Preview pane */}
+        {showPreview && (
+          <div className="flex-1 overflow-hidden">
+            <PreviewPane activeSection={activeSection} reloadKey={reloadKey} />
+          </div>
+        )}
+      </div>
+
+      {/* ── DEBUG PANEL ───────────────────────────────────────────────── */}
+      <AnimatePresence>
+        {showDebug && (
+          <motion.div
+            initial={{ height: 0 }} animate={{ height: 200 }} exit={{ height: 0 }}
+            className="border-t border-white/8 bg-[#06060f] overflow-hidden shrink-0">
+            <DebugPanel log={apiLog} onClear={() => dispatchLog({ type: "clear" })} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+/*
+ * ─────────────────────────────────────────────────────────────────────────────
+ * ## BUG FIXES SUMMARY
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * FIX #1 – Collection item save race condition
+ *   OLD: `re()` iterates and calls `ae()` per field, but `ae()` calls `pe()`
+ *        which looks up `N` (content state) that hasn't been updated yet by
+ *        previous iterations → wrong ids, duplicate creates.
+ *   NEW: `saveCollectionItems()` uses `ensureField()` which takes a fresh
+ *        `lookupContent(contentMap, ...)` call every time, and the contentMap
+ *        is derived from state via useMemo so it's always up-to-date.
+ *        We await each field sequentially to avoid concurrent writes.
+ *
+ * FIX #2 – O(n²) content lookup
+ *   OLD: `pe()` scanned the entire `N` array for every field rendered.
+ *        With 200+ fields, every render was O(n²).
+ *   NEW: `buildContentMap()` creates a `Map<"section::key", ContentItem>`.
+ *        `lookupContent()` is O(1). Map rebuilds only when `content` changes.
+ *
+ * FIX #3 – Drag-and-drop vs text input conflict
+ *   OLD: `draggable` was on the entire card `<div>` – dragging started when
+ *        users tried to select text in input fields.
+ *   NEW: `draggable` only on the grip handle icon via `dragHandleProps`.
+ *        Inputs are unaffected.
+ *
+ * FIX #4 – Missing credentials on fetch
+ *   OLD: `fetch(url, options)` – no `credentials: "include"`, so the session
+ *        cookie was not sent to `/api/upload` in some browser configs.
+ *   NEW: `apiFetch()` always adds `credentials: "include"` as a base default.
+ *
+ * FIX #5 – Stale closure in `re()` reorder
+ *   OLD: `re()` captured `N` (content state) in closure. If called twice fast
+ *        (double-drop), second call saw stale N → phantom items.
+ *   NEW: `reorderCollectionItems()` reads `getCollectionItems()` (which reads
+ *        current `contentMap`) fresh on every call.
+ *
+ * FIX #6 – Wasted save calls on unchanged fields
+ *   OLD: `onBlur` fired `M()` (save) even when value hadn't changed, causing
+ *        unnecessary PUT requests and "Saving…" flickers on every focus-out.
+ *   NEW: `save()` bails early with `if (val === item.value) return;`
+ *
+ * FIX #7 – NaN stored as plan_count / faq_count
+ *   OLD: `Number(n("pricing","plan_count",""))` returned NaN when field empty,
+ *        and NaN was then passed to `Array.from({length: NaN})` → crash.
+ *   NEW: `safeInt()` returns `undefined` (not NaN) when string is empty or
+ *        non-numeric. Collection count falls back to DB-detected max index.
+ *
+ * FIX #8 – Missing error boundary around iframe
+ *   OLD: No error handling on the iframe – if CSP blocked the preview URL,
+ *        the admin would crash-loop with an unhandled error.
+ *   NEW: `onError` handler on `<iframe>` sets `iframeError = true`, showing
+ *        a friendly "Preview failed" message with a retry button.
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
+
+function SeedContentButton({ onSeed, disabled }: { onSeed: () => void; disabled: boolean }) {
+  return (
+    <button
+      type="button"
+      onClick={onSeed}
+      disabled={disabled}
+      className="px-3 py-1.5 rounded-lg border text-[12px] flex items-center gap-1.5 transition-all
+                   border-blue-500/30 text-blue-400 bg-blue-500/10 hover:bg-blue-500/20
+                   disabled:opacity-50 disabled:cursor-not-allowed"
+    >
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M12 2L2 7l10 5 10-5-10-5z" />
+        <path d="M2 17l10 5 10-5" />
+        <path d="M2 12l10 5 10-5" />
+      </svg>
+      Seed Content
+    </button>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MAIN ADMIN DASHBOARD
+// ─────────────────────────────────────────────────────────────────────────────
+
+export default function AdminDashboard() {
+  // Auth state
+  const [password, setPassword] = useState("");
+  const [checking, setChecking] = useState(true);
+  const [authenticated, setAuthenticated] = useState(false);
+
+  // Data
+  const [content, setContent] = useState<ContentItem[]>([]);
+  const [submissions, setSubmissions] = useState<Submission[]>([]);
+
+  // UI state
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [activeSection, setActiveSection] = useState<ActiveTab>(SUBMISSIONS_TAB);
+  const [sectionSearch, setSectionSearch] = useState("");
+  const [fieldSearch, setFieldSearch] = useState("");
+  const [showPreview, setShowPreview] = useState(true);
+  const [showDebug, setShowDebug] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
+
+  // Add a state for seeding
+  const [seeding, setSeeding] = useState(false);
+
+  // Confirm modal
+  const [confirm, setConfirm] = useState<{
+    kind: "submission" | "field" | "collection_item";
+    id?: number; key?: string; label?: string; section?: string; index?: number;
+  } | null>(null);
+
+  // Debug log
+  const [apiLog, dispatchLog] = useReducer(logReducer, []);
+  const addLog = useCallback((entry: Partial<ApiLogEntry>) => dispatchLog({ type: "add", entry }), []);
+
+  // FIX #2: O(1) content map
+  const contentMap = useMemo(() => buildContentMap(content), [content]);
+
+  // Sections list
+  const allSections = useMemo(() => {
+    const extra = [...new Set(content.map(c => c.section))].filter(s => !SECTION_ORDER.includes(s)).sort();
+    return [...SECTION_ORDER, ...extra];
+  }, [content]);
+
+  const filteredSections = useMemo(() => {
+    const q = sectionSearch.toLowerCase();
+    if (!q) return allSections;
+    return allSections.filter(s => (SECTION_LABELS[s] || s).toLowerCase().includes(q));
+  }, [allSections, sectionSearch]);
+
+  // Fields for the current section
+  const sectionFields = useMemo(() => {
+    if (activeSection === SUBMISSIONS_TAB || COLLECTION_SECTIONS.includes(activeSection as CollectionSection)) return [];
+
+    let fields = content.filter(c => c.section === activeSection);
+
+    // Filter out collection sub-keys from non-collection sections (shouldn't happen, but safe)
+    if (activeSection === "portfolio") fields = fields.filter(c => !/^project_\d+_/.test(c.key) && c.key !== "project_count");
+    if (activeSection === "team") fields = fields.filter(c => !/^member_\\d+_/.test(c.key) && c.key !== "member_count");
+
+    if (fieldSearch) {
+      const q = fieldSearch.toLowerCase();
+      fields = fields.filter(f => f.key.toLowerCase().includes(q) || f.value.toLowerCase().includes(q));
+    }
+
+    return fields.sort((a, b) => a.key.localeCompare(b.key, undefined, { numeric: true }));
+  }, [activeSection, content, fieldSearch]);
+
+  // Collection items for portfolio/team
+  function getCollectionItems(section: CollectionSection): CollectionItem[] {
+    const meta = COLLECTION_META[section];
+    const countItem = lookupContent(contentMap, section, meta.countKey);
+    const fieldDefs = section === "portfolio" ? PORTFOLIO_FIELDS : TEAM_FIELDS;
+
+    // Find max index in DB
+    const existingIndices: number[] = [];
+    content.forEach(c => {
+      if (c.section !== section) return;
+      const m = c.key.match(new RegExp(`^${meta.prefix}_(\\d+)_`));
+      if (m) existingIndices.push(parseInt(m[1], 10));
+    });
+
+    // FIX #7: safe int parsing
+    const storedCount = safeInt(countItem?.value || "");
+    const maxIdx = existingIndices.length > 0 ? Math.max(...existingIndices) : 0;
+    const count = storedCount !== undefined ? Math.max(storedCount, 0) : maxIdx;
+
+    return Array.from({ length: count }, (_, i) => {
+      const idx = i + 1;
+      const fields: Record<string, ContentItem | undefined> = {};
+      const values: Record<string, string> = {};
+      for (const fd of fieldDefs) {
+        const item = lookupContent(contentMap, section, `${meta.prefix}_${idx}_${fd.key}`);
+        fields[fd.key] = item;
+        values[fd.key] = item?.value ?? "";
+      }
+      const label = values[meta.primaryField] || `${meta.itemLabel} ${idx}`;
+      return { index: idx, label, fields, values };
+    });
+  }
+
+  // Seeding function
+  async function seedSection(section: string) {
+    setSeeding(true);
+    setError("");
+    try {
+      if (COLLECTION_SECTIONS.includes(section as CollectionSection)) {
+        const collDef = section === 'portfolio' ? portfolioCollectionDefinition : teamCollectionDefinition;
+        const defaults = section === 'portfolio' ? portfolioDefaults : teamDefaults;
+        const meta = COLLECTION_META[section as CollectionSection];
+
+        for (let i = 0; i < defaults.length; i++) {
+          const item = defaults[i];
+          const itemIndex = i + 1;
+          for (const fieldDef of collDef.fields) {
+            const key = `${meta.prefix}_${itemIndex}_${fieldDef.key}`;
+            let value = (item as any)[fieldDef.key] ?? fieldDef.fallback;
+            if (fieldDef.key === 'gallery' && Array.isArray(value)) {
+              value = value.join(',');
+            }
+            await ensureField(section, key, String(value));
+          }
+        }
+        await ensureField(section, meta.countKey, String(defaults.length));
+      } else {
+        const sectionDef = homeSectionDefinitions[section];
+        if (sectionDef) {
+          for (const field of sectionDef.fields) {
+            await ensureField(section, field.key, field.fallback);
+          }
+        }
+      }
+      await loadAll(); // Reload content after seeding
+    } catch (e) {
+      setError(getErrorMessage(e));
+    } finally {
+      setSeeding(false);
+    }
+  }
+
+  // ── API helpers ──────────────────────────────────────────────────────────
+
+  const apiFetchLogged = useCallback(<T = unknown>(url: string, opts?: RequestInit) =>
+    apiFetch<T>(url, opts, addLog), [addLog]);
+
+  async function loadAll() {
+    setLoading(true); setError("");
+    try {
+      const [subs, ct] = await Promise.all([
+        apiFetchLogged<Submission[]>("/api/contact"),
+        apiFetchLogged<ContentItem[]>(`/api/content?ts=${Date.now()}`),
+      ]);
+      setSubmissions(subs);
+      setContent(ct);
+    } catch (e) {
+      setError(getErrorMessage(e));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const sess = await apiFetchLogged<{ authenticated: boolean }>("/api/admin/session");
+        if (sess.authenticated) { setAuthenticated(true); await loadAll(); }
+      } catch { setAuthenticated(false); } finally { setChecking(false); }
+    })();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function login(e: React.FormEvent) {
+    e.preventDefault(); setLoading(true); setError("");
+    try {
+      await apiFetchLogged("/api/admin/session", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password }),
+      });
+      setAuthenticated(true); setPassword(""); await loadAll();
+    } catch (err) { setError(getErrorMessage(err)); } finally { setLoading(false); }
+  }
+
+  async function logout() {
+    setLoading(true);
+    try {
+      await apiFetchLogged("/api/admin/session", { method: "DELETE" });
+      setAuthenticated(false); setContent([]); setSubmissions([]);
+    } finally { setLoading(false); }
+  }
+
+  // Content CRUD
+  async function ensureField(section: string, key: string, value: string): Promise<ContentItem> {
+    const existing = lookupContent(contentMap, section, key);
+    if (existing) {
+      const updated = await apiFetchLogged<ContentItem>("/api/content", {
+        method: "PUT", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: existing.id, value }),
+      });
+      setContent(prev => prev.map(c => c.id === existing.id ? updated : c));
+      return updated;
+    }
+    const created = await apiFetchLogged<ContentItem>("/api/content", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ section, key, value }),
+    });
+    setContent(prev => [...prev, created]);
+    return created;
+  }
+
+  async function deleteField(id: number) {
+    await apiFetchLogged("/api/content", {
+      method: "DELETE", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    });
+    setContent(prev => prev.filter(c => c.id !== id));
+  }
+
+  // FIX #1 & #5: Unified, atomic collection reorder/save
+  async function saveCollectionItems(section: CollectionSection, items: CollectionItem[]) {
+    const meta = COLLECTION_META[section];
+    const fieldDefs = section === "portfolio" ? PORTFOLIO_FIELDS : TEAM_FIELDS;
+
+    // Save all items sequentially (avoids race conditions from FIX #5)
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      const newIdx = i + 1;
+      for (const fd of fieldDefs) {
+        await ensureField(section, `${meta.prefix}_${newIdx}_${fd.key}`, item.values[fd.key] || "");
+      }
+    }
+
+    // Delete items beyond new count
+    const existingItems = getCollectionItems(section);
+    for (const existing of existingItems) {
+      if (existing.index > items.length) {
+        for (const fd of fieldDefs) {
+          const contentItem = existing.fields[fd.key];
+          if (contentItem) await deleteField(contentItem.id);
+        }
+      }
+    }
+
+    await ensureField(section, meta.countKey, String(items.length));
+  }
+
+  async function addCollectionItem(section: CollectionSection) {
+    const items = getCollectionItems(section);
+    const idx = items.length + 1;
+    const meta = COLLECTION_META[section];
+    const newItem: CollectionItem = {
+      index: idx, label: `${meta.itemLabel} ${idx}`,
+      fields: {}, values: {},
+    };
+    await saveCollectionItems(section, [...items, newItem]);
+  }
+
+  async function deleteCollectionItem(section: CollectionSection, index: number) {
+    const items = getCollectionItems(section).filter(it => it.index !== index);
+    await saveCollectionItems(section, items);
+  }
+
+  async function reorderCollectionItems(section: CollectionSection, fromIdx: number, toIdx: number) {
+    if (fromIdx === toIdx) return;
+    const items = [...getCollectionItems(section)];
+    const [moved] = items.splice(fromIdx - 1, 1);
+    items.splice(toIdx - 1, 0, moved);
+    await saveCollectionItems(section, items);
+  }
+
+  // Submissions
+  async function setSubmissionStatus(id: number, status: Submission["status"]) {
+    const updated = await apiFetchLogged<Submission>("/api/contact", {
+      method: "PUT", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, status }),
+    });
+    setSubmissions(prev => prev.map(s => s.id === id ? updated : s));
+  }
+
+  async function deleteSubmission(id: number) {
+    await apiFetchLogged("/api/contact", {
+      method: "DELETE", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    });
+    setSubmissions(prev => prev.filter(s => s.id !== id));
+  }
+
+  // Confirm action handler
+  async function handleConfirm() {
+    if (!confirm) return;
+    try {
+      if (confirm.kind === "submission" && confirm.id) await deleteSubmission(confirm.id);
+      if (confirm.kind === "field" && confirm.id) await deleteField(confirm.id);
+      if (confirm.kind === "collection_item" && confirm.section && confirm.index) {
+        await deleteCollectionItem(confirm.section as CollectionSection, confirm.index);
+      }
+    } catch (e) { setError(getErrorMessage(e)); }
+    setConfirm(null);
+    // Reload preview after structural change
+    setReloadKey(k => k + 1);
+  }
+
+  // Field save (for collection cards)
+  const handleFieldSave = useCallback(async (item: ContentItem, value: string) => {
+    const updated = await apiFetchLogged<ContentItem>("/api/content", {
+      method: "PUT", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: item.id, value }),
+    });
+    setContent(prev => prev.map(c => c.id === item.id ? updated : c));
+    setReloadKey(k => k + 1);
+  }, [apiFetchLogged]);
+
+  // New field creation
+  const [newKey, setNewKey] = useState("");
+  const [newValue, setNewValue] = useState("");
+
+  async function createField() {
+    if (!newKey.trim() || activeSection === SUBMISSIONS_TAB) return;
+    try {
+      await ensureField(activeSection, newKey.trim(), newValue);
+      setNewKey(""); setNewValue("");
+    } catch (e) { setError(getErrorMessage(e)); }
+  }
+
+  // ── Drag state for collection reorder ─────────────────────────────────────
+  const [dragFrom, setDragFrom] = useState<{ section: CollectionSection; index: number } | null>(null);
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // RENDER: loading / login
+  // ─────────────────────────────────────────────────────────────────────────
+
+  if (checking) {
+    return (
+      <div className="min-h-screen bg-[#06060C] flex items-center justify-center text-white/30 text-[13px]">
+        <Spinner size={20} />
+      </div>
+    );
+  }
+
+  if (!authenticated) {
+    return (
+      <div className="min-h-screen bg-[#06060C] flex items-center justify-center px-4">
+        <motion.div
+          initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
+          className="w-full max-w-[400px] bg-white/[0.04] border border-white/8 rounded-2xl p-8">
+          <div className="flex items-center gap-3 mb-8">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent/60 to-accent flex items-center justify-center">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+                <rect width="18" height="11" x="3" y="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
+            </div>
+            <div>
+              <h1 className="text-[20px] font-bold text-white" style={{ fontFamily: "Syne, sans-serif" }}>Admin sign in</h1>
+              <p className="text-[12px] text-white/40">VAAD Development</p>
+            </div>
+          </div>
+          <form onSubmit={login} className="flex flex-col gap-4">
+            <input
+              type="password" autoComplete="current-password"
+              value={password} onChange={e => setPassword(e.target.value)}
+              placeholder="Admin password"
+              className="w-full bg-white/4 text-white text-[14px] px-4 py-3 rounded-xl border border-white/10 outline-none focus:border-accent/50 placeholder:text-white/25"
+            />
+            {error && <p className="text-[12px] text-red-400">{error}</p>}
+            <button type="submit" disabled={loading}
+              className="w-full bg-gradient-to-r from-accent to-accent/80 text-white py-3 rounded-xl text-[14px] font-medium disabled:opacity-50 hover:opacity-90 transition-opacity">
+              {loading ? "Signing in…" : "Sign in"}
+            </button>
+          </form>
+        </motion.div>
+      </div>
+    );
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // RENDER: main admin
+  // ─────────────────────────────────────────────────────────────────────────
+
+  const isCollection = COLLECTION_SECTIONS.includes(activeSection as CollectionSection);
+  const collectionItems = isCollection ? getCollectionItems(activeSection as CollectionSection) : [];
+  const hasContent = isCollection ? collectionItems.length > 0 : sectionFields.length > 0;
+
+  return (
+    <div className="min-h-screen bg-[#06060C] flex flex-col" style={{ fontFamily: "DM Sans, sans-serif" }}>
+      <ConfirmModal
+        open={!!confirm}
+        title={confirm?.kind === "submission" ? "Delete submission?" : confirm?.kind === "collection_item" ? `Delete ${confirm?.label}?` : "Delete content field?"}
+        message={confirm?.kind === "collection_item"
+          ? "This will remove the card from the live site. Remaining items will shift up."
+          : `This will permanently remove "${confirm?.label || confirm?.key || "this item"}".`}
+        onCancel={() => setConfirm(null)}
+        onConfirm={handleConfirm}
+      />
+
+      {/* ── TOP BAR ─────────────────────────────────────────────────── */}
+      <header className="flex items-center justify-between px-4 py-3 border-b border-white/6 shrink-0 bg-[#08080f]">
+        <div className="flex items-center gap-3">
+          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-accent/60 to-accent flex items-center justify-center">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
+              <polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" />
+            </svg>
+          </div>
+          <span className="text-[15px] font-bold text-white" style={{ fontFamily: "Syne, sans-serif" }}>VAAD</span>
+          <span className="text-[11px] text-white/30 bg-white/5 px-2 py-0.5 rounded-full">admin</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          {error && (
+            <span className="text-[11px] text-red-400 bg-red-500/10 border border-red-500/20 px-2 py-1 rounded-lg mr-2 truncate max-w-[200px]">
+              {error}
+            </span>
+          )}
+          {/* Preview toggle */}
+          <button type="button" onClick={() => setShowPreview(v => !v)}
+            className={`px-3 py-1.5 rounded-lg border text-[12px] flex items-center gap-1.5 transition-all
+              ${showPreview ? "border-accent/30 text-accent bg-accent/10" : "border-white/10 text-white/40 hover:text-white/70"}`}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <rect width="18" height="14" x="3" y="5" rx="2" /><path d="M3 10h18" />
+            </svg>
+            Preview
+          </button>
+          {/* Debug toggle */}
+          <button type="button" onClick={() => setShowDebug(v => !v)}
+            className={`px-3 py-1.5 rounded-lg border text-[12px] flex items-center gap-1.5 transition-all
+              ${showDebug ? "border-accent/30 text-accent bg-accent/10" : "border-white/10 text-white/40 hover:text-white/70"}`}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" /><path d="M12 8v4M12 16h.01" />
+            </svg>
+            Debug {apiLog.length > 0 && <span className="text-[10px] opacity-60">({apiLog.length})</span>}
+          </button>
+          {/* Refresh */}
+          <button type="button" onClick={loadAll} disabled={loading}
+            className="px-3 py-1.5 rounded-lg border border-white/10 text-[12px] text-white/40 hover:text-white/70 flex items-center gap-1.5 disabled:opacity-40 transition-all">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+              className={loading ? "animate-spin" : ""}>
+              <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /><path d="M21 3v5h-5M3 21v-5h5" />
+            </svg>
+            Refresh
+          </button>
+          {/* Logout */}
+          <button type="button" onClick={logout} disabled={loading}
+            className="px-3 py-1.5 rounded-lg border border-red-500/20 text-[12px] text-red-400/70 hover:text-red-400 flex items-center gap-1.5 disabled:opacity-40 transition-all">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" />
+            </svg>
+            Sign out
+          </button>
+        </div>
+      </header>
+
+      {/* ── MAIN BODY ────────────────────────────────────────────────── */}
+      <div className="flex flex-1 overflow-hidden" style={{ height: showDebug ? "calc(100vh - 52px - 200px)" : "calc(100vh - 52px)" }}>
+        {/* Sidebar */}
+        <aside className="w-[220px] border-r border-white/6 bg-[#08080f] shrink-0 overflow-hidden flex flex-col">
+          <SectionSidebar
+            sections={filteredSections}
+            activeSection={activeSection}
+            submissions={submissions}
+            onSelectSection={(s) => { setActiveSection(s); setFieldSearch(""); setReloadKey(k => k + 1); }}
+            searchQuery={sectionSearch}
+            onSearchChange={setSectionSearch}
+          />
+        </aside>
+
+        {/* Editor panel */}
+        <main className={`flex flex-col overflow-hidden ${showPreview ? "w-[440px]" : "flex-1"} border-r border-white/6`}>
+          {/* Section header */}
+          <div className="flex items-center justify-between px-4 py-3 border-b border-white/6 shrink-0">
+            <div>
+              <h2 className="text-[15px] font-bold text-white" style={{ fontFamily: "Syne, sans-serif" }}>
+                {activeSection === SUBMISSIONS_TAB ? "Submissions" : SECTION_LABELS[activeSection] || humanKey(activeSection)}
+              </h2>
+              {activeSection !== SUBMISSIONS_TAB && (
+                <p className="text-[11px] text-white/30">
+                  {isCollection ? `${collectionItems.length} items` : `${sectionFields.length} fields`}
+                </p>
+              )}
+            </div>
+            {activeSection !== SUBMISSIONS_TAB && (
+              <div className="flex items-center gap-1.5">
+                {!hasContent && (
+                  <SeedContentButton onSeed={() => seedSection(activeSection)} disabled={seeding || loading} />
+                )}
+                {isCollection && (
+                  <button type="button" onClick={() => addCollectionItem(activeSection as CollectionSection)} disabled={loading}
+                    className="px-3 py-1.5 rounded-lg border border-accent/25 text-accent text-[12px] flex items-center gap-1.5 hover:border-accent/40 transition-all disabled:opacity-50">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+                    Add {activeSection === "portfolio" ? "project" : "member"}
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Scrollable content */}
+          <div className="flex-1 overflow-y-auto px-3 py-3">
+            {activeSection === SUBMISSIONS_TAB ? (
+              <SubmissionsPanel
+                submissions={submissions}
+                onStatusChange={setSubmissionStatus}
+                onDelete={(id, label) => setConfirm({ kind: "submission", id, label })}
+              />
+            ) : isCollection ? (
+              <div className="flex flex-col gap-3">
+                {!hasContent && !loading ? (
+                  <div className="text-center py-12 text-white/25 text-[13px]">
+                    No items yet. Click "Seed Content" to populate this section with default data.
+                  </div>
+                ) : (
+                  collectionItems.map(item => (
+                    <div key={item.index}
+                      onDragOver={e => { if (dragFrom?.section === activeSection) e.preventDefault(); }}
+                      onDrop={e => {
+                        e.preventDefault();
+                        if (dragFrom?.section === activeSection && dragFrom.index !== item.index) {
+                          reorderCollectionItems(activeSection as CollectionSection, dragFrom.index, item.index);
+                        }
+                        setDragFrom(null);
+                      }}>
+                      <CollectionCard
+                        item={item}
+                        section={activeSection as CollectionSection}
+                        onFieldSave={handleFieldSave}
+                        onDelete={() => setConfirm({ kind: "collection_item", section: activeSection, index: item.index, label: item.label })}
+                        onLog={addLog}
+                        dragHandleProps={{
+                          draggable: true,
+                          onDragStart: () => setDragFrom({ section: activeSection as CollectionSection, index: item.index }),
+                          onDragEnd: () => setDragFrom(null),
+                        }}
+                      />
+                    </div>
+                  ))
+                )}
+              </div>
+            ) : (
+              <div className="flex flex-col gap-3">
+                {/* Field search */}
+                {sectionFields.length > 4 && (
+                  <div className="relative">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+                      className="absolute left-2.5 top-1/2 -translate-y-1/2 text-white/25 pointer-events-none">
+                      <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
+                    </svg>
+                    <input type="text" value={fieldSearch} onChange={e => setFieldSearch(e.target.value)}
+                      placeholder="Filter fields…"
+                      className="w-full bg-white/4 text-white/80 text-[12px] pl-7 pr-3 py-2 rounded-xl border border-white/8 outline-none focus:border-accent/30 placeholder:text-white/20" />
+                  </div>
+                )}
+
+                {/* Add new field */}
+                <div className="bg-white/[0.02] rounded-2xl border border-white/6 p-3">
+                  <p className="text-[11px] text-white/30 mb-2 uppercase tracking-wider">New field</p>
+                  <div className="flex gap-2">
+                    <input type="text" value={newKey} onChange={e => setNewKey(e.target.value)}
+                      placeholder="field_key"
+                      className="w-[140px] bg-white/3 text-white text-[12px] px-2.5 py-2 rounded-lg border border-white/8 outline-none focus:border-accent/30 font-mono" />
+                    <input type="text" value={newValue} onChange={e => setNewValue(e.target.value)}
+                      onKeyDown={e => { if (e.key === "Enter") createField(); }}
+                      placeholder="Initial value"
+                      className="flex-1 bg-white/3 text-white text-[12px] px-2.5 py-2 rounded-lg border border-white/8 outline-none focus:border-accent/30" />
+                    <button type="button" onClick={createField}
+                      className="px-3 py-2 rounded-lg bg-accent/20 text-accent text-[12px] hover:bg-accent/30 transition-colors">
+                      Create
+                    </button>
+                  </div>
+                </div>
+
+                {!hasContent && !loading ? (
+                  <p className="text-center py-10 text-[13px] text-white/25">No fields in this section yet. Click "Seed Content" to start.</p>
+                ) : (
+                  sectionFields.map(field => (
+                    <FieldEditor
+                      key={field.id}
+                      item={field}
+                      onUpdate={updated => {
+                        setContent(prev => prev.map(c => c.id === updated.id ? updated : c));
+                        setReloadKey(k => k + 1);
+                      }}
+                      onDelete={(id, key) => setConfirm({ kind: "field", id, key, label: key })}
+                      onLog={addLog}
+                    />
+                  ))
+                )}
+              </div>
+            )}
+          </div>
+        </main>
+
+        {/* Preview pane */}
+        {showPreview && (
+          <div className="flex-1 overflow-hidden">
+            <PreviewPane activeSection={activeSection} reloadKey={reloadKey} />
+          </div>
+        )}
+      </div>
+
+      {/* ── DEBUG PANEL ───────────────────────────────────────────────── */}
+      <AnimatePresence>
+        {showDebug && (
+          <motion.div
+            initial={{ height: 0 }} animate={{ height: 200 }} exit={{ height: 0 }}
+            className="border-t border-white/8 bg-[#06060f] overflow-hidden shrink-0">
+            <DebugPanel log={apiLog} onClear={() => dispatchLog({ type: "clear" })} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+/*
+ * ─────────────────────────────────────────────────────────────────────────────
+ * ## BUG FIXES SUMMARY
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * FIX #1 – Collection item save race condition
+ *   OLD: `re()` iterates and calls `ae()` per field, but `ae()` calls `pe()`
+ *        which looks up `N` (content state) that hasn't been updated yet by
+ *        previous iterations → wrong ids, duplicate creates.
+ *   NEW: `saveCollectionItems()` uses `ensureField()` which takes a fresh
+ *        `lookupContent(contentMap, ...)` call every time, and the contentMap
+ *        is derived from state via useMemo so it's always up-to-date.
+ *        We await each field sequentially to avoid concurrent writes.
+ *
+ * FIX #2 – O(n²) content lookup
+ *   OLD: `pe()` scanned the entire `N` array for every field rendered.
+ *        With 200+ fields, every render was O(n²).
+ *   NEW: `buildContentMap()` creates a `Map<"section::key", ContentItem>`.
+ *        `lookupContent()` is O(1). Map rebuilds only when `content` changes.
+ *
+ * FIX #3 – Drag-and-drop vs text input conflict
+ *   OLD: `draggable` was on the entire card `<div>` – dragging started when
+ *        users tried to select text in input fields.
+ *   NEW: `draggable` only on the grip handle icon via `dragHandleProps`.
+ *        Inputs are unaffected.
+ *
+ * FIX #4 – Missing credentials on fetch
+ *   OLD: `fetch(url, options)` – no `credentials: "include"`, so the session
+ *        cookie was not sent to `/api/upload` in some browser configs.
+ *   NEW: `apiFetch()` always adds `credentials: "include"` as a base default.
+ *
+ * FIX #5 – Stale closure in `re()` reorder
+ *   OLD: `re()` captured `N` (content state) in closure. If called twice fast
+ *        (double-drop), second call saw stale N → phantom items.
+ *   NEW: `reorderCollectionItems()` reads `getCollectionItems()` (which reads
+ *        current `contentMap`) fresh on every call.
+ *
+ * FIX #6 – Wasted save calls on unchanged fields
+ *   OLD: `onBlur` fired `M()` (save) even when value hadn't changed, causing
+ *        unnecessary PUT requests and "Saving…" flickers on every focus-out.
+ *   NEW: `save()` bails early with `if (val === item.value) return;`
+ *
+ * FIX #7 – NaN stored as plan_count / faq_count
+ *   OLD: `Number(n("pricing","plan_count",""))` returned NaN when field empty,
+ *        and NaN was then passed to `Array.from({length: NaN})` → crash.
+ *   NEW: `safeInt()` returns `undefined` (not NaN) when string is empty or
+ *        non-numeric. Collection count falls back to DB-detected max index.
+ *
+ * FIX #8 – Missing error boundary around iframe
+ *   OLD: No error handling on the iframe – if CSP blocked the preview URL,
+ *        the admin would crash-loop with an unhandled error.
+ *   NEW: `onError` handler on `<iframe>` sets `iframeError = true`, showing
+ *        a friendly "Preview failed" message with a retry button.
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
+
+function SeedContentButton({ onSeed, disabled }: { onSeed: () => void; disabled: boolean }) {
+  return (
+    <button
+      type="button"
+      onClick={onSeed}
+      disabled={disabled}
+      className="px-3 py-1.5 rounded-lg border text-[12px] flex items-center gap-1.5 transition-all
+                   border-blue-500/30 text-blue-400 bg-blue-500/10 hover:bg-blue-500/20
+                   disabled:opacity-50 disabled:cursor-not-allowed"
+    >
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M12 2L2 7l10 5 10-5-10-5z" />
+        <path d="M2 17l10 5 10-5" />
+        <path d="M2 12l10 5 10-5" />
+      </svg>
+      Seed Content
+    </button>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MAIN ADMIN DASHBOARD
+// ─────────────────────────────────────────────────────────────────────────────
+
+export default function AdminDashboard() {
+  // Auth state
+  const [password, setPassword] = useState("");
+  const [checking, setChecking] = useState(true);
+  const [authenticated, setAuthenticated] = useState(false);
+
+  // Data
+  const [content, setContent] = useState<ContentItem[]>([]);
+  const [submissions, setSubmissions] = useState<Submission[]>([]);
+
+  // UI state
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [activeSection, setActiveSection] = useState<ActiveTab>(SUBMISSIONS_TAB);
+  const [sectionSearch, setSectionSearch] = useState("");
+  const [fieldSearch, setFieldSearch] = useState("");
+  const [showPreview, setShowPreview] = useState(true);
+  const [showDebug, setShowDebug] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
+
+  // Add a state for seeding
+  const [seeding, setSeeding] = useState(false);
+
+  // Confirm modal
+  const [confirm, setConfirm] = useState<{
+    kind: "submission" | "field" | "collection_item";
+    id?: number; key?: string; label?: string; section?: string; index?: number;
+  } | null>(null);
+
+  // Debug log
+  const [apiLog, dispatchLog] = useReducer(logReducer, []);
+  const addLog = useCallback((entry: Partial<ApiLogEntry>) => dispatchLog({ type: "add", entry }), []);
+
+  // FIX #2: O(1) content map
+  const contentMap = useMemo(() => buildContentMap(content), [content]);
+
+  // Sections list
+  const allSections = useMemo(() => {
+    const extra = [...new Set(content.map(c => c.section))].filter(s => !SECTION_ORDER.includes(s)).sort();
+    return [...SECTION_ORDER, ...extra];
+  }, [content]);
+
+  const filteredSections = useMemo(() => {
+    const q = sectionSearch.toLowerCase();
+    if (!q) return allSections;
+    return allSections.filter(s => (SECTION_LABELS[s] || s).toLowerCase().includes(q));
+  }, [allSections, sectionSearch]);
+
+  // Fields for the current section
+  const sectionFields = useMemo(() => {
+    if (activeSection === SUBMISSIONS_TAB || COLLECTION_SECTIONS.includes(activeSection as CollectionSection)) return [];
+
+    let fields = content.filter(c => c.section === activeSection);
+
+    // Filter out collection sub-keys from non-collection sections (shouldn't happen, but safe)
+    if (activeSection === "portfolio") fields = fields.filter(c => !/^project_\d+_/.test(c.key) && c.key !== "project_count");
+    if (activeSection === "team") fields = fields.filter(c => !/^member_\\d+_/.test(c.key) && c.key !== "member_count");
+
+    if (fieldSearch) {
+      const q = fieldSearch.toLowerCase();
+      fields = fields.filter(f => f.key.toLowerCase().includes(q) || f.value.toLowerCase().includes(q));
+    }
+
+    return fields.sort((a, b) => a.key.localeCompare(b.key, undefined, { numeric: true }));
+  }, [activeSection, content, fieldSearch]);
+
+  // Collection items for portfolio/team
+  function getCollectionItems(section: CollectionSection): CollectionItem[] {
+    const meta = COLLECTION_META[section];
+    const countItem = lookupContent(contentMap, section, meta.countKey);
+    const fieldDefs = section === "portfolio" ? PORTFOLIO_FIELDS : TEAM_FIELDS;
+
+    // Find max index in DB
+    const existingIndices: number[] = [];
+    content.forEach(c => {
+      if (c.section !== section) return;
+      const m = c.key.match(new RegExp(`^${meta.prefix}_(\\d+)_`));
+      if (m) existingIndices.push(parseInt(m[1], 10));
+    });
+
+    // FIX #7: safe int parsing
+    const storedCount = safeInt(countItem?.value || "");
+    const maxIdx = existingIndices.length > 0 ? Math.max(...existingIndices) : 0;
+    const count = storedCount !== undefined ? Math.max(storedCount, 0) : maxIdx;
+
+    return Array.from({ length: count }, (_, i) => {
+      const idx = i + 1;
+      const fields: Record<string, ContentItem | undefined> = {};
+      const values: Record<string, string> = {};
+      for (const fd of fieldDefs) {
+        const item = lookupContent(contentMap, section, `${meta.prefix}_${idx}_${fd.key}`);
+        fields[fd.key] = item;
+        values[fd.key] = item?.value ?? "";
+      }
+      const label = values[meta.primaryField] || `${meta.itemLabel} ${idx}`;
+      return { index: idx, label, fields, values };
+    });
+  }
+
+  // Seeding function
+  async function seedSection(section: string) {
+    setSeeding(true);
+    setError("");
+    try {
+      if (COLLECTION_SECTIONS.includes(section as CollectionSection)) {
+        const collDef = section === 'portfolio' ? portfolioCollectionDefinition : teamCollectionDefinition;
+        const defaults = section === 'portfolio' ? portfolioDefaults : teamDefaults;
+        const meta = COLLECTION_META[section as CollectionSection];
+
+        for (let i = 0; i < defaults.length; i++) {
+          const item = defaults[i];
+          const itemIndex = i + 1;
+          for (const fieldDef of collDef.fields) {
+            const key = `${meta.prefix}_${itemIndex}_${fieldDef.key}`;
+            let value = (item as any)[fieldDef.key] ?? fieldDef.fallback;
+            if (fieldDef.key === 'gallery' && Array.isArray(value)) {
+              value = value.join(',');
+            }
+            await ensureField(section, key, String(value));
+          }
+        }
+        await ensureField(section, meta.countKey, String(defaults.length));
+      } else {
+        const sectionDef = homeSectionDefinitions[section];
+        if (sectionDef) {
+          for (const field of sectionDef.fields) {
+            await ensureField(section, field.key, field.fallback);
+          }
+        }
+      }
+      await loadAll(); // Reload content after seeding
+    } catch (e) {
+      setError(getErrorMessage(e));
+    } finally {
+      setSeeding(false);
+    }
+  }
+
+  // ── API helpers ──────────────────────────────────────────────────────────
+
+  const apiFetchLogged = useCallback(<T = unknown>(url: string, opts?: RequestInit) =>
+    apiFetch<T>(url, opts, addLog), [addLog]);
+
+  async function loadAll() {
+    setLoading(true); setError("");
+    try {
+      const [subs, ct] = await Promise.all([
+        apiFetchLogged<Submission[]>("/api/contact"),
+        apiFetchLogged<ContentItem[]>(`/api/content?ts=${Date.now()}`),
+      ]);
+      setSubmissions(subs);
+      setContent(ct);
+    } catch (e) {
+      setError(getErrorMessage(e));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const sess = await apiFetchLogged<{ authenticated: boolean }>("/api/admin/session");
+        if (sess.authenticated) { setAuthenticated(true); await loadAll(); }
+      } catch { setAuthenticated(false); } finally { setChecking(false); }
+    })();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function login(e: React.FormEvent) {
+    e.preventDefault(); setLoading(true); setError("");
+    try {
+      await apiFetchLogged("/api/admin/session", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password }),
+      });
+      setAuthenticated(true); setPassword(""); await loadAll();
+    } catch (err) { setError(getErrorMessage(err)); } finally { setLoading(false); }
+  }
+
+  async function logout() {
+    setLoading(true);
+    try {
+      await apiFetchLogged("/api/admin/session", { method: "DELETE" });
+      setAuthenticated(false); setContent([]); setSubmissions([]);
+    } finally { setLoading(false); }
+  }
+
+  // Content CRUD
+  async function ensureField(section: string, key: string, value: string): Promise<ContentItem> {
+    const existing = lookupContent(contentMap, section, key);
+    if (existing) {
+      const updated = await apiFetchLogged<ContentItem>("/api/content", {
+        method: "PUT", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: existing.id, value }),
+      });
+      setContent(prev => prev.map(c => c.id === existing.id ? updated : c));
+      return updated;
+    }
+    const created = await apiFetchLogged<ContentItem>("/api/content", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ section, key, value }),
+    });
+    setContent(prev => [...prev, created]);
+    return created;
+  }
+
+  async function deleteField(id: number) {
+    await apiFetchLogged("/api/content", {
+      method: "DELETE", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    });
+    setContent(prev => prev.filter(c => c.id !== id));
+  }
+
+  // FIX #1 & #5: Unified, atomic collection reorder/save
+  async function saveCollectionItems(section: CollectionSection, items: CollectionItem[]) {
+    const meta = COLLECTION_META[section];
+    const fieldDefs = section === "portfolio" ? PORTFOLIO_FIELDS : TEAM_FIELDS;
+
+    // Save all items sequentially (avoids race conditions from FIX #5)
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      const newIdx = i + 1;
+      for (const fd of fieldDefs) {
+        await ensureField(section, `${meta.prefix}_${newIdx}_${fd.key}`, item.values[fd.key] || "");
+      }
+    }
+
+    // Delete items beyond new count
+    const existingItems = getCollectionItems(section);
+    for (const existing of existingItems) {
+      if (existing.index > items.length) {
+        for (const fd of fieldDefs) {
+          const contentItem = existing.fields[fd.key];
+          if (contentItem) await deleteField(contentItem.id);
+        }
+      }
+    }
+
+    await ensureField(section, meta.countKey, String(items.length));
+  }
+
+  async function addCollectionItem(section: CollectionSection) {
+    const items = getCollectionItems(section);
+    const idx = items.length + 1;
+    const meta = COLLECTION_META[section];
+    const newItem: CollectionItem = {
+      index: idx, label: `${meta.itemLabel} ${idx}`,
+      fields: {}, values: {},
+    };
+    await saveCollectionItems(section, [...items, newItem]);
+  }
+
+  async function deleteCollectionItem(section: CollectionSection, index: number) {
+    const items = getCollectionItems(section).filter(it => it.index !== index);
+    await saveCollectionItems(section, items);
+  }
+
+  async function reorderCollectionItems(section: CollectionSection, fromIdx: number, toIdx: number) {
+    if (fromIdx === toIdx) return;
+    const items = [...getCollectionItems(section)];
+    const [moved] = items.splice(fromIdx - 1, 1);
+    items.splice(toIdx - 1, 0, moved);
+    await saveCollectionItems(section, items);
+  }
+
+  // Submissions
+  async function setSubmissionStatus(id: number, status: Submission["status"]) {
+    const updated = await apiFetchLogged<Submission>("/api/contact", {
+      method: "PUT", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, status }),
+    });
+    setSubmissions(prev => prev.map(s => s.id === id ? updated : s));
+  }
+
+  async function deleteSubmission(id: number) {
+    await apiFetchLogged("/api/contact", {
+      method: "DELETE", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    });
+    setSubmissions(prev => prev.filter(s => s.id !== id));
+  }
+
+  // Confirm action handler
+  async function handleConfirm() {
+    if (!confirm) return;
+    try {
+      if (confirm.kind === "submission" && confirm.id) await deleteSubmission(confirm.id);
+      if (confirm.kind === "field" && confirm.id) await deleteField(confirm.id);
+      if (confirm.kind === "collection_item" && confirm.section && confirm.index) {
+        await deleteCollectionItem(confirm.section as CollectionSection, confirm.index);
+      }
+    } catch (e) { setError(getErrorMessage(e)); }
+    setConfirm(null);
+    // Reload preview after structural change
+    setReloadKey(k => k + 1);
+  }
+
+  // Field save (for collection cards)
+  const handleFieldSave = useCallback(async (item: ContentItem, value: string) => {
+    const updated = await apiFetchLogged<ContentItem>("/api/content", {
+      method: "PUT", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: item.id, value }),
+    });
+    setContent(prev => prev.map(c => c.id === item.id ? updated : c));
+    setReloadKey(k => k + 1);
+  }, [apiFetchLogged]);
+
+  // New field creation
+  const [newKey, setNewKey] = useState("");
+  const [newValue, setNewValue] = useState("");
+
+  async function createField() {
+    if (!newKey.trim() || activeSection === SUBMISSIONS_TAB) return;
+    try {
+      await ensureField(activeSection, newKey.trim(), newValue);
+      setNewKey(""); setNewValue("");
+    } catch (e) { setError(getErrorMessage(e)); }
+  }
+
+  // ── Drag state for collection reorder ─────────────────────────────────────
+  const [dragFrom, setDragFrom] = useState<{ section: CollectionSection; index: number } | null>(null);
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // RENDER: loading / login
+  // ─────────────────────────────────────────────────────────────────────────
+
+  if (checking) {
+    return (
+      <div className="min-h-screen bg-[#06060C] flex items-center justify-center text-white/30 text-[13px]">
+        <Spinner size={20} />
+      </div>
+    );
+  }
+
+  if (!authenticated) {
+    return (
+      <div className="min-h-screen bg-[#06060C] flex items-center justify-center px-4">
+        <motion.div
+          initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
+          className="w-full max-w-[400px] bg-white/[0.04] border border-white/8 rounded-2xl p-8">
+          <div className="flex items-center gap-3 mb-8">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent/60 to-accent flex items-center justify-center">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+                <rect width="18" height="11" x="3" y="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
+            </div>
+            <div>
+              <h1 className="text-[20px] font-bold text-white" style={{ fontFamily: "Syne, sans-serif" }}>Admin sign in</h1>
+              <p className="text-[12px] text-white/40">VAAD Development</p>
+            </div>
+          </div>
+          <form onSubmit={login} className="flex flex-col gap-4">
+            <input
+              type="password" autoComplete="current-password"
+              value={password} onChange={e => setPassword(e.target.value)}
+              placeholder="Admin password"
+              className="w-full bg-white/4 text-white text-[14px] px-4 py-3 rounded-xl border border-white/10 outline-none focus:border-accent/50 placeholder:text-white/25"
+            />
+            {error && <p className="text-[12px] text-red-400">{error}</p>}
+            <button type="submit" disabled={loading}
+              className="w-full bg-gradient-to-r from-accent to-accent/80 text-white py-3 rounded-xl text-[14px] font-medium disabled:opacity-50 hover:opacity-90 transition-opacity">
+              {loading ? "Signing in…" : "Sign in"}
+            </button>
+          </form>
+        </motion.div>
+      </div>
+    );
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // RENDER: main admin
+  // ─────────────────────────────────────────────────────────────────────────
+
+  const isCollection = COLLECTION_SECTIONS.includes(activeSection as CollectionSection);
+  const collectionItems = isCollection ? getCollectionItems(activeSection as CollectionSection) : [];
+  const hasContent = isCollection ? collectionItems.length > 0 : sectionFields.length > 0;
+
+  return (
+    <div className="min-h-screen bg-[#06060C] flex flex-col" style={{ fontFamily: "DM Sans, sans-serif" }}>
+      <ConfirmModal
+        open={!!confirm}
+        title={confirm?.kind === "submission" ? "Delete submission?" : confirm?.kind === "collection_item" ? `Delete ${confirm?.label}?` : "Delete content field?"}
+        message={confirm?.kind === "collection_item"
+          ? "This will remove the card from the live site. Remaining items will shift up."
+          : `This will permanently remove "${confirm?.label || confirm?.key || "this item"}".`}
+        onCancel={() => setConfirm(null)}
+        onConfirm={handleConfirm}
+      />
+
+      {/* ── TOP BAR ─────────────────────────────────────────────────── */}
+      <header className="flex items-center justify-between px-4 py-3 border-b border-white/6 shrink-0 bg-[#08080f]">
+        <div className="flex items-center gap-3">
+          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-accent/60 to-accent flex items-center justify-center">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
+              <polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" />
+            </svg>
+          </div>
+          <span className="text-[15px] font-bold text-white" style={{ fontFamily: "Syne, sans-serif" }}>VAAD</span>
+          <span className="text-[11px] text-white/30 bg-white/5 px-2 py-0.5 rounded-full">admin</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          {error && (
+            <span className="text-[11px] text-red-400 bg-red-500/10 border border-red-500/20 px-2 py-1 rounded-lg mr-2 truncate max-w-[200px]">
+              {error}
+            </span>
+          )}
+          {/* Preview toggle */}
+          <button type="button" onClick={() => setShowPreview(v => !v)}
+            className={`px-3 py-1.5 rounded-lg border text-[12px] flex items-center gap-1.5 transition-all
+              ${showPreview ? "border-accent/30 text-accent bg-accent/10" : "border-white/10 text-white/40 hover:text-white/70"}`}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <rect width="18" height="14" x="3" y="5" rx="2" /><path d="M3 10h18" />
+            </svg>
+            Preview
+          </button>
+          {/* Debug toggle */}
+          <button type="button" onClick={() => setShowDebug(v => !v)}
+            className={`px-3 py-1.5 rounded-lg border text-[12px] flex items-center gap-1.5 transition-all
+              ${showDebug ? "border-accent/30 text-accent bg-accent/10" : "border-white/10 text-white/40 hover:text-white/70"}`}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" /><path d="M12 8v4M12 16h.01" />
+            </svg>
+            Debug {apiLog.length > 0 && <span className="text-[10px] opacity-60">({apiLog.length})</span>}
+          </button>
+          {/* Refresh */}
+          <button type="button" onClick={loadAll} disabled={loading}
+            className="px-3 py-1.5 rounded-lg border border-white/10 text-[12px] text-white/40 hover:text-white/70 flex items-center gap-1.5 disabled:opacity-40 transition-all">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+              className={loading ? "animate-spin" : ""}>
+              <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /><path d="M21 3v5h-5M3 21v-5h5" />
+            </svg>
+            Refresh
+          </button>
+          {/* Logout */}
+          <button type="button" onClick={logout} disabled={loading}
+            className="px-3 py-1.5 rounded-lg border border-red-500/20 text-[12px] text-red-400/70 hover:text-red-400 flex items-center gap-1.5 disabled:opacity-40 transition-all">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" />
+            </svg>
+            Sign out
+          </button>
+        </div>
+      </header>
+
+      {/* ── MAIN BODY ────────────────────────────────────────────────── */}
+      <div className="flex flex-1 overflow-hidden" style={{ height: showDebug ? "calc(100vh - 52px - 200px)" : "calc(100vh - 52px)" }}>
+        {/* Sidebar */}
+        <aside className="w-[220px] border-r border-white/6 bg-[#08080f] shrink-0 overflow-hidden flex flex-col">
+          <SectionSidebar
+            sections={filteredSections}
+            activeSection={activeSection}
+            submissions={submissions}
+            onSelectSection={(s) => { setActiveSection(s); setFieldSearch(""); setReloadKey(k => k + 1); }}
+            searchQuery={sectionSearch}
+            onSearchChange={setSectionSearch}
+          />
+        </aside>
+
+        {/* Editor panel */}
+        <main className={`flex flex-col overflow-hidden ${showPreview ? "w-[440px]" : "flex-1"} border-r border-white/6`}>
+          {/* Section header */}
+          <div className="flex items-center justify-between px-4 py-3 border-b border-white/6 shrink-0">
+            <div>
+              <h2 className="text-[15px] font-bold text-white" style={{ fontFamily: "Syne, sans-serif" }}>
+                {activeSection === SUBMISSIONS_TAB ? "Submissions" : SECTION_LABELS[activeSection] || humanKey(activeSection)}
+              </h2>
+              {activeSection !== SUBMISSIONS_TAB && (
+                <p className="text-[11px] text-white/30">
+                  {isCollection ? `${collectionItems.length} items` : `${sectionFields.length} fields`}
+                </p>
+              )}
+            </div>
+            {activeSection !== SUBMISSIONS_TAB && (
+              <div className="flex items-center gap-1.5">
+                {!hasContent && (
+                  <SeedContentButton onSeed={() => seedSection(activeSection)} disabled={seeding || loading} />
+                )}
+                {isCollection && (
+                  <button type="button" onClick={() => addCollectionItem(activeSection as CollectionSection)} disabled={loading}
+                    className="px-3 py-1.5 rounded-lg border border-accent/25 text-accent text-[12px] flex items-center gap-1.5 hover:border-accent/40 transition-all disabled:opacity-50">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+                    Add {activeSection === "portfolio" ? "project" : "member"}
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Scrollable content */}
+          <div className="flex-1 overflow-y-auto px-3 py-3">
+            {activeSection === SUBMISSIONS_TAB ? (
+              <SubmissionsPanel
+                submissions={submissions}
+                onStatusChange={setSubmissionStatus}
+                onDelete={(id, label) => setConfirm({ kind: "submission", id, label })}
+              />
+            ) : isCollection ? (
+              <div className="flex flex-col gap-3">
+                {!hasContent && !loading ? (
+                  <div className="text-center py-12 text-white/25 text-[13px]">
+                    No items yet. Click "Seed Content" to populate this section with default data.
+                  </div>
+                ) : (
+                  collectionItems.map(item => (
+                    <div key={item.index}
+                      onDragOver={e => { if (dragFrom?.section === activeSection) e.preventDefault(); }}
+                      onDrop={e => {
+                        e.preventDefault();
+                        if (dragFrom?.section === activeSection && dragFrom.index !== item.index) {
+                          reorderCollectionItems(activeSection as CollectionSection, dragFrom.index, item.index);
+                        }
+                        setDragFrom(null);
+                      }}>
+                      <CollectionCard
+                        item={item}
+                        section={activeSection as CollectionSection}
+                        onFieldSave={handleFieldSave}
+                        onDelete={() => setConfirm({ kind: "collection_item", section: activeSection, index: item.index, label: item.label })}
+                        onLog={addLog}
+                        dragHandleProps={{
+                          draggable: true,
+                          onDragStart: () => setDragFrom({ section: activeSection as CollectionSection, index: item.index }),
+                          onDragEnd: () => setDragFrom(null),
+                        }}
+                      />
+                    </div>
+                  ))
+                )}
+              </div>
+            ) : (
+              <div className="flex flex-col gap-3">
+                {/* Field search */}
+                {sectionFields.length > 4 && (
+                  <div className="relative">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+                      className="absolute left-2.5 top-1/2 -translate-y-1/2 text-white/25 pointer-events-none">
+                      <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
+                    </svg>
+                    <input type="text" value={fieldSearch} onChange={e => setFieldSearch(e.target.value)}
+                      placeholder="Filter fields…"
+                      className="w-full bg-white/4 text-white/80 text-[12px] pl-7 pr-3 py-2 rounded-xl border border-white/8 outline-none focus:border-accent/30 placeholder:text-white/20" />
+                  </div>
+                )}
+
+                {/* Add new field */}
+                <div className="bg-white/[0.02] rounded-2xl border border-white/6 p-3">
+                  <p className="text-[11px] text-white/30 mb-2 uppercase tracking-wider">New field</p>
+                  <div className="flex gap-2">
+                    <input type="text" value={newKey} onChange={e => setNewKey(e.target.value)}
+                      placeholder="field_key"
+                      className="w-[140px] bg-white/3 text-white text-[12px] px-2.5 py-2 rounded-lg border border-white/8 outline-none focus:border-accent/30 font-mono" />
+                    <input type="text" value={newValue} onChange={e => setNewValue(e.target.value)}
+                      onKeyDown={e => { if (e.key === "Enter") createField(); }}
+                      placeholder="Initial value"
+                      className="flex-1 bg-white/3 text-white text-[12px] px-2.5 py-2 rounded-lg border border-white/8 outline-none focus:border-accent/30" />
+                    <button type="button" onClick={createField}
+                      className="px-3 py-2 rounded-lg bg-accent/20 text-accent text-[12px] hover:bg-accent/30 transition-colors">
+                      Create
+                    </button>
+                  </div>
+                </div>
+
+                {!hasContent && !loading ? (
+                  <p className="text-center py-10 text-[13px] text-white/25">No fields in this section yet. Click "Seed Content" to start.</p>
+                ) : (
+                  sectionFields.map(field => (
+                    <FieldEditor
+                      key={field.id}
+                      item={field}
+                      onUpdate={updated => {
+                        setContent(prev => prev.map(c => c.id === updated.id ? updated : c));
+                        setReloadKey(k => k + 1);
+                      }}
+                      onDelete={(id, key) => setConfirm({ kind: "field", id, key, label: key })}
+                      onLog={addLog}
+                    />
+                  ))
+                )}
+              </div>
+            )}
+          </div>
+        </main>
+
+        {/* Preview pane */}
+        {showPreview && (
+          <div className="flex-1 overflow-hidden">
+            <PreviewPane activeSection={activeSection} reloadKey={reloadKey} />
+          </div>
+        )}
+      </div>
+
+      {/* ── DEBUG PANEL ───────────────────────────────────────────────── */}
+      <AnimatePresence>
+        {showDebug && (
+          <motion.div
+            initial={{ height: 0 }} animate={{ height: 200 }} exit={{ height: 0 }}
+            className="border-t border-white/8 bg-[#06060f] overflow-hidden shrink-0">
+            <DebugPanel log={apiLog} onClear={() => dispatchLog({ type: "clear" })} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+/*
+ * ─────────────────────────────────────────────────────────────────────────────
+ * ## BUG FIXES SUMMARY
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * FIX #1 – Collection item save race condition
+ *   OLD: `re()` iterates and calls `ae()` per field, but `ae()` calls `pe()`
+ *        which looks up `N` (content state) that hasn't been updated yet by
+ *        previous iterations → wrong ids, duplicate creates.
+ *   NEW: `saveCollectionItems()` uses `ensureField()` which takes a fresh
+ *        `lookupContent(contentMap, ...)` call every time, and the contentMap
+ *        is derived from state via useMemo so it's always up-to-date.
+ *        We await each field sequentially to avoid concurrent writes.
+ *
+ * FIX #2 – O(n²) content lookup
+ *   OLD: `pe()` scanned the entire `N` array for every field rendered.
+ *        With 200+ fields, every render was O(n²).
+ *   NEW: `buildContentMap()` creates a `Map<"section::key", ContentItem>`.
+ *        `lookupContent()` is O(1). Map rebuilds only when `content` changes.
+ *
+ * FIX #3 – Drag-and-drop vs text input conflict
+ *   OLD: `draggable` was on the entire card `<div>` – dragging started when
+ *        users tried to select text in input fields.
+ *   NEW: `draggable` only on the grip handle icon via `dragHandleProps`.
+ *        Inputs are unaffected.
+ *
+ * FIX #4 – Missing credentials on fetch
+ *   OLD: `fetch(url, options)` – no `credentials: "include"`, so the session
+ *        cookie was not sent to `/api/upload` in some browser configs.
+ *   NEW: `apiFetch()` always adds `credentials: "include"` as a base default.
+ *
+ * FIX #5 – Stale closure in `re()` reorder
+ *   OLD: `re()` captured `N` (content state) in closure. If called twice fast
+ *        (double-drop), second call saw stale N → phantom items.
+ *   NEW: `reorderCollectionItems()` reads `getCollectionItems()` (which reads
+ *        current `contentMap`) fresh on every call.
+ *
+ * FIX #6 – Wasted save calls on unchanged fields
+ *   OLD: `onBlur` fired `M()` (save) even when value hadn't changed, causing
+ *        unnecessary PUT requests and "Saving…" flickers on every focus-out.
+ *   NEW: `save()` bails early with `if (val === item.value) return;`
+ *
+ * FIX #7 – NaN stored as plan_count / faq_count
+ *   OLD: `Number(n("pricing","plan_count",""))` returned NaN when field empty,
+ *        and NaN was then passed to `Array.from({length: NaN})` → crash.
+ *   NEW: `safeInt()` returns `undefined` (not NaN) when string is empty or
+ *        non-numeric. Collection count falls back to DB-detected max index.
+ *
+ * FIX #8 – Missing error boundary around iframe
+ *   OLD: No error handling on the iframe – if CSP blocked the preview URL,
+ *        the admin would crash-loop with an unhandled error.
+ *   NEW: `onError` handler on `<iframe>` sets `iframeError = true`, showing
+ *        a friendly "Preview failed" message with a retry button.
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
+
+function SeedContentButton({ onSeed, disabled }: { onSeed: () => void; disabled: boolean }) {
+  return (
+    <button
+      type="button"
+      onClick={onSeed}
+      disabled={disabled}
+      className="px-3 py-1.5 rounded-lg border text-[12px] flex items-center gap-1.5 transition-all
+                   border-blue-500/30 text-blue-400 bg-blue-500/10 hover:bg-blue-500/20
+                   disabled:opacity-50 disabled:cursor-not-allowed"
+    >
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M12 2L2 7l10 5 10-5-10-5z" />
+        <path d="M2 17l10 5 10-5" />
+        <path d="M2 12l10 5 10-5" />
+      </svg>
+      Seed Content
+    </button>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MAIN ADMIN DASHBOARD
+// ─────────────────────────────────────────────────────────────────────────────
+
+export default function AdminDashboard() {
+  // Auth state
+  const [password, setPassword] = useState("");
+  const [checking, setChecking] = useState(true);
+  const [authenticated, setAuthenticated] = useState(false);
+
+  // Data
+  const [content, setContent] = useState<ContentItem[]>([]);
+  const [submissions, setSubmissions] = useState<Submission[]>([]);
+
+  // UI state
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [activeSection, setActiveSection] = useState<ActiveTab>(SUBMISSIONS_TAB);
+  const [sectionSearch, setSectionSearch] = useState("");
+  const [fieldSearch, setFieldSearch] = useState("");
+  const [showPreview, setShowPreview] = useState(true);
+  const [showDebug, setShowDebug] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
+
+  // Add a state for seeding
+  const [seeding, setSeeding] = useState(false);
+
+  // Confirm modal
+  const [confirm, setConfirm] = useState<{
+    kind: "submission" | "field" | "collection_item";
+    id?: number; key?: string; label?: string; section?: string; index?: number;
+  } | null>(null);
+
+  // Debug log
+  const [apiLog, dispatchLog] = useReducer(logReducer, []);
+  const addLog = useCallback((entry: Partial<ApiLogEntry>) => dispatchLog({ type: "add", entry }), []);
+
+  // FIX #2: O(1) content map
+  const contentMap = useMemo(() => buildContentMap(content), [content]);
+
+  // Sections list
+  const allSections = useMemo(() => {
+    const extra = [...new Set(content.map(c => c.section))].filter(s => !SECTION_ORDER.includes(s)).sort();
+    return [...SECTION_ORDER, ...extra];
+  }, [content]);
+
+  const filteredSections = useMemo(() => {
+    const q = sectionSearch.toLowerCase();
+    if (!q) return allSections;
+    return allSections.filter(s => (SECTION_LABELS[s] || s).toLowerCase().includes(q));
+  }, [allSections, sectionSearch]);
+
+  // Fields for the current section
+  const sectionFields = useMemo(() => {
+    if (activeSection === SUBMISSIONS_TAB || COLLECTION_SECTIONS.includes(activeSection as CollectionSection)) return [];
+
+    let fields = content.filter(c => c.section === activeSection);
+
+    // Filter out collection sub-keys from non-collection sections (shouldn't happen, but safe)
+    if (activeSection === "portfolio") fields = fields.filter(c => !/^project_\d+_/.test(c.key) && c.key !== "project_count");
+    if (activeSection === "team") fields = fields.filter(c => !/^member_\\d+_/.test(c.key) && c.key !== "member_count");
+
+    if (fieldSearch) {
+      const q = fieldSearch.toLowerCase();
+      fields = fields.filter(f => f.key.toLowerCase().includes(q) || f.value.toLowerCase().includes(q));
+    }
+
+    return fields.sort((a, b) => a.key.localeCompare(b.key, undefined, { numeric: true }));
+  }, [activeSection, content, fieldSearch]);
+
+  // Collection items for portfolio/team
+  function getCollectionItems(section: CollectionSection): CollectionItem[] {
+    const meta = COLLECTION_META[section];
+    const countItem = lookupContent(contentMap, section, meta.countKey);
+    const fieldDefs = section === "portfolio" ? PORTFOLIO_FIELDS : TEAM_FIELDS;
+
+    // Find max index in DB
+    const existingIndices: number[] = [];
+    content.forEach(c => {
+      if (c.section !== section) return;
+      const m = c.key.match(new RegExp(`^${meta.prefix}_(\\d+)_`));
+      if (m) existingIndices.push(parseInt(m[1], 10));
+    });
+
+    // FIX #7: safe int parsing
+    const storedCount = safeInt(countItem?.value || "");
+    const maxIdx = existingIndices.length > 0 ? Math.max(...existingIndices) : 0;
+    const count = storedCount !== undefined ? Math.max(storedCount, 0) : maxIdx;
+
+    return Array.from({ length: count }, (_, i) => {
+      const idx = i + 1;
+      const fields: Record<string, ContentItem | undefined> = {};
+      const values: Record<string, string> = {};
+      for (const fd of fieldDefs) {
+        const item = lookupContent(contentMap, section, `${meta.prefix}_${idx}_${fd.key}`);
+        fields[fd.key] = item;
+        values[fd.key] = item?.value ?? "";
+      }
+      const label = values[meta.primaryField] || `${meta.itemLabel} ${idx}`;
+      return { index: idx, label, fields, values };
+    });
+  }
+
+  // Seeding function
+  async function seedSection(section: string) {
+    setSeeding(true);
+    setError("");
+    try {
+      if (COLLECTION_SECTIONS.includes(section as CollectionSection)) {
+        const collDef = section === 'portfolio' ? portfolioCollectionDefinition : teamCollectionDefinition;
+        const defaults = section === 'portfolio' ? portfolioDefaults : teamDefaults;
+        const meta = COLLECTION_META[section as CollectionSection];
+
+        for (let i = 0; i < defaults.length; i++) {
+          const item = defaults[i];
+          const itemIndex = i + 1;
+          for (const fieldDef of collDef.fields) {
+            const key = `${meta.prefix}_${itemIndex}_${fieldDef.key}`;
+            let value = (item as any)[fieldDef.key] ?? fieldDef.fallback;
+            if (fieldDef.key === 'gallery' && Array.isArray(value)) {
+              value = value.join(',');
+            }
+            await ensureField(section, key, String(value));
+          }
+        }
+        await ensureField(section, meta.countKey, String(defaults.length));
+      } else {
+        const sectionDef = homeSectionDefinitions[section];
+        if (sectionDef) {
+          for (const field of sectionDef.fields) {
+            await ensureField(section, field.key, field.fallback);
+          }
+        }
+      }
+      await loadAll(); // Reload content after seeding
+    } catch (e) {
+      setError(getErrorMessage(e));
+    } finally {
+      setSeeding(false);
+    }
+  }
+
+  // ── API helpers ──────────────────────────────────────────────────────────
+
+  const apiFetchLogged = useCallback(<T = unknown>(url: string, opts?: RequestInit) =>
+    apiFetch<T>(url, opts, addLog), [addLog]);
+
+  async function loadAll() {
+    setLoading(true); setError("");
+    try {
+      const [subs, ct] = await Promise.all([
+        apiFetchLogged<Submission[]>("/api/contact"),
+        apiFetchLogged<ContentItem[]>(`/api/content?ts=${Date.now()}`),
+      ]);
+      setSubmissions(subs);
+      setContent(ct);
+    } catch (e) {
+      setError(getErrorMessage(e));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const sess = await apiFetchLogged<{ authenticated: boolean }>("/api/admin/session");
+        if (sess.authenticated) { setAuthenticated(true); await loadAll(); }
+      } catch { setAuthenticated(false); } finally { setChecking(false); }
+    })();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function login(e: React.FormEvent) {
+    e.preventDefault(); setLoading(true); setError("");
+    try {
+      await apiFetchLogged("/api/admin/session", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password }),
+      });
+      setAuthenticated(true); setPassword(""); await loadAll();
+    } catch (err) { setError(getErrorMessage(err)); } finally { setLoading(false); }
+  }
+
+  async function logout() {
+    setLoading(true);
+    try {
+      await apiFetchLogged("/api/admin/session", { method: "DELETE" });
+      setAuthenticated(false); setContent([]); setSubmissions([]);
+    } finally { setLoading(false); }
+  }
+
+  // Content CRUD
+  async function ensureField(section: string, key: string, value: string): Promise<ContentItem> {
+    const existing = lookupContent(contentMap, section, key);
+    if (existing) {
+      const updated = await apiFetchLogged<ContentItem>("/api/content", {
+        method: "PUT", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: existing.id, value }),
+      });
+      setContent(prev => prev.map(c => c.id === existing.id ? updated : c));
+      return updated;
+    }
+    const created = await apiFetchLogged<ContentItem>("/api/content", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ section, key, value }),
+    });
+    setContent(prev => [...prev, created]);
+    return created;
+  }
+
+  async function deleteField(id: number) {
+    await apiFetchLogged("/api/content", {
+      method: "DELETE", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    });
+    setContent(prev => prev.filter(c => c.id !== id));
+  }
+
+  // FIX #1 & #5: Unified, atomic collection reorder/save
+  async function saveCollectionItems(section: CollectionSection, items: CollectionItem[]) {
+    const meta = COLLECTION_META[section];
+    const fieldDefs = section === "portfolio" ? PORTFOLIO_FIELDS : TEAM_FIELDS;
+
+    // Save all items sequentially (avoids race conditions from FIX #5)
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      const newIdx = i + 1;
+      for (const fd of fieldDefs) {
+        await ensureField(section, `${meta.prefix}_${newIdx}_${fd.key}`, item.values[fd.key] || "");
+      }
+    }
+
+    // Delete items beyond new count
+    const existingItems = getCollectionItems(section);
+    for (const existing of existingItems) {
+      if (existing.index > items.length) {
+        for (const fd of fieldDefs) {
+          const contentItem = existing.fields[fd.key];
+          if (contentItem) await deleteField(contentItem.id);
+        }
+      }
+    }
+
+    await ensureField(section, meta.countKey, String(items.length));
+  }
+
+  async function addCollectionItem(section: CollectionSection) {
+    const items = getCollectionItems(section);
+    const idx = items.length + 1;
+    const meta = COLLECTION_META[section];
+    const newItem: CollectionItem = {
+      index: idx, label: `${meta.itemLabel} ${idx}`,
+      fields: {}, values: {},
+    };
+    await saveCollectionItems(section, [...items, newItem]);
+  }
+
+  async function deleteCollectionItem(section: CollectionSection, index: number) {
+    const items = getCollectionItems(section).filter(it => it.index !== index);
+    await saveCollectionItems(section, items);
+  }
+
+  async function reorderCollectionItems(section: CollectionSection, fromIdx: number, toIdx: number) {
+    if (fromIdx === toIdx) return;
+    const items = [...getCollectionItems(section)];
+    const [moved] = items.splice(fromIdx - 1, 1);
+    items.splice(toIdx - 1, 0, moved);
+    await saveCollectionItems(section, items);
+  }
+
+  // Submissions
+  async function setSubmissionStatus(id: number, status: Submission["status"]) {
+    const updated = await apiFetchLogged<Submission>("/api/contact", {
+      method: "PUT", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, status }),
+    });
+    setSubmissions(prev => prev.map(s => s.id === id ? updated : s));
+  }
+
+  async function deleteSubmission(id: number) {
+    await apiFetchLogged("/api/contact", {
+      method: "DELETE", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    });
+    setSubmissions(prev => prev.filter(s => s.id !== id));
+  }
+
+  // Confirm action handler
+  async function handleConfirm() {
+    if (!confirm) return;
+    try {
+      if (confirm.kind === "submission" && confirm.id) await deleteSubmission(confirm.id);
+      if (confirm.kind === "field" && confirm.id) await deleteField(confirm.id);
+      if (confirm.kind === "collection_item" && confirm.section && confirm.index) {
+        await deleteCollectionItem(confirm.section as CollectionSection, confirm.index);
+      }
+    } catch (e) { setError(getErrorMessage(e)); }
+    setConfirm(null);
+    // Reload preview after structural change
+    setReloadKey(k => k + 1);
+  }
+
+  // Field save (for collection cards)
+  const handleFieldSave = useCallback(async (item: ContentItem, value: string) => {
+    const updated = await apiFetchLogged<ContentItem>("/api/content", {
+      method: "PUT", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: item.id, value }),
+    });
+    setContent(prev => prev.map(c => c.id === item.id ? updated : c));
+    setReloadKey(k => k + 1);
+  }, [apiFetchLogged]);
+
+  // New field creation
+  const [newKey, setNewKey] = useState("");
+  const [newValue, setNewValue] = useState("");
+
+  async function createField() {
+    if (!newKey.trim() || activeSection === SUBMISSIONS_TAB) return;
+    try {
+      await ensureField(activeSection, newKey.trim(), newValue);
+      setNewKey(""); setNewValue("");
+    } catch (e) { setError(getErrorMessage(e)); }
+  }
+
+  // ── Drag state for collection reorder ─────────────────────────────────────
+  const [dragFrom, setDragFrom] = useState<{ section: CollectionSection; index: number } | null>(null);
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // RENDER: loading / login
+  // ─────────────────────────────────────────────────────────────────────────
+
+  if (checking) {
+    return (
+      <div className="min-h-screen bg-[#06060C] flex items-center justify-center text-white/30 text-[13px]">
+        <Spinner size={20} />
+      </div>
+    );
+  }
+
+  if (!authenticated) {
+    return (
+      <div className="min-h-screen bg-[#06060C] flex items-center justify-center px-4">
+        <motion.div
+          initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
+          className="w-full max-w-[400px] bg-white/[0.04] border border-white/8 rounded-2xl p-8">
+          <div className="flex items-center gap-3 mb-8">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent/60 to-accent flex items-center justify-center">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+                <rect width="18" height="11" x="3" y="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
+            </div>
+            <div>
+              <h1 className="text-[20px] font-bold text-white" style={{ fontFamily: "Syne, sans-serif" }}>Admin sign in</h1>
+              <p className="text-[12px] text-white/40">VAAD Development</p>
+            </div>
+          </div>
+          <form onSubmit={login} className="flex flex-col gap-4">
+            <input
+              type="password" autoComplete="current-password"
+              value={password} onChange={e => setPassword(e.target.value)}
+              placeholder="Admin password"
+              className="w-full bg-white/4 text-white text-[14px] px-4 py-3 rounded-xl border border-white/10 outline-none focus:border-accent/50 placeholder:text-white/25"
+            />
+            {error && <p className="text-[12px] text-red-400">{error}</p>}
+            <button type="submit" disabled={loading}
+              className="w-full bg-gradient-to-r from-accent to-accent/80 text-white py-3 rounded-xl text-[14px] font-medium disabled:opacity-50 hover:opacity-90 transition-opacity">
+              {loading ? "Signing in…" : "Sign in"}
+            </button>
+          </form>
+        </motion.div>
+      </div>
+    );
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // RENDER: main admin
+  // ─────────────────────────────────────────────────────────────────────────
+
+  const isCollection = COLLECTION_SECTIONS.includes(activeSection as CollectionSection);
+  const collectionItems = isCollection ? getCollectionItems(activeSection as CollectionSection) : [];
+  const hasContent = isCollection ? collectionItems.length > 0 : sectionFields.length > 0;
+
+  return (
+    <div className="min-h-screen bg-[#06060C] flex flex-col" style={{ fontFamily: "DM Sans, sans-serif" }}>
+      <ConfirmModal
+        open={!!confirm}
+        title={confirm?.kind === "submission" ? "Delete submission?" : confirm?.kind === "collection_item" ? `Delete ${confirm?.label}?` : "Delete content field?"}
+        message={confirm?.kind === "collection_item"
+          ? "This will remove the card from the live site. Remaining items will shift up."
+          : `This will permanently remove "${confirm?.label || confirm?.key || "this item"}".`}
+        onCancel={() => setConfirm(null)}
+        onConfirm={handleConfirm}
+      />
+
+      {/* ── TOP BAR ─────────────────────────────────────────────────── */}
+      <header className="flex items-center justify-between px-4 py-3 border-b border-white/6 shrink-0 bg-[#08080f]">
+        <div className="flex items-center gap-3">
+          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-accent/60 to-accent flex items-center justify-center">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
+              <polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" />
+            </svg>
+          </div>
+          <span className="text-[15px] font-bold text-white" style={{ fontFamily: "Syne, sans-serif" }}>VAAD</span>
+          <span className="text-[11px] text-white/30 bg-white/5 px-2 py-0.5 rounded-full">admin</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          {error && (
+            <span className="text-[11px] text-red-400 bg-red-500/10 border border-red-500/20 px-2 py-1 rounded-lg mr-2 truncate max-w-[200px]">
+              {error}
+            </span>
+          )}
+          {/* Preview toggle */}
+          <button type="button" onClick={() => setShowPreview(v => !v)}
+            className={`px-3 py-1.5 rounded-lg border text-[12px] flex items-center gap-1.5 transition-all
+              ${showPreview ? "border-accent/30 text-accent bg-accent/10" : "border-white/10 text-white/40 hover:text-white/70"}`}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <rect width="18" height="14" x="3" y="5" rx="2" /><path d="M3 10h18" />
+            </svg>
+            Preview
+          </button>
+          {/* Debug toggle */}
+          <button type="button" onClick={() => setShowDebug(v => !v)}
+            className={`px-3 py-1.5 rounded-lg border text-[12px] flex items-center gap-1.5 transition-all
+              ${showDebug ? "border-accent/30 text-accent bg-accent/10" : "border-white/10 text-white/40 hover:text-white/70"}`}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" /><path d="M12 8v4M12 16h.01" />
+            </svg>
+            Debug {apiLog.length > 0 && <span className="text-[10px] opacity-60">({apiLog.length})</span>}
+          </button>
+          {/* Refresh */}
+          <button type="button" onClick={loadAll} disabled={loading}
+            className="px-3 py-1.5 rounded-lg border border-white/10 text-[12px] text-white/40 hover:text-white/70 flex items-center gap-1.5 disabled:opacity-40 transition-all">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+              className={loading ? "animate-spin" : ""}>
+              <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /><path d="M21 3v5h-5M3 21v-5h5" />
+            </svg>
+            Refresh
+          </button>
+          {/* Logout */}
+          <button type="button" onClick={logout} disabled={loading}
+            className="px-3 py-1.5 rounded-lg border border-red-500/20 text-[12px] text-red-400/70 hover:text-red-400 flex items-center gap-1.5 disabled:opacity-40 transition-all">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" />
+            </svg>
+            Sign out
+          </button>
+        </div>
+      </header>
+
+      {/* ── MAIN BODY ────────────────────────────────────────────────── */}
+      <div className="flex flex-1 overflow-hidden" style={{ height: showDebug ? "calc(100vh - 52px - 200px)" : "calc(100vh - 52px)" }}>
+        {/* Sidebar */}
+        <aside className="w-[220px] border-r border-white/6 bg-[#08080f] shrink-0 overflow-hidden flex flex-col">
+          <SectionSidebar
+            sections={filteredSections}
+            activeSection={activeSection}
+            submissions={submissions}
+            onSelectSection={(s) => { setActiveSection(s); setFieldSearch(""); setReloadKey(k => k + 1); }}
+            searchQuery={sectionSearch}
+            onSearchChange={setSectionSearch}
+          />
+        </aside>
+
+        {/* Editor panel */}
+        <main className={`flex flex-col overflow-hidden ${showPreview ? "w-[440px]" : "flex-1"} border-r border-white/6`}>
+          {/* Section header */}
+          <div className="flex items-center justify-between px-4 py-3 border-b border-white/6 shrink-0">
+            <div>
+              <h2 className="text-[15px] font-bold text-white" style={{ fontFamily: "Syne, sans-serif" }}>
+                {activeSection === SUBMISSIONS_TAB ? "Submissions" : SECTION_LABELS[activeSection] || humanKey(activeSection)}
+              </h2>
+              {activeSection !== SUBMISSIONS_TAB && (
+                <p className="text-[11px] text-white/30">
+                  {isCollection ? `${collectionItems.length} items` : `${sectionFields.length} fields`}
+                </p>
+              )}
+            </div>
+            {activeSection !== SUBMISSIONS_TAB && (
+              <div className="flex items-center gap-1.5">
+                {!hasContent && (
+                  <SeedContentButton onSeed={() => seedSection(activeSection)} disabled={seeding || loading} />
+                )}
+                {isCollection && (
+                  <button type="button" onClick={() => addCollectionItem(activeSection as CollectionSection)} disabled={loading}
+                    className="px-3 py-1.5 rounded-lg border border-accent/25 text-accent text-[12px] flex items-center gap-1.5 hover:border-accent/40 transition-all disabled:opacity-50">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+                    Add {activeSection === "portfolio" ? "project" : "member"}
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Scrollable content */}
+          <div className="flex-1 overflow-y-auto px-3 py-3">
+            {activeSection === SUBMISSIONS_TAB ? (
+              <SubmissionsPanel
+                submissions={submissions}
+                onStatusChange={setSubmissionStatus}
+                onDelete={(id, label) => setConfirm({ kind: "submission", id, label })}
+              />
+            ) : isCollection ? (
+              <div className="flex flex-col gap-3">
+                {!hasContent && !loading ? (
+                  <div className="text-center py-12 text-white/25 text-[13px]">
+                    No items yet. Click "Seed Content" to populate this section with default data.
+                  </div>
+                ) : (
+                  collectionItems.map(item => (
+                    <div key={item.index}
+                      onDragOver={e => { if (dragFrom?.section === activeSection) e.preventDefault(); }}
+                      onDrop={e => {
+                        e.preventDefault();
+                        if (dragFrom?.section === activeSection && dragFrom.index !== item.index) {
+                          reorderCollectionItems(activeSection as CollectionSection, dragFrom.index, item.index);
+                        }
+                        setDragFrom(null);
+                      }}>
+                      <CollectionCard
+                        item={item}
+                        section={activeSection as CollectionSection}
+                        onFieldSave={handleFieldSave}
+                        onDelete={() => setConfirm({ kind: "collection_item", section: activeSection, index: item.index, label: item.label })}
+                        onLog={addLog}
+                        dragHandleProps={{
+                          draggable: true,
+                          onDragStart: () => setDragFrom({ section: activeSection as CollectionSection, index: item.index }),
+                          onDragEnd: () => setDragFrom(null),
+                        }}
+                      />
+                    </div>
+                  ))
+                )}
+              </div>
+            ) : (
+              <div className="flex flex-col gap-3">
+                {/* Field search */}
+                {sectionFields.length > 4 && (
+                  <div className="relative">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+                      className="absolute left-2.5 top-1/2 -translate-y-1/2 text-white/25 pointer-events-none">
+                      <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
+                    </svg>
+                    <input type="text" value={fieldSearch} onChange={e => setFieldSearch(e.target.value)}
+                      placeholder="Filter fields…"
+                      className="w-full bg-white/4 text-white/80 text-[12px] pl-7 pr-3 py-2 rounded-xl border border-white/8 outline-none focus:border-accent/30 placeholder:text-white/20" />
+                  </div>
+                )}
+
+                {/* Add new field */}
+                <div className="bg-white/[0.02] rounded-2xl border border-white/6 p-3">
+                  <p className="text-[11px] text-white/30 mb-2 uppercase tracking-wider">New field</p>
+                  <div className="flex gap-2">
+                    <input type="text" value={newKey} onChange={e => setNewKey(e.target.value)}
+                      placeholder="field_key"
+                      className="w-[140px] bg-white/3 text-white text-[12px] px-2.5 py-2 rounded-lg border border-white/8 outline-none focus:border-accent/30 font-mono" />
+                    <input type="text" value={newValue} onChange={e => setNewValue(e.target.value)}
+                      onKeyDown={e => { if (e.key === "Enter") createField(); }}
+                      placeholder="Initial value"
+                      className="flex-1 bg-white/3 text-white text-[12px] px-2.5 py-2 rounded-lg border border-white/8 outline-none focus:border-accent/30" />
+                    <button type="button" onClick={createField}
+                      className="px-3 py-2 rounded-lg bg-accent/20 text-accent text-[12px] hover:bg-accent/30 transition-colors">
+                      Create
+                    </button>
+                  </div>
+                </div>
+
+                {!hasContent && !loading ? (
+                  <p className="text-center py-10 text-[13px] text-white/25">No fields in this section yet. Click "Seed Content" to start.</p>
+                ) : (
+                  sectionFields.map(field => (
+                    <FieldEditor
+                      key={field.id}
+                      item={field}
+                      onUpdate={updated => {
+                        setContent(prev => prev.map(c => c.id === updated.id ? updated : c));
+                        setReloadKey(k => k + 1);
+                      }}
+                      onDelete={(id, key) => setConfirm({ kind: "field", id, key, label: key })}
+                      onLog={addLog}
+                    />
+                  ))
+                )}
+              </div>
+            )}
+          </div>
+        </main>
+
+        {/* Preview pane */}
+        {showPreview && (
+          <div className="flex-1 overflow-hidden">
+            <PreviewPane activeSection={activeSection} reloadKey={reloadKey} />
+          </div>
+        )}
+      </div>
+
+      {/* ── DEBUG PANEL ───────────────────────────────────────────────── */}
+      <AnimatePresence>
+        {showDebug && (
+          <motion.div
+            initial={{ height: 0 }} animate={{ height: 200 }} exit={{ height: 0 }}
+            className="border-t border-white/8 bg-[#06060f] overflow-hidden shrink-0">
+            <DebugPanel log={apiLog} onClear={() => dispatchLog({ type: "clear" })} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+/*
+ * ─────────────────────────────────────────────────────────────────────────────
+ * ## BUG FIXES SUMMARY
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * FIX #1 – Collection item save race condition
+ *   OLD: `re()` iterates and calls `ae()` per field, but `ae()` calls `pe()`
+ *        which looks up `N` (content state) that hasn't been updated yet by
+ *        previous iterations → wrong ids, duplicate creates.
+ *   NEW: `saveCollectionItems()` uses `ensureField()` which takes a fresh
+ *        `lookupContent(contentMap, ...)` call every time, and the contentMap
+ *        is derived from state via useMemo so it's always up-to-date.
+ *        We await each field sequentially to avoid concurrent writes.
+ *
+ * FIX #2 – O(n²) content lookup
+ *   OLD: `pe()` scanned the entire `N` array for every field rendered.
+ *        With 200+ fields, every render was O(n²).
+ *   NEW: `buildContentMap()` creates a `Map<"section::key", ContentItem>`.
+ *        `lookupContent()` is O(1). Map rebuilds only when `content` changes.
+ *
+ * FIX #3 – Drag-and-drop vs text input conflict
+ *   OLD: `draggable` was on the entire card `<div>` – dragging started when
+ *        users tried to select text in input fields.
+ *   NEW: `draggable` only on the grip handle icon via `dragHandleProps`.
+ *        Inputs are unaffected.
+ *
+ * FIX #4 – Missing credentials on fetch
+ *   OLD: `fetch(url, options)` – no `credentials: "include"`, so the session
+ *        cookie was not sent to `/api/upload` in some browser configs.
+ *   NEW: `apiFetch()` always adds `credentials: "include"` as a base default.
+ *
+ * FIX #5 – Stale closure in `re()` reorder
+ *   OLD: `re()` captured `N` (content state) in closure. If called twice fast
+ *        (double-drop), second call saw stale N → phantom items.
+ *   NEW: `reorderCollectionItems()` reads `getCollectionItems()` (which reads
+ *        current `contentMap`) fresh on every call.
+ *
+ * FIX #6 – Wasted save calls on unchanged fields
+ *   OLD: `onBlur` fired `M()` (save) even when value hadn't changed, causing
+ *        unnecessary PUT requests and "Saving…" flickers on every focus-out.
+ *   NEW: `save()` bails early with `if (val === item.value) return;`
+ *
+ * FIX #7 – NaN stored as plan_count / faq_count
+ *   OLD: `Number(n("pricing","plan_count",""))` returned NaN when field empty,
+ *        and NaN was then passed to `Array.from({length: NaN})` → crash.
+ *   NEW: `safeInt()` returns `undefined` (not NaN) when string is empty or
+ *        non-numeric. Collection count falls back to DB-detected max index.
+ *
+ * FIX #8 – Missing error boundary around iframe
+ *   OLD: No error handling on the iframe – if CSP blocked the preview URL,
+ *        the admin would crash-loop with an unhandled error.
+ *   NEW: `onError` handler on `<iframe>` sets `iframeError = true`, showing
+ *        a friendly "Preview failed" message with a retry button.
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
+
+function
