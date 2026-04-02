@@ -1588,9 +1588,20 @@ export default function AdminDashboard() {
 
   const isCollection = COLLECTION_SECTIONS.includes(activeSection as CollectionSection);
   const collectionItems = isCollection ? getCollectionItems(activeSection as CollectionSection) : [];
+  const missingDefaultsCount = useMemo(() => {
+    if (activeSection === SUBMISSIONS_TAB) return 0;
+    const definition = homeSectionDefinitions[activeSection];
+    if (!definition) return 0;
+    let missing = 0;
+    for (const field of definition.fields) {
+      if (!lookupContent(contentMap, activeSection, field.key)) missing += 1;
+    }
+    return missing;
+  }, [activeSection, contentMap]);
+
   const showSeedDefaults = activeSection !== SUBMISSIONS_TAB
     && !!homeSectionDefinitions[activeSection]
-    && (isCollection ? (collectionItems.length === 0 || sectionFields.length === 0) : sectionFields.length === 0);
+    && (missingDefaultsCount > 0 || (isCollection && collectionItems.length === 0));
 
   return (
     <div className="min-h-screen bg-[#06060C] flex flex-col" style={{ fontFamily: "DM Sans, sans-serif" }}>

@@ -1,6 +1,6 @@
 import { hasSupabaseConfig } from './_config.js';
 import { getSupabaseAdmin, getSupabasePublic } from './_supabase.js';
-import { applySecurity, getErrorMessage, sanitize, verifyAdminSession } from './_security.js';
+import { applySecurity, getErrorMessage, hasAdminSession, sanitize, verifyAdminSession } from './_security.js';
 
 const defaultContent = [
   { section: 'nav', key: 'logo_text', value: 'VAAD' },
@@ -240,7 +240,8 @@ async function seedDefaultContent(supabase) {
 }
 
 export default async function handler(req, res) {
-  if (!applySecurity(req, res)) return;
+  const scope = req.method === 'GET' ? 'public' : (hasAdminSession(req) ? 'admin' : 'public');
+  if (!applySecurity(req, res, { scope })) return;
 
   try {
     if (!hasSupabaseConfig()) {

@@ -5,7 +5,7 @@ const rateLimitStore = new Map();
 const RATE_LIMIT_WINDOW = 60 * 1000;
 const RATE_LIMIT_LIMITS = {
   public: 30,
-  admin: 100,
+  admin: 500,
   auth: 12,
   upload: 20,
 };
