@@ -270,7 +270,12 @@ export default async function handler(req, res) {
 
         if (error) throw error;
 
-        res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
+        res.setHeader(
+          'Cache-Control',
+          hasAdminSession(req)
+            ? 'no-store'
+            : 'public, s-maxage=60, stale-while-revalidate=300'
+        );
         return res.status(200).json(data || []);
       } catch (fetchError) {
         console.error('Content fetch error:', fetchError);
