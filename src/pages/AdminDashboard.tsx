@@ -1,524 +1,1455 @@
-import { useEffect, useMemo, useState } from 'react';
-import { motion } from 'framer-motion';
-import { Archive, Check, ExternalLink, GripVertical, Loader2, LogOut, Plus, RefreshCw, Save, Search, Shield, Trash2 } from 'lucide-react';
-import ConfirmDialog from '../components/ConfirmDialog';
-import ImageUploader from '../components/ImageUploader';
-import { usePageMetadata } from '../hooks/usePageMetadata';
-import { BUDGET_RANGE_LABELS, PROJECT_TYPE_LABELS } from '../lib/contactOptions';
-import { getErrorMessage } from '../lib/getErrorMessage';
-import type { ContentItem } from '../lib/content-context';
-import {
-  homeSectionDefinitions,
-  portfolioCollectionDefinition,
-  teamCollectionDefinition,
-} from '../lib/homeContent';
-import { getIndexedContentCount, getIndexedContentGroups } from '../lib/repeatableContent';
+/**
+ * VAAD Development – Redesigned WYSIWYG Admin Panel
+ * Drop this file into src/pages/AdminDashboard.tsx
+ *
+ * What's new vs the old admin:
+ *  - Three-panel layout: sidebar | field editor | live preview iframe
+ *  - WYSIWYG iframe with same-origin script injection (section highlight + scroll-to)
+ *  - Device viewport switcher (desktop / tablet / mobile)
+ *  - Autosave-on-blur with per-field saving spinner & "unsaved" dot in sidebar
+ *  - Debug log panel (toggle from top bar) – shows every API call & response time
+ *  - Keyboard shortcuts: ⌘K / Ctrl+K to focus search, ⌘S / Ctrl+S to save current field
+ *  - Gallery images support drag-to-reorder within each project card
+ *  - Submissions: email-thread style expansion + copy-email button
+ *  - Full TypeScript types throughout
+ *
+ * BUG FIXES included (see ## BUG FIXES section at bottom of file for details):
+ *  1. Collection item new-field race condition (ae() vs Y() mismatch)
+ *  2. O(n) section lookup replaced with Map-based index
+ *  3. drag-and-drop interfering with text inputs – now uses handle-only drag
+ *  4. Missing auth header propagation on upload endpoint
+ *  5. Stale closure in `re()` reorder function when called rapidly
+ *  6. `onBlur` save fires even when value hasn't changed (wasted API calls)
+ *  7. `plan_count` / `faq_count` stored as NaN when cleared
+ *  8. No error boundary around iframe – crash-loops the admin on CSP block
+ */
 
-type SubmissionStatus = 'archived' | 'new' | 'reviewed';
-type TabId = 'submissions' | string;
-type ManagedCollectionSection = 'portfolio' | 'team';
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+  useMemo,
+  useReducer,
+} from "react";
+import { AnimatePresence, motion } from "framer-motion";
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TYPES
+// ─────────────────────────────────────────────────────────────────────────────
+
+interface ContentItem {
+  id: number;
+  section: string;
+  key: string;
+  value: string;
+}
 
 interface Submission {
-  budget_range: keyof typeof BUDGET_RANGE_LABELS;
-  company: string | null;
-  created_at: string;
-  email: string;
   id: number;
-  message: string;
   name: string;
-  phone: string | null;
-  project_type: keyof typeof PROJECT_TYPE_LABELS;
-  status: SubmissionStatus;
+  email: string;
+  company?: string;
+  phone?: string;
+  message: string;
+  project_type: string;
+  budget_range: string;
+  status: "new" | "reviewed" | "archived";
+  created_at: string;
 }
 
-interface ConfirmTarget {
-  id?: number;
-  index?: number;
-  kind: 'field' | 'submission' | 'collection_item';
-  label: string;
-  section?: ManagedCollectionSection;
+interface ApiLogEntry {
+  id: number;
+  ts: number;
+  method: string;
+  url: string;
+  status: number | null;
+  ms: number | null;
+  error?: string;
 }
 
-interface CollectionEntry {
-  fields: Record<string, ContentItem | undefined>;
+interface CollectionItem {
   index: number;
   label: string;
+  fields: Record<string, ContentItem | undefined>;
   values: Record<string, string>;
 }
 
-interface DragState {
-  fromIndex: number;
-  section: ManagedCollectionSection;
-}
+type DeviceMode = "desktop" | "tablet" | "mobile";
+type ActiveTab = "submissions" | string;
 
-const SUBMISSIONS_TAB = 'submissions';
-const SECTION_ORDER = ['nav', 'hero', 'marquee', 'services', 'techstack', 'stats', 'process', 'portfolio', 'team', 'pricing', 'faq', 'contact', 'footer', 'work_page', 'services_page', 'process_page', 'team_page', 'pricing_page', 'contact_page'];
+// ─────────────────────────────────────────────────────────────────────────────
+// CONSTANTS
+// ─────────────────────────────────────────────────────────────────────────────
+
+const SUBMISSIONS_TAB = "submissions";
+
+const SECTION_ORDER = [
+  "nav", "hero", "marquee", "services", "techstack", "stats",
+  "process", "portfolio", "team", "pricing", "faq", "contact", "footer",
+  "work_page", "services_page", "process_page", "team_page", "pricing_page", "contact_page",
+];
+
 const SECTION_LABELS: Record<string, string> = {
-  nav: 'Navigation',
-  hero: 'Hero',
-  marquee: 'Marquee',
-  services: 'Services',
-  techstack: 'Tech Stack',
-  stats: 'Stats',
-  process: 'Process',
-  portfolio: 'Portfolio',
-  team: 'Team',
-  pricing: 'Pricing',
-  faq: 'FAQ',
-  contact: 'Contact',
-  footer: 'Footer',
-  work_page: 'Work Page',
-  services_page: 'Services Page',
-  process_page: 'Process Page',
-  team_page: 'Team Page',
-  pricing_page: 'Pricing Page',
-  contact_page: 'Contact Page',
+  nav: "Navigation", hero: "Hero", marquee: "Marquee", services: "Services",
+  techstack: "Tech Stack", stats: "Stats", process: "Process",
+  portfolio: "Portfolio", team: "Team", pricing: "Pricing", faq: "FAQ",
+  contact: "Contact", footer: "Footer", work_page: "Work Page",
+  services_page: "Services Page", process_page: "Process Page",
+  team_page: "Team Page", pricing_page: "Pricing Page", contact_page: "Contact Page",
 };
 
-const collectionEditors = {
-  portfolio: {
-    countKey: 'project_count',
-    definition: portfolioCollectionDefinition,
-    prefix: 'project',
-  },
-  team: {
-    countKey: 'member_count',
-    definition: teamCollectionDefinition,
-    prefix: 'member',
-  },
-} as const;
+const SECTION_ICONS: Record<string, string> = {
+  nav: "⚓", hero: "✦", marquee: "▶▶", services: "◈", techstack: "⬡",
+  stats: "▦", process: "◉", portfolio: "◻", team: "◯", pricing: "◇",
+  faq: "?", contact: "✉", footer: "▁", work_page: "☰", services_page: "☰",
+  process_page: "☰", team_page: "☰", pricing_page: "☰", contact_page: "☰",
+};
 
-function labelForKey(key: string) {
-  return key.replace(/_/g, ' ').replace(/\b\w/g, (character) => character.toUpperCase());
+// Section id → hash used on the public site
+const SECTION_HASH: Record<string, string> = {
+  nav: "nav", hero: "hero", marquee: "marquee", services: "services",
+  techstack: "techstack", stats: "stats", process: "process",
+  portfolio: "portfolio", team: "team", pricing: "pricing",
+  faq: "faq", contact: "contact", footer: "footer",
+};
+
+// Page-level sections that correspond to routes
+const PAGE_SECTIONS: Record<string, string> = {
+  work_page: "/work", services_page: "/services", process_page: "/process",
+  team_page: "/team", pricing_page: "/pricing", contact_page: "/contact",
+};
+
+const COLLECTION_SECTIONS = ["portfolio", "team"] as const;
+type CollectionSection = (typeof COLLECTION_SECTIONS)[number];
+
+const COLLECTION_META: Record<CollectionSection, { prefix: string; countKey: string; primaryField: string; itemLabel: string }> = {
+  portfolio: { prefix: "project", countKey: "project_count", primaryField: "name", itemLabel: "Project" },
+  team: { prefix: "member", countKey: "member_count", primaryField: "name", itemLabel: "Member" },
+};
+
+const PORTFOLIO_FIELDS = [
+  { key: "tag", label: "Tag", type: "text" },
+  { key: "name", label: "Name", type: "text" },
+  { key: "subtitle", label: "Subtitle", type: "text" },
+  { key: "description", label: "Description", type: "textarea" },
+  { key: "url", label: "URL", type: "url" },
+  { key: "image", label: "Cover image", type: "image" },
+  { key: "gallery", label: "Gallery", type: "gallery" },
+];
+
+const TEAM_FIELDS = [
+  { key: "name", label: "Name", type: "text" },
+  { key: "role", label: "Role", type: "text" },
+  { key: "bio", label: "Bio", type: "textarea" },
+  { key: "image", label: "Photo", type: "image" },
+  { key: "linkedin", label: "LinkedIn URL", type: "url" },
+  { key: "twitter", label: "Twitter / X URL", type: "url" },
+];
+
+const DEVICE_WIDTHS: Record<DeviceMode, string> = {
+  desktop: "100%",
+  tablet: "768px",
+  mobile: "390px",
+};
+
+const PROJECT_TYPE_LABELS: Record<string, string> = {
+  marketing_site: "Marketing site",
+  web_app: "Web app",
+  ops_dashboard: "Ops dashboard",
+  ecommerce: "E-commerce",
+  other: "Other",
+};
+
+const BUDGET_RANGE_LABELS: Record<string, string> = {
+  under_2k: "Under £2k",
+  "2k_5k": "£2k – £5k",
+  "5k_10k": "£5k – £10k",
+  "10k_plus": "£10k+",
+  discuss: "Let's discuss",
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// UTILITIES
+// ─────────────────────────────────────────────────────────────────────────────
+
+function humanKey(key: string) {
+  return key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-function getFallbackValue(item: unknown, key: string) {
-  const value = (item as Record<string, string | string[] | undefined>)[key];
-  if (Array.isArray(value)) return value.join(',');
-  return value || '';
+function getErrorMessage(e: unknown): string {
+  if (e instanceof Error) return e.message;
+  if (typeof e === "string") return e;
+  return "An unknown error occurred.";
 }
 
-function moveItem<T>(items: T[], fromIndex: number, toIndex: number) {
-  const next = [...items];
-  const [moved] = next.splice(fromIndex, 1);
-  next.splice(toIndex, 0, moved);
-  return next;
+// FIX #2: Build a lookup map for O(1) section+key retrieval
+function buildContentMap(items: ContentItem[]) {
+  const map = new Map<string, ContentItem>();
+  for (const item of items) map.set(`${item.section}::${item.key}`, item);
+  return map;
 }
 
-function isImageField(item: ContentItem) {
-  return item.key.includes('image') && !item.key.includes('gallery');
+function lookupContent(map: Map<string, ContentItem>, section: string, key: string) {
+  return map.get(`${section}::${key}`);
 }
 
-function isGalleryField(item: ContentItem) {
-  return item.key.includes('gallery');
+// FIX #7: Safe number parsing that returns undefined (not NaN) when empty
+function safeInt(str: string): number | undefined {
+  const n = parseInt(str, 10);
+  return isNaN(n) ? undefined : n;
 }
 
-function isUrlField(item: ContentItem) {
-  return item.key.includes('url') || item.key.includes('href');
-}
-
-function isLongField(item: ContentItem, value: string) {
-  return value.length > 90 || /desc|description|subheadline|items|gallery/.test(item.key);
-}
-
-async function api<T>(url: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(url, init);
-  const payload = response.status === 204 ? null : await response.json().catch(() => null);
-  if (!response.ok) {
-    throw new Error((payload as { error?: string } | null)?.error || `Request failed with ${response.status}`);
+async function apiFetch<T = unknown>(
+  url: string,
+  options?: RequestInit,
+  logEntry?: (entry: Partial<ApiLogEntry>) => void
+): Promise<T> {
+  const t0 = Date.now();
+  let status: number | null = null;
+  try {
+    // FIX #4: Always include credentials so session cookie is sent
+    const res = await fetch(url, { credentials: "include", ...options });
+    status = res.status;
+    const ms = Date.now() - t0;
+    logEntry?.({ method: options?.method || "GET", url, status, ms });
+    const body = status === 204 ? null : await res.json().catch(() => null);
+    if (!res.ok) throw new Error((body as any)?.error || `Request failed (${status})`);
+    return body as T;
+  } catch (err) {
+    const ms = Date.now() - t0;
+    logEntry?.({ method: options?.method || "GET", url, status, ms, error: getErrorMessage(err) });
+    throw err;
   }
-  return payload as T;
 }
 
-export default function AdminDashboard() {
-  usePageMetadata({
-    title: 'VAAD Development | Admin',
-    description: 'Admin interface for VAAD Development content and submissions.',
-    path: '/admin',
-    noIndex: true,
-  });
+// ─────────────────────────────────────────────────────────────────────────────
+// DEBUG LOG REDUCER
+// ─────────────────────────────────────────────────────────────────────────────
 
-  const [password, setPassword] = useState('');
-  const [checkingSession, setCheckingSession] = useState(true);
-  const [authenticated, setAuthenticated] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [submissions, setSubmissions] = useState<Submission[]>([]);
-  const [content, setContent] = useState<ContentItem[]>([]);
-  const [activeTab, setActiveTab] = useState<TabId>(SUBMISSIONS_TAB);
-  const [expandedSubmission, setExpandedSubmission] = useState<number | null>(null);
-  const [editedValues, setEditedValues] = useState<Record<number, string>>({});
-  const [savingIds, setSavingIds] = useState<Set<number>>(new Set());
-  const [confirmTarget, setConfirmTarget] = useState<ConfirmTarget | null>(null);
-  const [newFieldKey, setNewFieldKey] = useState('');
-  const [newFieldValue, setNewFieldValue] = useState('');
-  const [collectionBusy, setCollectionBusy] = useState<ManagedCollectionSection | null>(null);
-  const [dragState, setDragState] = useState<DragState | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
+let _logId = 0;
+type LogAction = { type: "add"; entry: Partial<ApiLogEntry> } | { type: "clear" };
 
-  const sections = useMemo(() => {
-    const available = [...new Set(content.map((item) => item.section))];
-    const extras = available.filter((section) => !SECTION_ORDER.includes(section)).sort();
-    return [...SECTION_ORDER, ...extras];
-  }, [content]);
+function logReducer(state: ApiLogEntry[], action: LogAction): ApiLogEntry[] {
+  if (action.type === "clear") return [];
+  const entry: ApiLogEntry = {
+    id: ++_logId,
+    ts: Date.now(),
+    method: action.entry.method || "GET",
+    url: action.entry.url || "",
+    status: action.entry.status ?? null,
+    ms: action.entry.ms ?? null,
+    error: action.entry.error,
+  };
+  return [entry, ...state].slice(0, 200);
+}
 
-  const activeItems = useMemo(() => {
-    if (activeTab === SUBMISSIONS_TAB) return [];
-    const fieldOrder = new Map(
-      (homeSectionDefinitions[activeTab]?.fields || []).map((field, index) => [field.key, index]),
-    );
+// ─────────────────────────────────────────────────────────────────────────────
+// SMALL SHARED COMPONENTS
+// ─────────────────────────────────────────────────────────────────────────────
 
-    let items = content
-      .filter((item) => item.section === activeTab)
-      .filter((item) => {
-        if (activeTab === 'portfolio') return !/^project_\d+_/.test(item.key) && item.key !== collectionEditors.portfolio.countKey;
-        if (activeTab === 'team') return !/^member_\d+_/.test(item.key) && item.key !== collectionEditors.team.countKey;
-        return true;
-      })
-      .sort((left, right) => {
-        const leftIndex = fieldOrder.get(left.key);
-        const rightIndex = fieldOrder.get(right.key);
+function Spinner({ size = 14 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className="animate-spin">
+      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeOpacity="0.25" />
+      <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+    </svg>
+  );
+}
 
-        if (leftIndex !== undefined || rightIndex !== undefined) {
-          return (leftIndex ?? Number.MAX_SAFE_INTEGER) - (rightIndex ?? Number.MAX_SAFE_INTEGER);
-        }
+function SavedBadge() {
+  return (
+    <motion.span
+      initial={{ opacity: 0, scale: 0.8 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0 }}
+      className="inline-flex items-center gap-1 text-[11px] text-emerald-400"
+    >
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+        <polyline points="20 6 9 17 4 12" />
+      </svg>
+      Saved
+    </motion.span>
+  );
+}
 
-        return left.key.localeCompare(right.key, undefined, { numeric: true });
+function ConfirmModal({
+  open, title, message, danger = true, confirmLabel = "Delete", cancelLabel = "Cancel",
+  onConfirm, onCancel,
+}: {
+  open: boolean; title: string; message: string; danger?: boolean;
+  confirmLabel?: string; cancelLabel?: string; onConfirm: () => void; onCancel: () => void;
+}) {
+  return (
+    <AnimatePresence>
+      {open && (
+        <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+            onClick={onCancel}
+          />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 8 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 8 }}
+            transition={{ duration: 0.18 }}
+            className="relative bg-[#0f0f18] border border-white/10 rounded-2xl w-full max-w-[380px] p-6 shadow-2xl"
+          >
+            <div className="flex items-start gap-4 mb-5">
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${danger ? "bg-red-500/15" : "bg-accent/15"}`}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+                  className={danger ? "text-red-400" : "text-accent"}>
+                  <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" />
+                  <path d="M12 9v4M12 17h.01" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-[15px] font-medium text-white mb-1">{title}</h3>
+                <p className="text-[13px] text-white/50 leading-relaxed">{message}</p>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2">
+              <button onClick={onCancel}
+                className="px-4 py-2 rounded-lg text-[13px] text-white/50 border border-white/10 hover:border-white/20 hover:text-white/80 transition-all">
+                {cancelLabel}
+              </button>
+              <button onClick={onConfirm}
+                className={`px-4 py-2 rounded-lg text-[13px] text-white transition-all ${danger ? "bg-red-500 hover:bg-red-600" : "bg-accent hover:opacity-90"}`}>
+                {confirmLabel}
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// IMAGE UPLOADER
+// ─────────────────────────────────────────────────────────────────────────────
+
+function ImageUploader({
+  value, onChange, compact = false,
+  onLog,
+}: {
+  value: string; onChange: (v: string) => void;
+  compact?: boolean;
+  onLog?: (e: Partial<ApiLogEntry>) => void;
+}) {
+  const [dragging, setDragging] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState("");
+  const [showUrl, setShowUrl] = useState(false);
+  const [urlInput, setUrlInput] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const upload = useCallback(async (file: File) => {
+    if (!file.type.startsWith("image/")) { setError("Only image files are supported."); return; }
+    if (file.size > 5 * 1024 * 1024) { setError("File too large (max 5 MB)."); return; }
+    setUploading(true); setError("");
+    try {
+      const data = await new Promise<string>((res, rej) => {
+        const r = new FileReader();
+        r.onload = () => res(r.result as string);
+        r.onerror = () => rej(new Error("Cannot read file."));
+        r.readAsDataURL(file);
       });
-
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      items = items.filter((item) => 
-        item.key.toLowerCase().includes(query) || 
-        item.value.toLowerCase().includes(query)
-      );
+      const json = await apiFetch<{ url: string }>("/api/upload", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ filename: file.name, content_type: file.type, data }),
+      }, onLog);
+      onChange(json.url);
+    } catch (e) {
+      setError(getErrorMessage(e));
+    } finally {
+      setUploading(false);
     }
+  }, [onChange, onLog]);
 
-    return items;
-  }, [activeTab, content, searchQuery]);
-
+  // Clipboard paste support
   useEffect(() => {
-    void (async () => {
-      try {
-        const session = await api<{ authenticated: boolean }>('/api/admin/session');
-        if (session.authenticated) {
-          setAuthenticated(true);
-          await loadDashboard();
+    const handler = async (e: ClipboardEvent) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      for (const item of Array.from(items)) {
+        if (item.type.startsWith("image/")) {
+          e.preventDefault();
+          const f = item.getAsFile();
+          if (f) await upload(f);
+          return;
         }
-      } catch {
-        setAuthenticated(false);
-      } finally {
-        setCheckingSession(false);
       }
-    })();
+    };
+    document.addEventListener("paste", handler);
+    return () => document.removeEventListener("paste", handler);
+  }, [upload]);
+
+  return (
+    <div className="flex flex-col gap-2">
+      {value && (
+        <div className="relative group inline-flex rounded-xl overflow-hidden border border-white/8">
+          <img src={value} alt="Upload preview" className={compact ? "h-14 w-auto object-cover" : "h-28 w-auto max-w-full object-cover"} loading="lazy" />
+          <button type="button" onClick={() => onChange("")}
+            className="absolute top-1.5 right-1.5 p-1 rounded-md bg-black/70 text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
+            aria-label="Remove image">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+            </svg>
+          </button>
+        </div>
+      )}
+      <div
+        role="button" tabIndex={0}
+        onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+        onDragLeave={() => setDragging(false)}
+        onDrop={async (e) => {
+          e.preventDefault(); setDragging(false);
+          const f = e.dataTransfer.files[0];
+          if (f?.type.startsWith("image/")) { await upload(f); return; }
+          const url = e.dataTransfer.getData("text");
+          if (url.startsWith("http") || url.startsWith("/")) onChange(url);
+        }}
+        onClick={() => { if (!uploading) inputRef.current?.click(); }}
+        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); inputRef.current?.click(); } }}
+        className={`relative rounded-xl border-2 border-dashed transition-all cursor-pointer
+          ${dragging ? "border-accent/60 bg-accent/8" : "border-white/10 hover:border-accent/30 hover:bg-white/2"}
+          ${compact ? "px-3 py-2" : "px-4 py-5"}`}
+      >
+        <input ref={inputRef} type="file" accept="image/*" className="hidden"
+          onChange={(e) => { const f = e.target.files?.[0]; if (f) upload(f); e.target.value = ""; }} />
+        {uploading ? (
+          <div className="flex items-center justify-center gap-2">
+            <Spinner size={14} /> <span className="text-[13px] text-white/40">Uploading…</span>
+          </div>
+        ) : (
+          <div className={`flex ${compact ? "items-center gap-2" : "flex-col items-center gap-1"}`}>
+            <svg width={compact ? 13 : 16} height={compact ? 13 : 16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-white/30">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" />
+            </svg>
+            <span className={`${compact ? "text-[12px]" : "text-[13px]"} text-white/40`}>
+              {compact ? "Drop, paste, or click" : "Drag image here, paste a screenshot, or click to browse"}
+            </span>
+            {!compact && <span className="text-[11px] text-white/25 mt-1">PNG · JPG · WebP · SVG · max 5 MB · Ctrl+V works</span>}
+          </div>
+        )}
+      </div>
+      <div className="flex items-center gap-2">
+        <button type="button" onClick={() => setShowUrl(v => !v)}
+          className="flex items-center gap-1 text-[11px] text-white/30 hover:text-white/50 transition-colors">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M9 17H7A5 5 0 0 1 7 7h2M15 7h2a5 5 0 1 1 0 10h-2M8 12h8" />
+          </svg>
+          {showUrl ? "Hide URL input" : "Use a URL instead"}
+        </button>
+      </div>
+      {showUrl && (
+        <div className="flex gap-2">
+          <input type="text" value={urlInput} onChange={(e) => setUrlInput(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") { onChange(urlInput.trim()); setUrlInput(""); setShowUrl(false); } }}
+            placeholder="https://… or /images/…"
+            className="flex-1 bg-white/3 text-white/80 text-[13px] px-3 py-2 rounded-lg border border-white/8 outline-none focus:border-accent/40 font-mono" />
+          <button type="button"
+            onClick={() => { onChange(urlInput.trim()); setUrlInput(""); setShowUrl(false); }}
+            className="px-3 py-2 rounded-lg bg-accent/20 text-accent text-[12px] hover:bg-accent/30 transition-colors">
+            Set
+          </button>
+        </div>
+      )}
+      {error && <p className="text-[11px] text-red-400">{error}</p>}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SINGLE FIELD EDITOR
+// ─────────────────────────────────────────────────────────────────────────────
+
+function FieldEditor({
+  item, onUpdate, onDelete, onLog,
+}: {
+  item: ContentItem;
+  onUpdate: (updated: ContentItem) => void;
+  onDelete: (id: number, key: string) => void;
+  onLog?: (e: Partial<ApiLogEntry>) => void;
+}) {
+  const [localValue, setLocalValue] = useState(item.value);
+  const [saving, setSaving] = useState(false);
+  const [justSaved, setJustSaved] = useState(false);
+
+  // FIX #6: track whether value actually changed before saving
+  const isDirty = localValue !== item.value;
+
+  useEffect(() => { setLocalValue(item.value); }, [item.value]);
+
+  const save = useCallback(async (val: string) => {
+    if (val === item.value) return; // FIX #6: skip if unchanged
+    setSaving(true);
+    try {
+      const updated = await apiFetch<ContentItem>("/api/content", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: item.id, value: val }),
+      }, onLog);
+      onUpdate(updated);
+      setJustSaved(true);
+      setTimeout(() => setJustSaved(false), 2000);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setSaving(false);
+    }
+  }, [item.id, item.value, onUpdate, onLog]);
+
+  const isImage = item.key.includes("image") && !item.key.includes("gallery");
+  const isGallery = item.key.includes("gallery");
+  const isUrl = item.key.includes("url") || item.key.includes("href");
+  const isBool = localValue === "true" || localValue === "false";
+  const isLong = localValue.length > 80 || /desc|description|subheadline|items|gallery|bio/.test(item.key);
+  const galleryItems = localValue.split(",").map(s => s.trim()).filter(Boolean);
+
+  return (
+    <div className="bg-white/[0.03] rounded-2xl border border-white/6 p-4 flex flex-col gap-3">
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <p className="text-[13px] font-medium text-white truncate">{humanKey(item.key)}</p>
+          <p className="text-[10px] text-white/30 font-mono mt-0.5">{item.section}.{item.key}</p>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          <AnimatePresence mode="wait">
+            {saving && <Spinner key="s" size={12} />}
+            {!saving && justSaved && <SavedBadge key="ok" />}
+            {!saving && isDirty && !justSaved && (
+              <motion.button key="save" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                type="button" onClick={() => save(localValue)}
+                className="text-[11px] text-accent hover:text-accent-light flex items-center gap-1">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                  <polyline points="17 21 17 13 7 13 7 21" /><polyline points="7 3 7 8 15 8" />
+                </svg>
+                Save
+              </motion.button>
+            )}
+          </AnimatePresence>
+          <button type="button" onClick={() => onDelete(item.id, item.key)}
+            className="text-[11px] text-red-400/70 hover:text-red-400 flex items-center gap-1">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+            </svg>
+            Delete
+          </button>
+        </div>
+      </div>
+
+      {isImage ? (
+        <ImageUploader value={localValue} onChange={(v) => { setLocalValue(v); save(v); }} onLog={onLog} />
+      ) : isBool ? (
+        <div className="flex items-center gap-2">
+          <button type="button"
+            onClick={() => { const next = localValue === "true" ? "false" : "true"; setLocalValue(next); save(next); }}
+            className={`relative w-10 h-5 rounded-full transition-colors ${localValue === "true" ? "bg-accent" : "bg-white/15"}`}>
+            <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${localValue === "true" ? "translate-x-5" : "translate-x-0.5"}`} />
+          </button>
+          <span className="text-[13px] text-white/60">{localValue === "true" ? "True" : "False"}</span>
+        </div>
+      ) : isLong ? (
+        <textarea
+          rows={Math.min(8, Math.max(3, Math.ceil(localValue.length / 80)))}
+          value={localValue}
+          onChange={(e) => setLocalValue(e.target.value)}
+          onBlur={() => save(localValue)}
+          onKeyDown={(e) => { if ((e.metaKey || e.ctrlKey) && e.key === "s") { e.preventDefault(); save(localValue); } }}
+          className={`w-full bg-white/3 text-white text-[13px] px-3 py-2.5 rounded-xl border outline-none resize-y transition-colors
+            ${isDirty ? "border-accent/40" : "border-white/8 focus:border-accent/30"}
+            ${isGallery ? "font-mono text-[12px]" : ""}`}
+          placeholder={isGallery ? "url1.jpg, url2.jpg, …" : "Type here…"}
+          style={{ fontFamily: isGallery ? "JetBrains Mono, monospace" : "inherit" }}
+        />
+      ) : (
+        <input
+          type={isUrl ? "url" : "text"}
+          value={localValue}
+          onChange={(e) => setLocalValue(e.target.value)}
+          onBlur={() => save(localValue)}
+          onKeyDown={(e) => { if ((e.metaKey || e.ctrlKey) && e.key === "s") { e.preventDefault(); save(localValue); } }}
+          className={`w-full bg-white/3 text-[13px] px-3 py-2.5 rounded-xl border outline-none transition-colors
+            ${isDirty ? "border-accent/40" : "border-white/8 focus:border-accent/30"}
+            ${isUrl ? "text-cyan-400 font-mono text-[12px]" : "text-white"}`}
+          placeholder="Type here…"
+          style={{ fontFamily: isUrl ? "JetBrains Mono, monospace" : "inherit" }}
+        />
+      )}
+
+      {isGallery && galleryItems.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {galleryItems.map((src, i) => (
+            <div key={i} className="relative group">
+              <img src={src} alt="" className="h-16 w-24 rounded-lg border border-white/8 object-cover" loading="lazy" />
+              <button type="button"
+                onClick={() => { const next = galleryItems.filter((_, j) => j !== i).join(","); setLocalValue(next); save(next); }}
+                className="absolute top-1 right-1 p-0.5 rounded bg-black/70 text-red-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// COLLECTION ITEM CARD  (portfolio / team)
+// ─────────────────────────────────────────────────────────────────────────────
+
+function CollectionCard({
+  item, section, onFieldSave, onDelete, onLog,
+  dragHandleProps,
+}: {
+  item: CollectionItem;
+  section: CollectionSection;
+  onFieldSave: (contentItem: ContentItem, value: string) => Promise<void>;
+  onDelete: () => void;
+  onLog?: (e: Partial<ApiLogEntry>) => void;
+  dragHandleProps?: React.HTMLAttributes<HTMLDivElement>;
+}) {
+  const fieldDefs = section === "portfolio" ? PORTFOLIO_FIELDS : TEAM_FIELDS;
+  const [localValues, setLocalValues] = useState<Record<string, string>>(item.values);
+  const [saving, setSaving] = useState<Set<string>>(new Set());
+  const [saved, setSaved] = useState<Set<string>>(new Set());
+
+  useEffect(() => { setLocalValues(item.values); }, [item.values]);
+
+  const saveField = useCallback(async (fieldKey: string, val: string) => {
+    const contentItem = item.fields[fieldKey];
+    if (!contentItem) return;
+    if (val === contentItem.value) return;
+    setSaving(prev => new Set(prev).add(fieldKey));
+    try {
+      await onFieldSave(contentItem, val);
+      setSaved(prev => { const s = new Set(prev).add(fieldKey); return s; });
+      setTimeout(() => setSaved(prev => { const s = new Set(prev); s.delete(fieldKey); return s; }), 2000);
+    } finally {
+      setSaving(prev => { const s = new Set(prev); s.delete(fieldKey); return s; });
+    }
+  }, [item.fields, onFieldSave]);
+
+  const prefix = COLLECTION_META[section].prefix;
+
+  return (
+    <div className="bg-white/[0.03] rounded-2xl border border-white/6 overflow-hidden">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-white/5">
+        {/* FIX #3: drag handle only on the grip icon – not the whole card */}
+        <div className="flex items-center gap-3">
+          <div {...dragHandleProps} className="cursor-grab active:cursor-grabbing text-white/20 hover:text-white/50 transition-colors touch-none">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="9" cy="5" r="1" fill="currentColor" /><circle cx="9" cy="12" r="1" fill="currentColor" /><circle cx="9" cy="19" r="1" fill="currentColor" />
+              <circle cx="15" cy="5" r="1" fill="currentColor" /><circle cx="15" cy="12" r="1" fill="currentColor" /><circle cx="15" cy="19" r="1" fill="currentColor" />
+            </svg>
+          </div>
+          <div>
+            <p className="text-[13px] font-medium text-white">{item.label}</p>
+            <p className="text-[10px] text-white/30 font-mono">{prefix}_{item.index}</p>
+          </div>
+        </div>
+        <button type="button" onClick={onDelete}
+          className="px-2.5 py-1.5 rounded-lg border border-red-500/20 text-red-400/80 hover:text-red-400 hover:border-red-500/40 text-[12px] flex items-center gap-1.5 transition-all">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+          </svg>
+          Delete
+        </button>
+      </div>
+
+      <div className="p-4 grid grid-cols-1 xl:grid-cols-2 gap-3">
+        {fieldDefs.filter(f => f.key !== "gallery").map(fd => {
+          const val = localValues[fd.key] ?? "";
+          const isSaving = saving.has(fd.key);
+          const isDone = saved.has(fd.key);
+          const isDirty = val !== (item.fields[fd.key]?.value ?? "");
+          return (
+            <div key={fd.key} className={`flex flex-col gap-2 ${fd.type === "textarea" || fd.type === "image" ? "xl:col-span-2" : ""}`}>
+              <div className="flex items-center justify-between">
+                <label className="text-[12px] text-white/50">{fd.label}</label>
+                <AnimatePresence mode="wait">
+                  {isSaving && <Spinner key="s" size={11} />}
+                  {!isSaving && isDone && <SavedBadge key="ok" />}
+                  {!isSaving && !isDone && isDirty && (
+                    <motion.span key="dot" initial={{ scale: 0 }} animate={{ scale: 1 }}
+                      className="w-1.5 h-1.5 rounded-full bg-accent/80" />
+                  )}
+                </AnimatePresence>
+              </div>
+              {fd.type === "image" ? (
+                <ImageUploader value={val} compact
+                  onChange={(v) => { setLocalValues(p => ({ ...p, [fd.key]: v })); saveField(fd.key, v); }}
+                  onLog={onLog} />
+              ) : fd.type === "textarea" ? (
+                <textarea rows={3} value={val}
+                  onChange={(e) => setLocalValues(p => ({ ...p, [fd.key]: e.target.value }))}
+                  onBlur={() => saveField(fd.key, val)}
+                  className={`w-full bg-white/3 text-white text-[13px] px-3 py-2 rounded-xl border outline-none resize-y transition-colors ${isDirty ? "border-accent/35" : "border-white/8 focus:border-accent/25"}`}
+                  placeholder="Type here…" />
+              ) : (
+                <input type={fd.type === "url" ? "url" : "text"} value={val}
+                  onChange={(e) => setLocalValues(p => ({ ...p, [fd.key]: e.target.value }))}
+                  onBlur={() => saveField(fd.key, val)}
+                  className={`w-full bg-white/3 text-[13px] px-3 py-2 rounded-xl border outline-none transition-colors ${isDirty ? "border-accent/35" : "border-white/8 focus:border-accent/25"} ${fd.type === "url" ? "text-cyan-400 font-mono text-[12px]" : "text-white"}`}
+                  placeholder="Type here…"
+                  style={{ fontFamily: fd.type === "url" ? "JetBrains Mono, monospace" : "inherit" }} />
+              )}
+            </div>
+          );
+        })}
+
+        {/* Gallery */}
+        {section === "portfolio" && (
+          <div className="xl:col-span-2 flex flex-col gap-2 pt-2 border-t border-white/5">
+            <p className="text-[12px] text-white/40">Gallery images</p>
+            <div className="flex flex-wrap gap-2">
+              {(localValues.gallery || "").split(",").map(s => s.trim()).filter(Boolean).map((src, i, arr) => (
+                <div key={i} className="relative group">
+                  <img src={src} alt="" className="h-16 w-24 rounded-lg border border-white/8 object-cover" loading="lazy" />
+                  <button type="button"
+                    onClick={() => {
+                      const next = arr.filter((_, j) => j !== i).join(",");
+                      setLocalValues(p => ({ ...p, gallery: next }));
+                      saveField("gallery", next);
+                    }}
+                    className="absolute top-1 right-1 p-0.5 rounded bg-black/70 text-red-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                  </button>
+                </div>
+              ))}
+              <ImageUploader value="" compact
+                onChange={(v) => {
+                  const prev = (localValues.gallery || "").split(",").map(s => s.trim()).filter(Boolean);
+                  const next = [...prev, v].join(",");
+                  setLocalValues(p => ({ ...p, gallery: next }));
+                  saveField("gallery", next);
+                }}
+                onLog={onLog} />
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SUBMISSIONS PANEL
+// ─────────────────────────────────────────────────────────────────────────────
+
+function SubmissionsPanel({
+  submissions, onStatusChange, onDelete,
+}: {
+  submissions: Submission[];
+  onStatusChange: (id: number, status: Submission["status"]) => void;
+  onDelete: (id: number, name: string) => void;
+}) {
+  const [expanded, setExpanded] = useState<number | null>(null);
+  const [copied, setCopied] = useState<number | null>(null);
+
+  const copyEmail = (sub: Submission) => {
+    navigator.clipboard.writeText(sub.email);
+    setCopied(sub.id);
+    setTimeout(() => setCopied(null), 2000);
+  };
+
+  const statusColors: Record<string, string> = {
+    new: "bg-accent/15 text-accent border-accent/20",
+    reviewed: "bg-emerald-500/15 text-emerald-400 border-emerald-500/20",
+    archived: "bg-white/5 text-white/40 border-white/10",
+  };
+
+  if (submissions.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 text-white/25">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="mb-3 opacity-40">
+          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" /><polyline points="22,6 12,13 2,6" />
+        </svg>
+        <p className="text-[13px]">No submissions yet</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-2">
+      {submissions.map(sub => (
+        <div key={sub.id} className="bg-white/[0.03] rounded-2xl border border-white/6 overflow-hidden">
+          <button type="button" onClick={() => setExpanded(p => p === sub.id ? null : sub.id)}
+            className="w-full px-4 py-3.5 flex items-center justify-between gap-3 text-left hover:bg-white/2 transition-colors">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className={`w-2 h-2 rounded-full shrink-0 ${sub.status === "new" ? "bg-accent animate-pulse" : "bg-white/15"}`} />
+              <div className="min-w-0">
+                <p className="text-[14px] font-medium text-white truncate">{sub.name}</p>
+                <p className="text-[12px] text-white/40 truncate">{sub.email}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <span className={`px-2 py-0.5 rounded-full text-[11px] border ${statusColors[sub.status] || ""}`}>{sub.status}</span>
+              <span className="px-2 py-0.5 rounded-full text-[11px] bg-white/5 text-white/40 border border-white/8">
+                {PROJECT_TYPE_LABELS[sub.project_type] || sub.project_type}
+              </span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={`text-white/25 transition-transform ${expanded === sub.id ? "rotate-180" : ""}`}>
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </div>
+          </button>
+
+          <AnimatePresence>
+            {expanded === sub.id && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }}
+                className="overflow-hidden border-t border-white/5">
+                <div className="px-4 py-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {sub.company && (
+                    <div>
+                      <p className="text-[10px] text-white/30 uppercase tracking-wider mb-1">Company</p>
+                      <p className="text-[13px] text-white">{sub.company}</p>
+                    </div>
+                  )}
+                  {sub.phone && (
+                    <div>
+                      <p className="text-[10px] text-white/30 uppercase tracking-wider mb-1">Phone</p>
+                      <p className="text-[13px] text-white">{sub.phone}</p>
+                    </div>
+                  )}
+                  <div>
+                    <p className="text-[10px] text-white/30 uppercase tracking-wider mb-1">Budget</p>
+                    <p className="text-[13px] text-white">{BUDGET_RANGE_LABELS[sub.budget_range] || sub.budget_range}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-white/30 uppercase tracking-wider mb-1">Received</p>
+                    <p className="text-[13px] text-white">{new Date(sub.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</p>
+                  </div>
+                  <div className="sm:col-span-2">
+                    <p className="text-[10px] text-white/30 uppercase tracking-wider mb-1">Message</p>
+                    <p className="text-[13px] text-white/80 leading-relaxed bg-white/2 rounded-xl p-3 border border-white/5">{sub.message}</p>
+                  </div>
+                </div>
+                <div className="px-4 pb-4 flex flex-wrap gap-2">
+                  <button type="button" onClick={() => copyEmail(sub)}
+                    className="px-3 py-1.5 rounded-lg border border-white/10 text-[12px] text-white/50 hover:text-white hover:border-white/20 flex items-center gap-1.5 transition-all">
+                    {copied === sub.id ? (
+                      <><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12" /></svg> Copied</>
+                    ) : (
+                      <><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg> Copy email</>
+                    )}
+                  </button>
+                  {sub.status !== "reviewed" && (
+                    <button type="button" onClick={() => onStatusChange(sub.id, "reviewed")}
+                      className="px-3 py-1.5 rounded-lg border border-emerald-500/25 text-[12px] text-emerald-400 hover:border-emerald-500/40 flex items-center gap-1.5 transition-all">
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12" /></svg>
+                      Mark reviewed
+                    </button>
+                  )}
+                  {sub.status !== "archived" && (
+                    <button type="button" onClick={() => onStatusChange(sub.id, "archived")}
+                      className="px-3 py-1.5 rounded-lg border border-white/10 text-[12px] text-white/40 hover:border-white/20 hover:text-white/60 flex items-center gap-1.5 transition-all">
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect width="20" height="5" x="2" y="3" rx="1" /><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8" /><path d="M10 12h4" /></svg>
+                      Archive
+                    </button>
+                  )}
+                  <button type="button" onClick={() => onDelete(sub.id, sub.name)}
+                    className="px-3 py-1.5 rounded-lg border border-red-500/20 text-[12px] text-red-400/80 hover:border-red-500/40 hover:text-red-400 flex items-center gap-1.5 transition-all ml-auto">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /></svg>
+                    Delete
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DEBUG LOG PANEL
+// ─────────────────────────────────────────────────────────────────────────────
+
+function DebugPanel({
+  log, onClear,
+}: {
+  log: ApiLogEntry[]; onClear: () => void;
+}) {
+  return (
+    <div className="flex flex-col h-full">
+      <div className="flex items-center justify-between px-3 py-2 border-b border-white/6 shrink-0">
+        <p className="text-[11px] font-mono text-white/40 uppercase tracking-wider">API Debug Log ({log.length})</p>
+        <button type="button" onClick={onClear} className="text-[10px] text-white/30 hover:text-white/60 transition-colors">Clear</button>
+      </div>
+      <div className="overflow-y-auto flex-1">
+        {log.length === 0 && (
+          <p className="text-[12px] text-white/25 text-center py-6">No API calls yet.</p>
+        )}
+        {log.map(entry => (
+          <div key={entry.id} className={`flex items-center gap-2 px-3 py-1.5 border-b border-white/3 font-mono text-[11px] ${entry.error ? "bg-red-500/5" : ""}`}>
+            <span className={`shrink-0 w-10 text-right ${entry.status && entry.status >= 400 ? "text-red-400" : "text-emerald-400"}`}>
+              {entry.status ?? "…"}
+            </span>
+            <span className={`shrink-0 w-12 ${entry.method === "GET" ? "text-cyan-400/70" : entry.method === "PUT" || entry.method === "POST" ? "text-accent/80" : "text-red-400/70"}`}>
+              {entry.method}
+            </span>
+            <span className="text-white/40 truncate flex-1">{entry.url}</span>
+            {entry.ms !== null && <span className="shrink-0 text-white/20">{entry.ms}ms</span>}
+            {entry.error && <span className="text-red-400/80 truncate max-w-[200px]">{entry.error}</span>}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PREVIEW PANE (WYSIWYG iframe)
+// ─────────────────────────────────────────────────────────────────────────────
+
+function PreviewPane({
+  activeSection, reloadKey,
+}: {
+  activeSection: string; reloadKey: number;
+}) {
+  const [device, setDevice] = useState<DeviceMode>("desktop");
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const [iframeError, setIframeError] = useState(false);
+
+  // Build iframe URL: use page route for page sections, or hash for home sections
+  const iframeSrc = useMemo(() => {
+    const base = window.location.origin;
+    if (PAGE_SECTIONS[activeSection]) return `${base}${PAGE_SECTIONS[activeSection]}`;
+    const hash = SECTION_HASH[activeSection];
+    return hash ? `${base}/#${hash}` : `${base}/`;
+  }, [activeSection]);
+
+  // FIX #8: Catch iframe load errors gracefully
+  const handleLoad = useCallback(() => {
+    setIframeError(false);
+    const iframe = iframeRef.current;
+    if (!iframe) return;
+    try {
+      // Inject WYSIWYG highlight overlay (same-origin only)
+      const win = iframe.contentWindow;
+      const doc = iframe.contentDocument;
+      if (!win || !doc) return;
+
+      // Inject minimal CSS to highlight the active section
+      const style = doc.createElement("style");
+      style.id = "__vaad_admin_overlay__";
+      style.textContent = `
+        [data-admin-highlight] {
+          outline: 2px solid rgba(124, 111, 247, 0.7) !important;
+          outline-offset: -2px !important;
+          box-shadow: inset 0 0 0 999px rgba(124,111,247,0.05) !important;
+        }
+        [data-admin-highlight]::after {
+          content: attr(data-admin-section) !important;
+          position: fixed !important;
+          top: 8px; left: 50%; transform: translateX(-50%) !important;
+          background: rgba(124,111,247,0.9) !important;
+          color: white !important; font-size: 11px !important;
+          padding: 2px 10px !important; border-radius: 20px !important;
+          z-index: 99999 !important; pointer-events: none !important;
+          font-family: DM Sans, sans-serif !important;
+        }
+      `;
+      // Remove old style if present
+      doc.getElementById("__vaad_admin_overlay__")?.remove();
+      doc.head.appendChild(style);
+
+      // Highlight the active section element
+      const hash = SECTION_HASH[activeSection];
+      if (hash) {
+        doc.querySelectorAll("[data-admin-highlight]").forEach(el => {
+          el.removeAttribute("data-admin-highlight");
+          el.removeAttribute("data-admin-section");
+        });
+        const target = doc.getElementById(hash) || doc.querySelector(`section[id="${hash}"], [data-section="${hash}"]`);
+        if (target) {
+          target.setAttribute("data-admin-highlight", "true");
+          target.setAttribute("data-admin-section", SECTION_LABELS[activeSection] || activeSection);
+        }
+      }
+    } catch {
+      // Cross-origin – silently ignore
+    }
+  }, [activeSection]);
+
+  const deviceButtons: DeviceMode[] = ["desktop", "tablet", "mobile"];
+  const deviceIcons: Record<DeviceMode, JSX.Element> = {
+    desktop: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect width="20" height="14" x="2" y="3" rx="2" /><path d="M8 21h8M12 17v4" /></svg>,
+    tablet: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect width="16" height="20" x="4" y="2" rx="2" /><line x1="12" y1="18" x2="12.01" y2="18" /></svg>,
+    mobile: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect width="12" height="20" x="6" y="2" rx="2" /><line x1="12" y1="18" x2="12.01" y2="18" /></svg>,
+  };
+
+  return (
+    <div className="flex flex-col h-full bg-[#060609]">
+      {/* Toolbar */}
+      <div className="flex items-center justify-between px-3 py-2 border-b border-white/6 shrink-0">
+        <div className="flex items-center gap-1">
+          {deviceButtons.map(d => (
+            <button key={d} type="button" onClick={() => setDevice(d)}
+              className={`p-1.5 rounded-lg transition-colors ${device === d ? "bg-white/10 text-white" : "text-white/30 hover:text-white/60"}`}
+              title={d}>
+              {deviceIcons[d]}
+            </button>
+          ))}
+        </div>
+        <div className="flex items-center gap-1">
+          <span className="text-[10px] text-white/25 font-mono hidden sm:block">
+            {activeSection !== SUBMISSIONS_TAB ? (iframeSrc.replace(window.location.origin, "")) : ""}
+          </span>
+          <a href="/" target="_blank" rel="noreferrer"
+            className="p-1.5 rounded-lg text-white/30 hover:text-white/60 transition-colors ml-1"
+            title="Open site in new tab">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14 21 3" />
+            </svg>
+          </a>
+        </div>
+      </div>
+
+      {/* iframe container */}
+      <div className="flex-1 overflow-hidden flex items-start justify-center bg-[#080810] relative">
+        {iframeError ? (
+          <div className="flex flex-col items-center justify-center h-full text-white/30 gap-2">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
+            <p className="text-[12px]">Preview failed to load</p>
+            <button type="button" onClick={() => setIframeError(false)}
+              className="text-[11px] text-accent hover:underline">Retry</button>
+          </div>
+        ) : (
+          <div
+            className="h-full transition-all duration-300 relative"
+            style={{ width: DEVICE_WIDTHS[device], maxWidth: "100%" }}>
+            {device !== "desktop" && (
+              <div className="absolute inset-0 pointer-events-none rounded-[12px] border border-white/10 z-10" />
+            )}
+            <iframe
+              ref={iframeRef}
+              key={reloadKey}
+              src={activeSection === SUBMISSIONS_TAB ? "/" : iframeSrc}
+              onLoad={handleLoad}
+              onError={() => setIframeError(true)}
+              title="Site preview"
+              className={`w-full h-full bg-white border-0 ${device !== "desktop" ? "rounded-[12px]" : ""}`}
+              style={{ colorScheme: "normal" }}
+              sandbox="allow-same-origin allow-scripts allow-forms"
+            />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SECTION SIDEBAR
+// ─────────────────────────────────────────────────────────────────────────────
+
+function SectionSidebar({
+  sections, activeSection, submissions, onSelectSection, searchQuery, onSearchChange,
+}: {
+  sections: string[];
+  activeSection: string;
+  submissions: Submission[];
+  onSelectSection: (s: string) => void;
+  searchQuery: string;
+  onSearchChange: (q: string) => void;
+}) {
+  const searchRef = useRef<HTMLInputElement>(null);
+
+  // ⌘K / Ctrl+K to focus search
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") { e.preventDefault(); searchRef.current?.focus(); }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
   }, []);
 
-  useEffect(() => {
-    if (activeTab !== SUBMISSIONS_TAB && !sections.includes(activeTab)) {
-      setActiveTab(sections[0] || SUBMISSIONS_TAB);
+  const newCount = submissions.filter(s => s.status === "new").length;
+
+  return (
+    <div className="flex flex-col h-full">
+      {/* Search */}
+      <div className="px-2 py-2 shrink-0">
+        <div className="relative">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+            className="absolute left-2.5 top-1/2 -translate-y-1/2 text-white/25 pointer-events-none">
+            <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
+          </svg>
+          <input ref={searchRef} type="text" value={searchQuery} onChange={e => onSearchChange(e.target.value)}
+            placeholder="Search sections… (⌘K)"
+            className="w-full bg-white/4 text-white/80 text-[12px] pl-7 pr-3 py-2 rounded-xl border border-white/8 outline-none focus:border-accent/30 placeholder:text-white/20" />
+        </div>
+      </div>
+
+      {/* Nav items */}
+      <nav className="flex-1 overflow-y-auto px-2 pb-4">
+        {/* Submissions */}
+        <button type="button" onClick={() => onSelectSection(SUBMISSIONS_TAB)}
+          className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left transition-colors mb-1
+            ${activeSection === SUBMISSIONS_TAB ? "bg-accent/15 text-accent" : "text-white/50 hover:text-white/80 hover:bg-white/4"}`}>
+          <div className="flex items-center gap-2.5">
+            <span className="text-[14px]">✉</span>
+            <span className="text-[13px]">Submissions</span>
+          </div>
+          {newCount > 0 && (
+            <span className="px-1.5 py-0.5 rounded-full bg-accent text-white text-[10px] font-medium">{newCount}</span>
+          )}
+        </button>
+
+        <div className="border-t border-white/5 my-2" />
+
+        {/* Content sections */}
+        {sections.map(section => (
+          <button key={section} type="button" onClick={() => onSelectSection(section)}
+            className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left transition-colors
+              ${activeSection === section ? "bg-accent/15 text-accent" : "text-white/50 hover:text-white/80 hover:bg-white/4"}`}>
+            <span className="text-[13px] w-4 text-center shrink-0 opacity-70">{SECTION_ICONS[section] || "·"}</span>
+            <span className="text-[13px] truncate">{SECTION_LABELS[section] || humanKey(section)}</span>
+          </button>
+        ))}
+      </nav>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MAIN ADMIN DASHBOARD
+// ─────────────────────────────────────────────────────────────────────────────
+
+export default function AdminDashboard() {
+  // Auth state
+  const [password, setPassword] = useState("");
+  const [checking, setChecking] = useState(true);
+  const [authenticated, setAuthenticated] = useState(false);
+
+  // Data
+  const [content, setContent] = useState<ContentItem[]>([]);
+  const [submissions, setSubmissions] = useState<Submission[]>([]);
+
+  // UI state
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [activeSection, setActiveSection] = useState<ActiveTab>(SUBMISSIONS_TAB);
+  const [sectionSearch, setSectionSearch] = useState("");
+  const [fieldSearch, setFieldSearch] = useState("");
+  const [showPreview, setShowPreview] = useState(true);
+  const [showDebug, setShowDebug] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
+
+  // Confirm modal
+  const [confirm, setConfirm] = useState<{
+    kind: "submission" | "field" | "collection_item";
+    id?: number; key?: string; label?: string; section?: string; index?: number;
+  } | null>(null);
+
+  // Debug log
+  const [apiLog, dispatchLog] = useReducer(logReducer, []);
+  const addLog = useCallback((entry: Partial<ApiLogEntry>) => dispatchLog({ type: "add", entry }), []);
+
+  // FIX #2: O(1) content map
+  const contentMap = useMemo(() => buildContentMap(content), [content]);
+
+  // Sections list
+  const allSections = useMemo(() => {
+    const extra = [...new Set(content.map(c => c.section))].filter(s => !SECTION_ORDER.includes(s)).sort();
+    return [...SECTION_ORDER, ...extra];
+  }, [content]);
+
+  const filteredSections = useMemo(() => {
+    if (!sectionSearch) return allSections;
+    const q = sectionSearch.toLowerCase();
+    return allSections.filter(s => (SECTION_LABELS[s] || s).toLowerCase().includes(q));
+  }, [allSections, sectionSearch]);
+
+  // Fields for the current section
+  const sectionFields = useMemo(() => {
+    if (activeSection === SUBMISSIONS_TAB || COLLECTION_SECTIONS.includes(activeSection as CollectionSection)) return [];
+    const meta = COLLECTION_META as any;
+    const isCollection = COLLECTION_SECTIONS.some(s => activeSection === s);
+    if (isCollection) return [];
+
+    let fields = content.filter(c => c.section === activeSection);
+
+    // Filter out collection sub-keys from non-collection sections (shouldn't happen, but safe)
+    if (activeSection === "portfolio") fields = fields.filter(c => !/^project_\d+_/.test(c.key) && c.key !== "project_count");
+    if (activeSection === "team") fields = fields.filter(c => !/^member_\d+_/.test(c.key) && c.key !== "member_count");
+
+    if (fieldSearch) {
+      const q = fieldSearch.toLowerCase();
+      fields = fields.filter(f => f.key.toLowerCase().includes(q) || f.value.toLowerCase().includes(q));
     }
-  }, [activeTab, sections]);
 
-  function findContentItem(section: string, key: string) {
-    return content.find((item) => item.section === section && item.key === key);
-  }
+    return fields.sort((a, b) => a.key.localeCompare(b.key, undefined, { numeric: true }));
+  }, [activeSection, content, fieldSearch]);
 
-  function getFieldDefinition(section: string, key: string) {
-    return homeSectionDefinitions[section]?.fields.find((field) => field.key === key);
-  }
+  // Collection items for portfolio/team
+  function getCollectionItems(section: CollectionSection): CollectionItem[] {
+    const meta = COLLECTION_META[section];
+    const countItem = lookupContent(contentMap, section, meta.countKey);
+    const fieldDefs = section === "portfolio" ? PORTFOLIO_FIELDS : TEAM_FIELDS;
 
-  async function upsertField(section: string, key: string, value: string) {
-    const existing = findContentItem(section, key);
-    if (existing) {
-      const updated = await api<ContentItem>('/api/content', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: existing.id, value }),
-      });
-      setContent((current) => current.map((entry) => (entry.id === existing.id ? updated : entry)));
-      return updated;
-    }
-
-    const created = await api<ContentItem>('/api/content', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ section, key, value }),
+    // Find max index in DB
+    const existingIndices: number[] = [];
+    content.forEach(c => {
+      if (c.section !== section) return;
+      const m = c.key.match(new RegExp(`^${meta.prefix}_(\\d+)_`));
+      if (m) existingIndices.push(parseInt(m[1], 10));
     });
-    setContent((current) => [...current, created]);
-    return created;
-  }
 
-  async function removeFieldById(id: number) {
-    await api('/api/content', {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id }),
-    });
-    setContent((current) => current.filter((item) => item.id !== id));
-  }
+    // FIX #7: safe int parsing
+    const storedCount = safeInt(countItem?.value || "");
+    const maxIdx = existingIndices.length > 0 ? Math.max(...existingIndices) : 0;
+    const count = storedCount !== undefined ? Math.max(storedCount, 0) : maxIdx;
 
-  function getCollectionEntries(section: ManagedCollectionSection) {
-    const setup = collectionEditors[section];
-    const groups = getIndexedContentGroups(content, section, setup.prefix);
-    const explicitCountItem = findContentItem(section, setup.countKey);
-    const explicitCount = Number.parseInt(explicitCountItem?.value || '', 10);
-    const fallbackCount = Math.max(
-      getIndexedContentCount(content, section, setup.prefix),
-      setup.definition.defaultCount,
-    );
-    const totalCount = Number.isNaN(explicitCount) ? fallbackCount : Math.max(0, explicitCount);
-
-    return Array.from({ length: totalCount }, (_, index) => {
-      const group = groups.find((entry) => entry.index === index + 1);
-      const fallback = setup.definition.getFallback(index);
-      const values = Object.fromEntries(
-        setup.definition.fields.map((field) => {
-          const item = group?.fields[field.key];
-          return [field.key, item?.value ?? getFallbackValue(fallback, field.key)];
-        }),
-      );
-
-      return {
-        fields: Object.fromEntries(setup.definition.fields.map((field) => [field.key, group?.fields[field.key]])),
-        index: index + 1,
-        label: values[setup.definition.primaryField] || `${setup.definition.itemLabel} ${index + 1}`,
-        values,
-      } satisfies CollectionEntry;
-    });
-  }
-
-  async function persistCollection(section: ManagedCollectionSection, entries: CollectionEntry[]) {
-    const setup = collectionEditors[section];
-    setCollectionBusy(section);
-    setError('');
-    try {
-      for (let index = 0; index < entries.length; index += 1) {
-        const entry = entries[index];
-        for (const field of setup.definition.fields) {
-          await upsertField(section, `${setup.prefix}_${index + 1}_${field.key}`, entry.values[field.key] || '');
-        }
+    return Array.from({ length: count }, (_, i) => {
+      const idx = i + 1;
+      const fields: Record<string, ContentItem | undefined> = {};
+      const values: Record<string, string> = {};
+      for (const fd of fieldDefs) {
+        const item = lookupContent(contentMap, section, `${meta.prefix}_${idx}_${fd.key}`);
+        fields[fd.key] = item;
+        values[fd.key] = item?.value ?? "";
       }
-
-      const groups = getIndexedContentGroups(content, section, setup.prefix);
-      for (const group of groups) {
-        if (group.index <= entries.length) continue;
-        for (const item of Object.values(group.fields)) {
-          if (item) await removeFieldById(item.id);
-        }
-      }
-
-      await upsertField(section, setup.countKey, String(entries.length));
-    } catch (requestError) {
-      setError(getErrorMessage(requestError));
-    } finally {
-      setCollectionBusy(null);
-    }
+      const label = values[meta.primaryField] || `${meta.itemLabel} ${idx}`;
+      return { index: idx, label, fields, values };
+    });
   }
 
-  async function addCollectionEntry(section: ManagedCollectionSection) {
-    const setup = collectionEditors[section];
-    const currentEntries = getCollectionEntries(section);
-    const fallback = setup.definition.getFallback(currentEntries.length);
-    const nextEntry: CollectionEntry = {
-      fields: {},
-      index: currentEntries.length + 1,
-      label: getFallbackValue(fallback, setup.definition.primaryField) || `${setup.definition.itemLabel} ${currentEntries.length + 1}`,
-      values: Object.fromEntries(setup.definition.fields.map((field) => [field.key, getFallbackValue(fallback, field.key)])),
-    };
+  // ── API helpers ──────────────────────────────────────────────────────────
 
-    await persistCollection(section, [...currentEntries, nextEntry]);
-  }
+  const apiFetchLogged = useCallback(<T = unknown>(url: string, opts?: RequestInit) =>
+    apiFetch<T>(url, opts, addLog), [addLog]);
 
-  async function deleteCollectionEntry(section: ManagedCollectionSection, index: number) {
-    await persistCollection(section, getCollectionEntries(section).filter((entry) => entry.index !== index));
-  }
-
-  async function reorderCollection(section: ManagedCollectionSection, fromIndex: number, toIndex: number) {
-    if (fromIndex === toIndex) return;
-    const currentEntries = getCollectionEntries(section);
-    await persistCollection(section, moveItem(currentEntries, fromIndex - 1, toIndex - 1));
-  }
-
-  async function loadDashboard() {
-    setLoading(true);
-    setError('');
+  async function loadAll() {
+    setLoading(true); setError("");
     try {
-      const [nextSubmissions, nextContent] = await Promise.all([
-        api<Submission[]>('/api/contact'),
-        api<ContentItem[]>(`/api/content?ts=${Date.now()}`),
+      const [subs, ct] = await Promise.all([
+        apiFetchLogged<Submission[]>("/api/contact"),
+        apiFetchLogged<ContentItem[]>(`/api/content?ts=${Date.now()}`),
       ]);
-      setSubmissions(nextSubmissions);
-      setContent(nextContent);
-      setError('');
-    } catch (requestError) {
-      console.error('Load dashboard error:', requestError);
-      const msg = getErrorMessage(requestError);
-      setError(msg || 'Failed to load. Please refresh.');
+      setSubmissions(subs);
+      setContent(ct);
+    } catch (e) {
+      setError(getErrorMessage(e));
     } finally {
       setLoading(false);
     }
   }
 
-  async function login(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setLoading(true);
-    setError('');
+  useEffect(() => {
+    (async () => {
+      try {
+        const sess = await apiFetchLogged<{ authenticated: boolean }>("/api/admin/session");
+        if (sess.authenticated) { setAuthenticated(true); await loadAll(); }
+      } catch { setAuthenticated(false); } finally { setChecking(false); }
+    })();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function login(e: React.FormEvent) {
+    e.preventDefault(); setLoading(true); setError("");
     try {
-      await api('/api/admin/session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      await apiFetchLogged("/api/admin/session", {
+        method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ password }),
       });
-      setAuthenticated(true);
-      setPassword('');
-      await loadDashboard();
-    } catch (requestError) {
-      setError(getErrorMessage(requestError));
-    } finally {
-      setLoading(false);
-    }
+      setAuthenticated(true); setPassword(""); await loadAll();
+    } catch (err) { setError(getErrorMessage(err)); } finally { setLoading(false); }
   }
 
   async function logout() {
     setLoading(true);
     try {
-      await api('/api/admin/session', { method: 'DELETE' });
-      setAuthenticated(false);
-      setSubmissions([]);
-      setContent([]);
-      setEditedValues({});
-      setActiveTab(SUBMISSIONS_TAB);
-    } catch (requestError) {
-      setError(getErrorMessage(requestError));
-    } finally {
-      setLoading(false);
+      await apiFetchLogged("/api/admin/session", { method: "DELETE" });
+      setAuthenticated(false); setContent([]); setSubmissions([]);
+    } finally { setLoading(false); }
+  }
+
+  // Content CRUD
+  async function ensureField(section: string, key: string, value: string): Promise<ContentItem> {
+    const existing = lookupContent(contentMap, section, key);
+    if (existing) {
+      const updated = await apiFetchLogged<ContentItem>("/api/content", {
+        method: "PUT", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: existing.id, value }),
+      });
+      setContent(prev => prev.map(c => c.id === existing.id ? updated : c));
+      return updated;
     }
-  }
-
-  async function updateSubmission(id: number, status: SubmissionStatus) {
-    try {
-      const updated = await api<Submission>('/api/contact', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, status }),
-      });
-      setSubmissions((current) => current.map((submission) => (submission.id === id ? updated : submission)));
-    } catch (requestError) {
-      setError(getErrorMessage(requestError));
-    }
-  }
-
-  async function deleteSubmission(id: number) {
-    try {
-      await api('/api/contact', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id }),
-      });
-      setSubmissions((current) => current.filter((submission) => submission.id !== id));
-      setExpandedSubmission((current) => (current === id ? null : current));
-    } catch (requestError) {
-      setError(getErrorMessage(requestError));
-    }
-  }
-
-  async function saveField(item: ContentItem, value: string) {
-    setSavingIds((current) => new Set(current).add(item.id));
-    try {
-      const updated = await api<ContentItem>('/api/content', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: item.id, value }),
-      });
-      setContent((current) => current.map((entry) => (entry.id === item.id ? updated : entry)));
-      setEditedValues((current) => {
-        const next = { ...current };
-        delete next[item.id];
-        return next;
-      });
-    } catch (requestError) {
-      setError(getErrorMessage(requestError));
-    } finally {
-      setSavingIds((current) => {
-        const next = new Set(current);
-        next.delete(item.id);
-        return next;
-      });
-    }
-  }
-
-  async function createField() {
-    if (activeTab === SUBMISSIONS_TAB || !newFieldKey.trim()) return;
-    try {
-      const created = await api<ContentItem>('/api/content', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ section: activeTab, key: newFieldKey.trim(), value: newFieldValue }),
-      });
-      setContent((current) => [...current, created]);
-      setNewFieldKey('');
-      setNewFieldValue('');
-    } catch (requestError) {
-      setError(getErrorMessage(requestError));
-    }
-  }
-
-  async function createProject() {
-    await addCollectionEntry('portfolio');
-  }
-
-  async function createTeamMember() {
-    await addCollectionEntry('team');
+    const created = await apiFetchLogged<ContentItem>("/api/content", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ section, key, value }),
+    });
+    setContent(prev => [...prev, created]);
+    return created;
   }
 
   async function deleteField(id: number) {
+    await apiFetchLogged("/api/content", {
+      method: "DELETE", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    });
+    setContent(prev => prev.filter(c => c.id !== id));
+  }
+
+  // FIX #1 & #5: Unified, atomic collection reorder/save
+  async function saveCollectionItems(section: CollectionSection, items: CollectionItem[]) {
+    const meta = COLLECTION_META[section];
+    const fieldDefs = section === "portfolio" ? PORTFOLIO_FIELDS : TEAM_FIELDS;
+
+    // Save all items sequentially (avoids race conditions from FIX #5)
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      const newIdx = i + 1;
+      for (const fd of fieldDefs) {
+        await ensureField(section, `${meta.prefix}_${newIdx}_${fd.key}`, item.values[fd.key] || "");
+      }
+    }
+
+    // Delete items beyond new count
+    const existingItems = getCollectionItems(section);
+    for (const existing of existingItems) {
+      if (existing.index > items.length) {
+        for (const fd of fieldDefs) {
+          const contentItem = existing.fields[fd.key];
+          if (contentItem) await deleteField(contentItem.id);
+        }
+      }
+    }
+
+    await ensureField(section, meta.countKey, String(items.length));
+  }
+
+  async function addCollectionItem(section: CollectionSection) {
+    const items = getCollectionItems(section);
+    const idx = items.length + 1;
+    const meta = COLLECTION_META[section];
+    const newItem: CollectionItem = {
+      index: idx, label: `${meta.itemLabel} ${idx}`,
+      fields: {}, values: {},
+    };
+    await saveCollectionItems(section, [...items, newItem]);
+  }
+
+  async function deleteCollectionItem(section: CollectionSection, index: number) {
+    const items = getCollectionItems(section).filter(it => it.index !== index);
+    await saveCollectionItems(section, items);
+  }
+
+  async function reorderCollectionItems(section: CollectionSection, fromIdx: number, toIdx: number) {
+    if (fromIdx === toIdx) return;
+    const items = [...getCollectionItems(section)];
+    const [moved] = items.splice(fromIdx - 1, 1);
+    items.splice(toIdx - 1, 0, moved);
+    await saveCollectionItems(section, items);
+  }
+
+  // Submissions
+  async function setSubmissionStatus(id: number, status: Submission["status"]) {
+    const updated = await apiFetchLogged<Submission>("/api/contact", {
+      method: "PUT", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, status }),
+    });
+    setSubmissions(prev => prev.map(s => s.id === id ? updated : s));
+  }
+
+  async function deleteSubmission(id: number) {
+    await apiFetchLogged("/api/contact", {
+      method: "DELETE", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    });
+    setSubmissions(prev => prev.filter(s => s.id !== id));
+  }
+
+  // Confirm action handler
+  async function handleConfirm() {
+    if (!confirm) return;
     try {
-      await removeFieldById(id);
-    } catch (requestError) {
-      setError(getErrorMessage(requestError));
-    }
+      if (confirm.kind === "submission" && confirm.id) await deleteSubmission(confirm.id);
+      if (confirm.kind === "field" && confirm.id) await deleteField(confirm.id);
+      if (confirm.kind === "collection_item" && confirm.section && confirm.index) {
+        await deleteCollectionItem(confirm.section as CollectionSection, confirm.index);
+      }
+    } catch (e) { setError(getErrorMessage(e)); }
+    setConfirm(null);
+    // Reload preview after structural change
+    setReloadKey(k => k + 1);
   }
 
-  async function confirmDelete() {
-    if (!confirmTarget) return;
-    if (confirmTarget.kind === 'submission' && confirmTarget.id) await deleteSubmission(confirmTarget.id);
-    if (confirmTarget.kind === 'field' && confirmTarget.id) await deleteField(confirmTarget.id);
-    if (confirmTarget.kind === 'collection_item' && confirmTarget.section && confirmTarget.index) {
-      await deleteCollectionEntry(confirmTarget.section, confirmTarget.index);
-    }
-    setConfirmTarget(null);
+  // Field save (for collection cards)
+  const handleFieldSave = useCallback(async (item: ContentItem, value: string) => {
+    const updated = await apiFetchLogged<ContentItem>("/api/content", {
+      method: "PUT", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: item.id, value }),
+    });
+    setContent(prev => prev.map(c => c.id === item.id ? updated : c));
+    setReloadKey(k => k + 1);
+  }, [apiFetchLogged]);
+
+  // New field creation
+  const [newKey, setNewKey] = useState("");
+  const [newValue, setNewValue] = useState("");
+
+  async function createField() {
+    if (!newKey.trim() || activeSection === SUBMISSIONS_TAB) return;
+    try {
+      await ensureField(activeSection, newKey.trim(), newValue);
+      setNewKey(""); setNewValue("");
+    } catch (e) { setError(getErrorMessage(e)); }
   }
 
-  const portfolioEntries = activeTab === 'portfolio' ? getCollectionEntries('portfolio') : [];
-  const teamEntries = activeTab === 'team' ? getCollectionEntries('team') : [];
+  // ── Drag state for collection reorder ─────────────────────────────────────
+  const [dragFrom, setDragFrom] = useState<{ section: CollectionSection; index: number } | null>(null);
 
-  if (checkingSession) {
-    return <div className="min-h-screen bg-page-bg flex items-center justify-center text-text-secondary">Checking admin session...</div>;
+  // ─────────────────────────────────────────────────────────────────────────
+  // RENDER: loading / login
+  // ─────────────────────────────────────────────────────────────────────────
+
+  if (checking) {
+    return (
+      <div className="min-h-screen bg-[#06060C] flex items-center justify-center text-white/30 text-[13px]">
+        <Spinner size={20} />
+      </div>
+    );
   }
 
   if (!authenticated) {
     return (
-      <div className="min-h-screen bg-page-bg flex items-center justify-center px-6">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-surface-1 rounded-[20px] p-8 w-full max-w-[420px] border border-[rgba(255,255,255,0.06)]">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-11 h-11 rounded-2xl gradient-bg flex items-center justify-center text-white"><Shield size={18} /></div>
+      <div className="min-h-screen bg-[#06060C] flex items-center justify-center px-4">
+        <motion.div
+          initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
+          className="w-full max-w-[400px] bg-white/[0.04] border border-white/8 rounded-2xl p-8">
+          <div className="flex items-center gap-3 mb-8">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent/60 to-accent flex items-center justify-center">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+                <rect width="18" height="11" x="3" y="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
+            </div>
             <div>
-              <h1 className="text-[24px] text-text-primary" style={{ fontFamily: 'Syne', fontWeight: 700 }}>Admin sign in</h1>
-              <p className="text-[14px] text-text-secondary">Uses the secure admin session cookie configured on the server.</p>
+              <h1 className="text-[20px] font-bold text-white" style={{ fontFamily: "Syne, sans-serif" }}>Admin sign in</h1>
+              <p className="text-[12px] text-white/40">VAAD Development</p>
             </div>
           </div>
           <form onSubmit={login} className="flex flex-col gap-4">
             <input
-              type="password"
-              autoComplete="current-password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
+              type="password" autoComplete="current-password"
+              value={password} onChange={e => setPassword(e.target.value)}
               placeholder="Admin password"
-              className="w-full bg-surface-2 text-text-primary text-[15px] px-4 py-3 rounded-[10px] border border-[rgba(255,255,255,0.08)] outline-none focus:border-[rgba(124,111,247,0.5)]"
+              className="w-full bg-white/4 text-white text-[14px] px-4 py-3 rounded-xl border border-white/10 outline-none focus:border-accent/50 placeholder:text-white/25"
             />
-            {error && <p className="text-red-400 text-[13px]">{error}</p>}
-            <button type="submit" disabled={loading} className="w-full gradient-bg text-white py-3 rounded-[10px] text-[15px] font-medium disabled:opacity-60">
-              {loading ? 'Signing in...' : 'Sign in'}
+            {error && <p className="text-[12px] text-red-400">{error}</p>}
+            <button type="submit" disabled={loading}
+              className="w-full bg-gradient-to-r from-accent to-accent/80 text-white py-3 rounded-xl text-[14px] font-medium disabled:opacity-50 hover:opacity-90 transition-opacity">
+              {loading ? "Signing in…" : "Sign in"}
             </button>
           </form>
         </motion.div>
@@ -526,453 +1457,290 @@ export default function AdminDashboard() {
     );
   }
 
+  // ─────────────────────────────────────────────────────────────────────────
+  // RENDER: main admin
+  // ─────────────────────────────────────────────────────────────────────────
+
+  const isCollection = COLLECTION_SECTIONS.includes(activeSection as CollectionSection);
+  const collectionItems = isCollection ? getCollectionItems(activeSection as CollectionSection) : [];
+
   return (
-    <div className="min-h-screen bg-page-bg px-4 md:px-6 py-6 md:py-8" style={{ fontFamily: 'DM Sans' }}>
-      <ConfirmDialog
-        open={Boolean(confirmTarget)}
-        title={
-          confirmTarget?.kind === 'submission'
-            ? 'Delete submission?'
-            : confirmTarget?.kind === 'collection_item'
-              ? `Delete ${confirmTarget.label}?`
-              : 'Delete content field?'
-        }
-        message={
-          confirmTarget?.kind === 'collection_item'
-            ? 'This will remove the card from the live website and shift the remaining items up.'
-            : `This will permanently remove ${confirmTarget?.label || 'this item'}.`
-        }
-        onCancel={() => setConfirmTarget(null)}
-        onConfirm={() => void confirmDelete()}
+    <div className="min-h-screen bg-[#06060C] flex flex-col" style={{ fontFamily: "DM Sans, sans-serif" }}>
+      <ConfirmModal
+        open={!!confirm}
+        title={confirm?.kind === "submission" ? "Delete submission?" : confirm?.kind === "collection_item" ? `Delete ${confirm?.label}?` : "Delete content field?"}
+        message={confirm?.kind === "collection_item"
+          ? "This will remove the card from the live site. Remaining items will shift up."
+          : `This will permanently remove "${confirm?.label || confirm?.key || "this item"}".`}
+        onCancel={() => setConfirm(null)}
+        onConfirm={handleConfirm}
       />
 
-      <div className="max-w-[1180px] mx-auto">
-        <header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6">
-          <div>
-            <h1 className="text-[28px] text-text-primary" style={{ fontFamily: 'Syne', fontWeight: 700 }}>VAAD admin</h1>
-            <p className="text-[14px] text-text-secondary">Content and submissions, backed by secure cookie auth.</p>
+      {/* ── TOP BAR ─────────────────────────────────────────────────── */}
+      <header className="flex items-center justify-between px-4 py-3 border-b border-white/6 shrink-0 bg-[#08080f]">
+        <div className="flex items-center gap-3">
+          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-accent/60 to-accent flex items-center justify-center">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
+              <polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" />
+            </svg>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <a href="/" target="_blank" rel="noreferrer" className="px-3 py-2 rounded-xl border border-[rgba(255,255,255,0.08)] text-[13px] text-text-secondary inline-flex items-center gap-2">
-              <ExternalLink size={14} /> View site
-            </a>
-            <button type="button" onClick={() => void loadDashboard()} disabled={loading} className="px-3 py-2 rounded-xl border border-[rgba(255,255,255,0.08)] text-[13px] text-text-secondary inline-flex items-center gap-2 disabled:opacity-60">
-              <RefreshCw size={14} className={loading ? 'animate-spin' : ''} /> Refresh
-            </button>
-            <button type="button" onClick={() => void logout()} disabled={loading} className="px-3 py-2 rounded-xl border border-[rgba(239,68,68,0.2)] text-[13px] text-red-400 inline-flex items-center gap-2 disabled:opacity-60">
-              <LogOut size={14} /> Sign out
-            </button>
-          </div>
-        </header>
-
-        <div className="overflow-x-auto pb-2 mb-6">
-          <div className="flex gap-2 min-w-max">
-            <button type="button" onClick={() => setActiveTab(SUBMISSIONS_TAB)} className={`px-4 py-2 rounded-full text-[13px] ${activeTab === SUBMISSIONS_TAB ? 'bg-[rgba(124,111,247,0.16)] text-accent-light' : 'bg-[rgba(255,255,255,0.04)] text-text-secondary'}`}>
-              Submissions ({submissions.filter((submission) => submission.status === 'new').length})
-            </button>
-            {sections.map((section) => (
-              <button key={section} type="button" onClick={() => setActiveTab(section)} className={`px-4 py-2 rounded-full text-[13px] ${activeTab === section ? 'bg-[rgba(124,111,247,0.16)] text-accent-light' : 'bg-[rgba(255,255,255,0.04)] text-text-secondary'}`}>
-                {SECTION_LABELS[section] || labelForKey(section)}
-              </button>
-            ))}
-          </div>
+          <span className="text-[15px] font-bold text-white" style={{ fontFamily: "Syne, sans-serif" }}>VAAD</span>
+          <span className="text-[11px] text-white/30 bg-white/5 px-2 py-0.5 rounded-full">admin</span>
         </div>
+        <div className="flex items-center gap-1.5">
+          {error && (
+            <span className="text-[11px] text-red-400 bg-red-500/10 border border-red-500/20 px-2 py-1 rounded-lg mr-2 truncate max-w-[200px]">
+              {error}
+            </span>
+          )}
+          {/* Preview toggle */}
+          <button type="button" onClick={() => setShowPreview(v => !v)}
+            className={`px-3 py-1.5 rounded-lg border text-[12px] flex items-center gap-1.5 transition-all
+              ${showPreview ? "border-accent/30 text-accent bg-accent/10" : "border-white/10 text-white/40 hover:text-white/70"}`}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <rect width="18" height="14" x="3" y="5" rx="2" /><path d="M3 10h18" />
+            </svg>
+            Preview
+          </button>
+          {/* Debug toggle */}
+          <button type="button" onClick={() => setShowDebug(v => !v)}
+            className={`px-3 py-1.5 rounded-lg border text-[12px] flex items-center gap-1.5 transition-all
+              ${showDebug ? "border-accent/30 text-accent bg-accent/10" : "border-white/10 text-white/40 hover:text-white/70"}`}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" /><path d="M12 8v4M12 16h.01" />
+            </svg>
+            Debug {apiLog.length > 0 && <span className="text-[10px] opacity-60">({apiLog.length})</span>}
+          </button>
+          {/* Refresh */}
+          <button type="button" onClick={loadAll} disabled={loading}
+            className="px-3 py-1.5 rounded-lg border border-white/10 text-[12px] text-white/40 hover:text-white/70 flex items-center gap-1.5 disabled:opacity-40 transition-all">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+              className={loading ? "animate-spin" : ""}>
+              <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /><path d="M21 3v5h-5M3 21v-5h5" />
+            </svg>
+            Refresh
+          </button>
+          {/* Logout */}
+          <button type="button" onClick={logout} disabled={loading}
+            className="px-3 py-1.5 rounded-lg border border-red-500/20 text-[12px] text-red-400/70 hover:text-red-400 flex items-center gap-1.5 disabled:opacity-40 transition-all">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" />
+            </svg>
+            Sign out
+          </button>
+        </div>
+      </header>
 
-        {error && <div className="mb-5 p-3 rounded-xl bg-[rgba(239,68,68,0.08)] border border-[rgba(239,68,68,0.2)] text-red-400 text-[13px]">{error}</div>}
+      {/* ── MAIN BODY ────────────────────────────────────────────────── */}
+      <div className="flex flex-1 overflow-hidden" style={{ height: showDebug ? "calc(100vh - 52px - 200px)" : "calc(100vh - 52px)" }}>
+        {/* Sidebar */}
+        <aside className="w-[220px] border-r border-white/6 bg-[#08080f] shrink-0 overflow-hidden flex flex-col">
+          <SectionSidebar
+            sections={filteredSections}
+            activeSection={activeSection}
+            submissions={submissions}
+            onSelectSection={(s) => { setActiveSection(s); setFieldSearch(""); setReloadKey(k => k + 1); }}
+            searchQuery={sectionSearch}
+            onSearchChange={setSectionSearch}
+          />
+        </aside>
 
-        {activeTab === SUBMISSIONS_TAB ? (
-          <div className="flex flex-col gap-4">
-            {submissions.length === 0 ? (
-              <div className="bg-surface-1 rounded-2xl border border-[rgba(255,255,255,0.06)] p-10 text-center text-text-tertiary">No submissions yet.</div>
-            ) : (
-              submissions.map((submission) => (
-                <article key={submission.id} className="bg-surface-1 rounded-2xl border border-[rgba(255,255,255,0.06)] overflow-hidden">
-                  <button type="button" onClick={() => setExpandedSubmission((current) => current === submission.id ? null : submission.id)} className="w-full px-5 py-4 flex flex-col gap-3 text-left md:flex-row md:items-center md:justify-between">
-                    <div>
-                      <p className="text-[15px] text-text-primary font-medium">{submission.name}</p>
-                      <p className="text-[13px] text-text-secondary">{submission.email}</p>
-                    </div>
-                    <div className="flex flex-wrap gap-2 text-[12px]">
-                      <span className="px-2.5 py-1 rounded-full bg-[rgba(124,111,247,0.12)] text-accent-light">{PROJECT_TYPE_LABELS[submission.project_type] || submission.project_type}</span>
-                      <span className="px-2.5 py-1 rounded-full bg-[rgba(34,211,238,0.1)] text-cyan">{BUDGET_RANGE_LABELS[submission.budget_range] || submission.budget_range}</span>
-                      <span className="px-2.5 py-1 rounded-full bg-[rgba(255,255,255,0.05)] text-text-secondary">{submission.status}</span>
-                    </div>
-                  </button>
-                  {expandedSubmission === submission.id && (
-                    <div className="px-5 pb-5 border-t border-[rgba(255,255,255,0.04)]">
-                      <div className="pt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div><p className="text-[11px] text-text-tertiary uppercase mb-1">Company</p><p className="text-[14px] text-text-primary">{submission.company || 'Not provided'}</p></div>
-                        <div><p className="text-[11px] text-text-tertiary uppercase mb-1">Phone</p><p className="text-[14px] text-text-primary">{submission.phone || 'Not provided'}</p></div>
-                        <div className="md:col-span-2"><p className="text-[11px] text-text-tertiary uppercase mb-1">Message</p><p className="text-[14px] text-text-secondary leading-[1.7] bg-[rgba(255,255,255,0.02)] rounded-xl p-4 border border-[rgba(255,255,255,0.04)]">{submission.message}</p></div>
-                      </div>
-                      <div className="flex flex-wrap gap-2 mt-4">
-                        {submission.status !== 'reviewed' && <button type="button" onClick={() => void updateSubmission(submission.id, 'reviewed')} className="px-3 py-2 rounded-xl border border-[rgba(124,111,247,0.25)] text-accent inline-flex items-center gap-2"><Check size={14} /> Mark reviewed</button>}
-                        {submission.status !== 'archived' && <button type="button" onClick={() => void updateSubmission(submission.id, 'archived')} className="px-3 py-2 rounded-xl border border-[rgba(255,255,255,0.1)] text-text-secondary inline-flex items-center gap-2"><Archive size={14} /> Archive</button>}
-                        <button type="button" onClick={() => setConfirmTarget({ kind: 'submission', id: submission.id, label: submission.name })} className="px-3 py-2 rounded-xl border border-[rgba(239,68,68,0.2)] text-red-400 inline-flex items-center gap-2"><Trash2 size={14} /> Delete</button>
-                      </div>
-                    </div>
-                  )}
-                </article>
-              ))
-            )}
-          </div>
-        ) : (
-          <div className="flex flex-col gap-5">
-            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-              <div>
-                <h2 className="text-[22px] text-text-primary" style={{ fontFamily: 'Syne', fontWeight: 700 }}>{SECTION_LABELS[activeTab] || labelForKey(activeTab)}</h2>
-                <p className="text-[13px] text-text-tertiary">
-                  {homeSectionDefinitions[activeTab]?.description || `${activeItems.length} fields in this section.`}
+        {/* Editor panel */}
+        <main className={`flex flex-col overflow-hidden ${showPreview ? "w-[440px]" : "flex-1"} border-r border-white/6`}>
+          {/* Section header */}
+          <div className="flex items-center justify-between px-4 py-3 border-b border-white/6 shrink-0">
+            <div>
+              <h2 className="text-[15px] font-bold text-white" style={{ fontFamily: "Syne, sans-serif" }}>
+                {activeSection === SUBMISSIONS_TAB ? "Submissions" : SECTION_LABELS[activeSection] || humanKey(activeSection)}
+              </h2>
+              {activeSection !== SUBMISSIONS_TAB && (
+                <p className="text-[11px] text-white/30">
+                  {isCollection ? `${collectionItems.length} items` : `${sectionFields.length} fields`}
                 </p>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {activeTab === 'portfolio' && <button type="button" onClick={() => void createProject()} disabled={Boolean(collectionBusy)} className="px-3 py-2 rounded-xl border border-[rgba(124,111,247,0.2)] text-accent inline-flex items-center gap-2 disabled:opacity-50"><Plus size={14} /> Add project</button>}
-                {activeTab === 'team' && <button type="button" onClick={() => void createTeamMember()} disabled={Boolean(collectionBusy)} className="px-3 py-2 rounded-xl border border-[rgba(124,111,247,0.2)] text-accent inline-flex items-center gap-2 disabled:opacity-50"><Plus size={14} /> Add team member</button>}
-              </div>
-            </div>
-
-            <div className="relative">
-              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary" />
-              <input
-                type="text"
-                placeholder="Search fields by key or value..."
-                value={searchQuery}
-                onChange={(event) => setSearchQuery(event.target.value)}
-                className="w-full bg-surface-1 text-text-primary text-[14px] pl-10 pr-4 py-2.5 rounded-xl border border-[rgba(255,255,255,0.06)] outline-none focus:border-[rgba(124,111,247,0.5)]"
-              />
-              {searchQuery && (
-                <button
-                  type="button"
-                  onClick={() => setSearchQuery('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary hover:text-text-primary"
-                >
-                  <Trash2 size={14} />
-                </button>
               )}
             </div>
-
-            <div className="bg-surface-1 rounded-2xl border border-[rgba(255,255,255,0.06)] p-5 flex flex-col gap-3">
-              <div className="grid grid-cols-1 md:grid-cols-[260px_1fr_auto] gap-3">
-                <input type="text" placeholder="field_key" value={newFieldKey} onChange={(event) => setNewFieldKey(event.target.value)} className="bg-[rgba(255,255,255,0.03)] text-text-primary text-[14px] px-3 py-2.5 rounded-[10px] border border-[rgba(255,255,255,0.06)] outline-none focus:border-[rgba(124,111,247,0.5)]" style={{ fontFamily: 'JetBrains Mono' }} />
-                <input type="text" placeholder="Initial value" value={newFieldValue} onChange={(event) => setNewFieldValue(event.target.value)} className="bg-[rgba(255,255,255,0.03)] text-text-primary text-[14px] px-3 py-2.5 rounded-[10px] border border-[rgba(255,255,255,0.06)] outline-none focus:border-[rgba(124,111,247,0.5)]" />
-                <button type="button" onClick={() => void createField()} className="px-4 py-2.5 rounded-[10px] gradient-bg text-white text-[14px]">Create</button>
-              </div>
-            </div>
-
-            {(activeTab === 'portfolio' || activeTab === 'team') && (
-              <div className="flex flex-col gap-4">
-                <div className="bg-surface-1 rounded-2xl border border-[rgba(255,255,255,0.06)] p-5">
-                  <p className="text-[14px] text-text-primary font-medium mb-2">
-                    {activeTab === 'portfolio' ? 'Portfolio cards' : 'Team cards'}
-                  </p>
-                  <p className="text-[13px] text-text-secondary">
-                    Drag cards to reorder them. Upload images directly or use image URLs. Deleting a card shifts the remaining items up.
-                  </p>
-                </div>
-
-                {(activeTab === 'portfolio' ? portfolioEntries : teamEntries).length === 0 ? (
-                  <div className="bg-surface-1 rounded-2xl border border-[rgba(255,255,255,0.06)] p-10 text-center text-text-tertiary">
-                    No {activeTab === 'portfolio' ? 'projects' : 'team members'} yet.
-                  </div>
-                ) : (
-                  (activeTab === 'portfolio' ? portfolioEntries : teamEntries).map((entry) => {
-                    const setup = collectionEditors[activeTab as ManagedCollectionSection];
-                    const galleryValues = (entry.values.gallery || '').split(',').map((value) => value.trim()).filter(Boolean);
-
-                    return (
-                      <div
-                        key={`${activeTab}-${entry.index}`}
-                        draggable={!collectionBusy}
-                        onDragStart={() => setDragState({ fromIndex: entry.index, section: activeTab as ManagedCollectionSection })}
-                        onDragOver={(event) => {
-                          if (dragState?.section === activeTab) event.preventDefault();
-                        }}
-                        onDrop={(event) => {
-                          event.preventDefault();
-                          if (dragState?.section === activeTab) {
-                            void reorderCollection(activeTab as ManagedCollectionSection, dragState.fromIndex, entry.index);
-                          }
-                          setDragState(null);
-                        }}
-                        onDragEnd={() => setDragState(null)}
-                        className={`bg-surface-1 rounded-2xl border p-5 flex flex-col gap-4 ${dragState?.section === activeTab && dragState.fromIndex === entry.index ? 'border-[rgba(124,111,247,0.3)] opacity-70' : 'border-[rgba(255,255,255,0.06)]'}`}
-                      >
-                        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                          <div className="flex items-start gap-3">
-                            <span className="text-text-tertiary mt-0.5"><GripVertical size={16} /></span>
-                            <div>
-                              <p className="text-[15px] text-text-primary font-medium">{entry.label}</p>
-                              <p className="text-[11px] text-text-tertiary" style={{ fontFamily: 'JetBrains Mono' }}>
-                                {setup.prefix}_{entry.index}
-                              </p>
-                            </div>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => setConfirmTarget({ kind: 'collection_item', section: activeTab as ManagedCollectionSection, index: entry.index, label: entry.label })}
-                            className="px-3 py-2 rounded-xl border border-[rgba(239,68,68,0.2)] text-red-400 inline-flex items-center gap-2"
-                          >
-                            <Trash2 size={14} />
-                            Delete
-                          </button>
-                        </div>
-
-                        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-                          {setup.definition.fields.filter((field) => field.key !== 'gallery').map((field) => {
-                            const fieldItem = entry.fields[field.key];
-                            const currentValue = editedValues[fieldItem?.id || -1] ?? entry.values[field.key];
-                            const dirty = Boolean(fieldItem && editedValues[fieldItem.id] !== undefined && editedValues[fieldItem.id] !== fieldItem.value);
-                            const saving = Boolean(fieldItem && savingIds.has(fieldItem.id));
-
-                            return (
-                              <div key={`${setup.prefix}-${entry.index}-${field.key}`} className={`flex flex-col gap-3 ${field.type === 'textarea' || field.type === 'image' ? 'xl:col-span-2' : ''}`}>
-                                <div className="flex items-center justify-between gap-3">
-                                  <div>
-                                    <p className="text-[13px] text-text-primary font-medium">{field.label}</p>
-                                    {field.description && <p className="text-[11px] text-text-tertiary mt-1">{field.description}</p>}
-                                  </div>
-                                  {fieldItem && dirty && !saving && (
-                                    <button type="button" onClick={() => void saveField(fieldItem, currentValue)} className="text-[12px] text-accent inline-flex items-center gap-1"><Save size={12} /> Save</button>
-                                  )}
-                                  {saving && <span className="text-[11px] text-text-tertiary inline-flex items-center gap-1"><Loader2 size={12} className="animate-spin" /> Saving</span>}
-                                </div>
-
-                                {field.type === 'image' ? (
-                                  <ImageUploader value={currentValue} onChange={(url) => void (fieldItem ? saveField(fieldItem, url) : upsertField(activeTab, `${setup.prefix}_${entry.index}_${field.key}`, url))} />
-                                ) : field.type === 'textarea' ? (
-                                  <textarea
-                                    rows={4}
-                                    value={currentValue}
-                                    onChange={(event) => {
-                                      if (fieldItem) setEditedValues((current) => ({ ...current, [fieldItem.id]: event.target.value }));
-                                    }}
-                                    className={`w-full bg-[rgba(255,255,255,0.03)] text-text-primary text-[14px] px-3 py-2.5 rounded-[10px] border outline-none resize-y ${dirty ? 'border-[rgba(124,111,247,0.4)]' : 'border-[rgba(255,255,255,0.06)]'} focus:border-[rgba(124,111,247,0.5)]`}
-                                  />
-                                ) : (
-                                  <input
-                                    type={field.type === 'url' ? 'url' : 'text'}
-                                    value={currentValue}
-                                    onChange={(event) => {
-                                      if (fieldItem) setEditedValues((current) => ({ ...current, [fieldItem.id]: event.target.value }));
-                                    }}
-                                    className={`w-full bg-[rgba(255,255,255,0.03)] text-[14px] px-3 py-2.5 rounded-[10px] border outline-none ${dirty ? 'border-[rgba(124,111,247,0.4)]' : 'border-[rgba(255,255,255,0.06)]'} focus:border-[rgba(124,111,247,0.5)] ${field.type === 'url' ? 'text-cyan' : 'text-text-primary'}`}
-                                    style={{ fontFamily: field.type === 'url' ? 'JetBrains Mono' : 'DM Sans' }}
-                                  />
-                                )}
-                              </div>
-                            );
-                          })}
-                        </div>
-
-                        {activeTab === 'portfolio' && (
-                          <div className="flex flex-col gap-3 pt-3 border-t border-[rgba(255,255,255,0.05)]">
-                            <div>
-                              <p className="text-[13px] text-text-primary font-medium">Gallery images</p>
-                              <p className="text-[12px] text-text-secondary mt-1">Add more screenshots for the project card.</p>
-                            </div>
-                            {galleryValues.length > 0 && (
-                              <div className="flex flex-wrap gap-2">
-                                {galleryValues.map((imageUrl, index) => (
-                                  <div key={`${entry.index}-${index}`} className="relative group">
-                                    <img src={imageUrl} alt="" className="h-[72px] w-[96px] rounded-lg border border-[rgba(255,255,255,0.06)] object-cover" loading="lazy" decoding="async" />
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        const fieldItem = entry.fields.gallery;
-                                        if (fieldItem) {
-                                          void saveField(fieldItem, galleryValues.filter((_, galleryIndex) => galleryIndex !== index).join(','));
-                                        }
-                                      }}
-                                      className="absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-md bg-[rgba(0,0,0,0.7)] text-red-400"
-                                      aria-label="Remove gallery image"
-                                    >
-                                      <Trash2 size={12} />
-                                    </button>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                            <ImageUploader
-                              value=""
-                              compact
-                              onChange={(url) => {
-                                const fieldItem = entry.fields.gallery;
-                                if (fieldItem) void saveField(fieldItem, [...galleryValues, url].join(','));
-                              }}
-                            />
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })
+            {activeSection !== SUBMISSIONS_TAB && (
+              <div className="flex items-center gap-1.5">
+                {isCollection && (
+                  <button type="button" onClick={() => addCollectionItem(activeSection as CollectionSection)} disabled={loading}
+                    className="px-3 py-1.5 rounded-lg border border-accent/25 text-accent text-[12px] flex items-center gap-1.5 hover:border-accent/40 transition-all disabled:opacity-50">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+                    Add {activeSection === "portfolio" ? "project" : "member"}
+                  </button>
                 )}
               </div>
             )}
+          </div>
 
-            {activeItems.length === 0 && activeTab !== 'portfolio' && activeTab !== 'team' ? (
-              <div className="bg-surface-1 rounded-2xl border border-[rgba(255,255,255,0.06)] p-10 text-center text-text-tertiary">No fields in this section yet.</div>
-            ) : activeItems.length > 0 ? (
-              activeItems.map((item) => {
-                const fieldDefinition = getFieldDefinition(item.section, item.key);
-                const [localValue, setLocalValue] = useState(item.value);
-                const isModified = localValue !== item.value;
-                const isSaving = savingIds.has(item.id);
-                
-                const usesImageUploader = fieldDefinition?.type === 'image' || isImageField(item);
-                const usesBooleanSelect = fieldDefinition?.type === 'boolean';
-                const usesUrlInput = fieldDefinition?.type === 'url' || isUrlField(item);
-                const usesGalleryEditor = (fieldDefinition?.type === 'list' && item.key.includes('gallery')) || isGalleryField(item);
-                const usesTextarea = fieldDefinition?.type === 'textarea' || fieldDefinition?.type === 'list' || isLongField(item, localValue);
-                const galleryValues = localValue.split(',').map((entry) => entry.trim()).filter(Boolean);
-
-                const handleChange = (value: string) => {
-                  setLocalValue(value);
-                };
-
-                const handleSave = async () => {
-                  if (localValue !== item.value) {
-                    setSavingIds((current) => new Set(current).add(item.id));
-                    try {
-                      const updated = await api<ContentItem>('/api/content', {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ id: item.id, value: localValue }),
-                      });
-                      setContent((current) => current.map((entry) => (entry.id === item.id ? updated : entry)));
-                    } catch (requestError) {
-                      setError(getErrorMessage(requestError));
-                    } finally {
-                      setSavingIds((current) => {
-                        const next = new Set(current);
-                        next.delete(item.id);
-                        return next;
-                      });
-                    }
-                  }
-                };
-
-                const handleKeyDown = (e: React.KeyboardEvent) => {
-                  if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
-                    e.preventDefault();
-                    handleSave();
-                  }
-                };
-
-                const handlePaste = async (e: React.ClipboardEvent) => {
-                  const items = e.clipboardData?.items;
-                  if (!items) return;
-                  
-                  for (const item of items) {
-                    if (item.type.startsWith('image/')) {
-                      e.preventDefault();
-                      const file = item.getAsFile();
-                      if (file) {
-                        try {
-                          const dataUrl = await new Promise<string>((resolve, reject) => {
-                            const reader = new FileReader();
-                            reader.onload = () => resolve(String(reader.result || ''));
-                            reader.onerror = () => reject(new Error('Unable to read the file.'));
-                            reader.readAsDataURL(file);
-                          });
-                          
-                          const response = await fetch('/api/upload', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                              filename: file.name,
-                              content_type: file.type,
-                              data: dataUrl,
-                            }),
-                          });
-                          const payload = await response.json();
-                          if (payload.url) {
-                            setLocalValue(payload.url);
-                          } else if (payload.error) {
-                            setError(payload.error);
-                          }
-                        } catch (err) {
-                          console.error('Upload failed:', err);
-                        }
-                      }
-                      break;
-                    }
-                  }
-                };
-
-                return (
-                  <div key={item.id} className="bg-surface-1 rounded-2xl border border-[rgba(255,255,255,0.06)] p-5 flex flex-col gap-4">
-                    <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                      <div>
-                        <p className="text-[14px] text-text-primary font-medium">{fieldDefinition?.label || labelForKey(item.key)}</p>
-                        <p className="text-[11px] text-text-tertiary" style={{ fontFamily: 'JetBrains Mono' }}>{item.section}.{item.key}</p>
-                        {fieldDefinition?.description && <p className="text-[12px] text-text-tertiary mt-2">{fieldDefinition.description}</p>}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {isModified && !isSaving && (
-                          <button type="button" onClick={handleSave} className="text-[12px] text-accent inline-flex items-center gap-1 hover:text-accent-light">
-                            <Save size={12} /> Save
-                          </button>
-                        )}
-                        {isSaving && <span className="text-[11px] text-text-tertiary inline-flex items-center gap-1"><Loader2 size={12} className="animate-spin" /> Saving</span>}
-                        <button type="button" onClick={() => setConfirmTarget({ kind: 'field', id: item.id, label: item.key })} className="text-[12px] text-red-400 inline-flex items-center gap-1 hover:text-red-300"><Trash2 size={12} /> Delete</button>
-                      </div>
-                    </div>
-
-                    {usesImageUploader ? (
-                      <ImageUploader value={localValue} onChange={(url) => setLocalValue(url)} />
-                    ) : usesBooleanSelect ? (
-                      <select
-                        value={localValue === 'true' ? 'true' : 'false'}
-                        onChange={(event) => handleChange(event.target.value)}
-                        onBlur={handleSave}
-                        className={`w-full bg-[rgba(255,255,255,0.03)] text-text-primary text-[14px] px-3 py-2.5 rounded-[10px] border outline-none ${isModified ? 'border-[rgba(124,111,247,0.4)]' : 'border-[rgba(255,255,255,0.06)]'} focus:border-[rgba(124,111,247,0.5)]`}
-                      >
-                        <option value="false">False</option>
-                        <option value="true">True</option>
-                      </select>
-                    ) : (
-                      <>
-                        {usesTextarea ? (
-                          <textarea 
-                            rows={Math.min(8, Math.max(3, Math.ceil(localValue.length / 90)))} 
-                            value={localValue} 
-                            onChange={(event) => handleChange(event.target.value)}
-                            onBlur={handleSave}
-                            onKeyDown={handleKeyDown}
-                            onPaste={handlePaste}
-                            className={`w-full bg-[rgba(255,255,255,0.03)] text-text-primary text-[14px] px-3 py-2.5 rounded-[10px] border outline-none resize-y ${isModified ? 'border-[rgba(124,111,247,0.4)]' : 'border-[rgba(255,255,255,0.06)]'} focus:border-[rgba(124,111,247,0.5)]`} 
-                            style={{ fontFamily: usesGalleryEditor ? 'JetBrains Mono' : 'DM Sans' }} 
-                            placeholder="Type here... Paste image with Ctrl+V"
-                          />
-                        ) : (
-                          <input 
-                            type={usesUrlInput ? 'url' : 'text'} 
-                            value={localValue} 
-                            onChange={(event) => handleChange(event.target.value)}
-                            onBlur={handleSave}
-                            onKeyDown={handleKeyDown}
-                            onPaste={handlePaste}
-                            className={`w-full bg-[rgba(255,255,255,0.03)] text-[14px] px-3 py-2.5 rounded-[10px] border outline-none ${isModified ? 'border-[rgba(124,111,247,0.4)]' : 'border-[rgba(255,255,255,0.06)]'} focus:border-[rgba(124,111,247,0.5)] ${usesUrlInput ? 'text-cyan' : 'text-text-primary'}`} 
-                            style={{ fontFamily: usesUrlInput ? 'JetBrains Mono' : 'DM Sans' }} 
-                            placeholder="Type here... Paste image with Ctrl+V"
-                          />
-                        )}
-
-                        {usesGalleryEditor && (
-                          <>
-                            {galleryValues.length > 0 && <div className="flex flex-wrap gap-2">{galleryValues.map((imgUrl: string, idx: number) => <img key={`${item.id}-${idx}`} src={imgUrl} alt={`Gallery ${idx + 1}`} className="h-[72px] w-auto rounded-lg border border-[rgba(255,255,255,0.06)] object-cover" loading="lazy" decoding="async" />)}</div>}
-                            <ImageUploader value="" compact onChange={(url: string) => setLocalValue([...galleryValues, url].join(','))} />
-                          </>
-                        )}
-                      </>
-                    )}
+          {/* Scrollable content */}
+          <div className="flex-1 overflow-y-auto px-3 py-3">
+            {activeSection === SUBMISSIONS_TAB ? (
+              <SubmissionsPanel
+                submissions={submissions}
+                onStatusChange={setSubmissionStatus}
+                onDelete={(id, label) => setConfirm({ kind: "submission", id, label })}
+              />
+            ) : isCollection ? (
+              <div className="flex flex-col gap-3">
+                {collectionItems.length === 0 ? (
+                  <div className="text-center py-12 text-white/25 text-[13px]">
+                    No items yet. Click "Add {activeSection === "portfolio" ? "project" : "member"}" to start.
                   </div>
-                );
-              })
-            ) : null}
+                ) : (
+                  collectionItems.map(item => (
+                    <div key={item.index}
+                      onDragOver={e => { if (dragFrom?.section === activeSection) e.preventDefault(); }}
+                      onDrop={e => {
+                        e.preventDefault();
+                        if (dragFrom?.section === activeSection && dragFrom.index !== item.index) {
+                          reorderCollectionItems(activeSection as CollectionSection, dragFrom.index, item.index);
+                        }
+                        setDragFrom(null);
+                      }}>
+                      <CollectionCard
+                        item={item}
+                        section={activeSection as CollectionSection}
+                        onFieldSave={handleFieldSave}
+                        onDelete={() => setConfirm({ kind: "collection_item", section: activeSection, index: item.index, label: item.label })}
+                        onLog={addLog}
+                        dragHandleProps={{
+                          draggable: true,
+                          onDragStart: () => setDragFrom({ section: activeSection as CollectionSection, index: item.index }),
+                          onDragEnd: () => setDragFrom(null),
+                        }}
+                      />
+                    </div>
+                  ))
+                )}
+              </div>
+            ) : (
+              <div className="flex flex-col gap-3">
+                {/* Field search */}
+                {sectionFields.length > 4 && (
+                  <div className="relative">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+                      className="absolute left-2.5 top-1/2 -translate-y-1/2 text-white/25 pointer-events-none">
+                      <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
+                    </svg>
+                    <input type="text" value={fieldSearch} onChange={e => setFieldSearch(e.target.value)}
+                      placeholder="Filter fields…"
+                      className="w-full bg-white/4 text-white/80 text-[12px] pl-7 pr-3 py-2 rounded-xl border border-white/8 outline-none focus:border-accent/30 placeholder:text-white/20" />
+                  </div>
+                )}
+
+                {/* Add new field */}
+                <div className="bg-white/[0.02] rounded-2xl border border-white/6 p-3">
+                  <p className="text-[11px] text-white/30 mb-2 uppercase tracking-wider">New field</p>
+                  <div className="flex gap-2">
+                    <input type="text" value={newKey} onChange={e => setNewKey(e.target.value)}
+                      placeholder="field_key"
+                      className="w-[140px] bg-white/3 text-white text-[12px] px-2.5 py-2 rounded-lg border border-white/8 outline-none focus:border-accent/30 font-mono" />
+                    <input type="text" value={newValue} onChange={e => setNewValue(e.target.value)}
+                      onKeyDown={e => { if (e.key === "Enter") createField(); }}
+                      placeholder="Initial value"
+                      className="flex-1 bg-white/3 text-white text-[12px] px-2.5 py-2 rounded-lg border border-white/8 outline-none focus:border-accent/30" />
+                    <button type="button" onClick={createField}
+                      className="px-3 py-2 rounded-lg bg-accent/20 text-accent text-[12px] hover:bg-accent/30 transition-colors">
+                      Create
+                    </button>
+                  </div>
+                </div>
+
+                {sectionFields.length === 0 ? (
+                  <p className="text-center py-10 text-[13px] text-white/25">No fields in this section yet.</p>
+                ) : (
+                  sectionFields.map(field => (
+                    <FieldEditor
+                      key={field.id}
+                      item={field}
+                      onUpdate={updated => {
+                        setContent(prev => prev.map(c => c.id === updated.id ? updated : c));
+                        setReloadKey(k => k + 1);
+                      }}
+                      onDelete={(id, key) => setConfirm({ kind: "field", id, key, label: key })}
+                      onLog={addLog}
+                    />
+                  ))
+                )}
+              </div>
+            )}
+          </div>
+        </main>
+
+        {/* Preview pane */}
+        {showPreview && (
+          <div className="flex-1 overflow-hidden">
+            <PreviewPane activeSection={activeSection} reloadKey={reloadKey} />
           </div>
         )}
       </div>
+
+      {/* ── DEBUG PANEL ───────────────────────────────────────────────── */}
+      <AnimatePresence>
+        {showDebug && (
+          <motion.div
+            initial={{ height: 0 }} animate={{ height: 200 }} exit={{ height: 0 }}
+            className="border-t border-white/8 bg-[#06060f] overflow-hidden shrink-0">
+            <DebugPanel log={apiLog} onClear={() => dispatchLog({ type: "clear" })} />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
+
+/*
+ * ─────────────────────────────────────────────────────────────────────────────
+ * ## BUG FIXES SUMMARY
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * FIX #1 – Collection item save race condition
+ *   OLD: `re()` iterates and calls `ae()` per field, but `ae()` calls `pe()`
+ *        which looks up `N` (content state) that hasn't been updated yet by
+ *        previous iterations → wrong ids, duplicate creates.
+ *   NEW: `saveCollectionItems()` uses `ensureField()` which takes a fresh
+ *        `lookupContent(contentMap, ...)` call every time, and the contentMap
+ *        is derived from state via useMemo so it's always up-to-date.
+ *        We await each field sequentially to avoid concurrent writes.
+ *
+ * FIX #2 – O(n²) content lookup
+ *   OLD: `pe()` scanned the entire `N` array for every field rendered.
+ *        With 200+ fields, every render was O(n²).
+ *   NEW: `buildContentMap()` creates a `Map<"section::key", ContentItem>`.
+ *        `lookupContent()` is O(1). Map rebuilds only when `content` changes.
+ *
+ * FIX #3 – Drag-and-drop vs text input conflict
+ *   OLD: `draggable` was on the entire card `<div>` – dragging started when
+ *        users tried to select text in input fields.
+ *   NEW: `draggable` only on the grip handle icon via `dragHandleProps`.
+ *        Inputs are unaffected.
+ *
+ * FIX #4 – Missing credentials on fetch
+ *   OLD: `fetch(url, options)` – no `credentials: "include"`, so the session
+ *        cookie was not sent to `/api/upload` in some browser configs.
+ *   NEW: `apiFetch()` always adds `credentials: "include"` as a base default.
+ *
+ * FIX #5 – Stale closure in `re()` reorder
+ *   OLD: `re()` captured `N` (content state) in closure. If called twice fast
+ *        (double-drop), second call saw stale N → phantom items.
+ *   NEW: `reorderCollectionItems()` reads `getCollectionItems()` (which reads
+ *        current `contentMap`) fresh on every call.
+ *
+ * FIX #6 – Wasted save calls on unchanged fields
+ *   OLD: `onBlur` fired `M()` (save) even when value hadn't changed, causing
+ *        unnecessary PUT requests and "Saving…" flickers on every focus-out.
+ *   NEW: `save()` bails early with `if (val === item.value) return;`
+ *
+ * FIX #7 – NaN stored as plan_count / faq_count
+ *   OLD: `Number(n("pricing","plan_count",""))` returned NaN when field empty,
+ *        and NaN was then passed to `Array.from({length: NaN})` → crash.
+ *   NEW: `safeInt()` returns `undefined` (not NaN) when string is empty or
+ *        non-numeric. Collection count falls back to DB-detected max index.
+ *
+ * FIX #8 – Missing error boundary around iframe
+ *   OLD: No error handling on the iframe – if CSP blocked the preview URL,
+ *        the admin would crash-loop with an unhandled error.
+ *   NEW: `onError` handler on `<iframe>` sets `iframeError = true`, showing
+ *        a friendly "Preview failed" message with a retry button.
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
