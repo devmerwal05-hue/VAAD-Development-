@@ -12,7 +12,7 @@ const ProcessPage = lazy(() => import('./pages/ProcessPage'));
 const TeamPage = lazy(() => import('./pages/TeamPage'));
 const PricingPage = lazy(() => import('./pages/PricingPage'));
 const ContactPage = lazy(() => import('./pages/ContactPage'));
-const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
+const AdminDashboard = lazy(() => import('./admin/AdminDashboard'));
 const NotFound = lazy(() => import('./components/NotFound'));
 
 function PageLoader() {

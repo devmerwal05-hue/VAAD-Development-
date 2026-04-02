@@ -1,7 +1,6 @@
 /**
  * VAAD Development – Redesigned WYSIWYG Admin Panel
- * Implementation lives in src/admin/AdminPanel.tsx
- * Route wrapper is src/pages/AdminDashboard.tsx
+ * Implementation lives in src/admin/AdminDashboard.tsx
  *
  * What's new vs the old admin:
  *  - Three-panel layout: sidebar | field editor | live preview iframe
