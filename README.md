@@ -21,13 +21,14 @@ Marketing site and lightweight admin CMS for VAAD Development, built with React,
    - `ADMIN_SESSION_SECRET`
    - `SITE_URL`
    - `ALLOWED_ORIGINS`
-3. Run the schema in [supabase/schema.sql](/Users/papa/Downloads/VAAD-development/supabase/schema.sql).
+3. Run the schema in [supabase/schema.sql](supabase/schema.sql).
 4. Install dependencies with `npm install`.
-5. Start the app with `npm run dev`.
+5. Start the API (Vercel Functions) with `vercel dev --listen 3000`.
+6. Start the frontend with `npm run dev`.
 
 ## Supabase setup
 
-- Run [supabase/schema.sql](/Users/papa/Downloads/VAAD-development/supabase/schema.sql) in the Supabase SQL editor.
+- Run [supabase/schema.sql](supabase/schema.sql) in the Supabase SQL editor.
 - The script creates:
   - `public.site_content`
   - `public.contact_submissions_v2`
@@ -38,7 +39,7 @@ Marketing site and lightweight admin CMS for VAAD Development, built with React,
 
 ## Admin flow
 
-- `POST /api/admin/session` verifies `ADMIN_PASSWORD` and sets an `HttpOnly` admin session cookie.
+- `POST /api/admin/session` verifies `ADMIN_PASSWORD` (fallback: `2025`) and sets an `HttpOnly` admin session cookie.
 - `GET /api/admin/session` checks whether the cookie is valid.
 - `DELETE /api/admin/session` clears the cookie.
 - The browser no longer stores the admin password in `localStorage`.
@@ -55,4 +56,4 @@ Marketing site and lightweight admin CMS for VAAD Development, built with React,
 
 - Until Supabase env vars are configured, the public site still renders with component fallbacks, but admin/content APIs will not be fully functional.
 - Uploaded images are stored in Supabase Storage instead of base64 blobs in Postgres.
-- Static SEO defaults live in [index.html](/Users/papa/Downloads/VAAD-development/index.html); per-route metadata is set client-side through [src/hooks/usePageMetadata.ts](/Users/papa/Downloads/VAAD-development/src/hooks/usePageMetadata.ts).
+- Static SEO defaults live in [index.html](index.html); per-route metadata is set client-side through [src/hooks/usePageMetadata.ts](src/hooks/usePageMetadata.ts).

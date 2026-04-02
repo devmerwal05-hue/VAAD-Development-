@@ -59,7 +59,11 @@ export function rateLimit(req, res, scope = 'public') {
 function isSecureRequest(req) {
   const forwardedProto = req.headers['x-forwarded-proto'];
   const host = req.headers['x-forwarded-host'] || req.headers.host || '';
-  return forwardedProto === 'https' || !host.includes('localhost');
+  if (forwardedProto === 'https') return true;
+
+  const hostname = String(host).toLowerCase().split(',')[0]?.trim().split(':')[0] || '';
+  const isLocalHost = hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1';
+  return Boolean(hostname) && !isLocalHost;
 }
 
 function getAdminSessionSecret() {
@@ -199,9 +203,9 @@ export function setCorsHeaders(req, res) {
 }
 
 export function verifyAdminPassword(password) {
-  // Simple comparison - just check if it's "2025"
-  console.log('verifyAdminPassword called with:', password);
-  return password === '2025';
+  if (typeof password !== 'string') return false;
+  const expected = getEnv('ADMIN_PASSWORD') || '2025';
+  return password === expected;
 }
 
 export function startAdminSession(req, res) {
