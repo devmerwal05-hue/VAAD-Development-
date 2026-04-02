@@ -35,6 +35,42 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     return () => controller.abort();
   }, []);
 
+  useEffect(() => {
+    // Only listen inside an iframe (used by the admin WYSIWYG preview).
+    if (window.parent === window) return;
+
+    const handleMessage = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) return;
+      if (event.source !== window.parent) return;
+
+      const data = event.data as unknown;
+      if (!data || typeof data !== 'object') return;
+
+      const message = data as { type?: string; content?: unknown };
+      if (message.type !== 'VAAD_ADMIN_CONTENT_UPDATE') return;
+      if (!Array.isArray(message.content)) return;
+
+      const next = (message.content as unknown[])
+        .filter((item): item is { id: unknown; section: unknown; key: unknown; value: unknown } => {
+          return Boolean(item && typeof item === 'object' && 'id' in item && 'section' in item && 'key' in item && 'value' in item);
+        })
+        .map((item) => ({
+          id: typeof item.id === 'number' ? item.id : Number.NaN,
+          section: typeof item.section === 'string' ? item.section : '',
+          key: typeof item.key === 'string' ? item.key : '',
+          value: typeof item.value === 'string' ? item.value : '',
+        }))
+        .filter((item) => Number.isFinite(item.id) && item.section && item.key);
+
+      setContent(next as ContentItem[]);
+      setError(null);
+      setLoading(false);
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
+
   const contentMap = useMemo(() => {
     const map = new Map<string, string>();
     for (const item of content) {

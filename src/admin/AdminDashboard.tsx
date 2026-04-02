@@ -33,7 +33,7 @@ import React, {
   useReducer,
 } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import { DragDropContext, Droppable, Draggable, type DropResult } from 'react-beautiful-dnd';
 import {
   homeSectionDefinitions,
   portfolioDefaults,
@@ -219,7 +219,15 @@ async function apiFetch<T = unknown>(
     const ms = Date.now() - t0;
     logEntry?.({ method: options?.method || "GET", url, status, ms });
     const body = status === 204 ? null : await res.json().catch(() => null);
-    if (!res.ok) throw new Error((body as any)?.error || `Request failed (${status})`);
+
+    const errorFromBody = (() => {
+      if (!body || typeof body !== 'object') return null;
+      if (!('error' in body)) return null;
+      const maybe = (body as { error?: unknown }).error;
+      return typeof maybe === 'string' ? maybe : null;
+    })();
+
+    if (!res.ok) throw new Error(errorFromBody || `Request failed (${status})`);
     return body as T;
   } catch (err) {
     const ms = Date.now() - t0;
@@ -534,7 +542,7 @@ function FieldEditor({
   const isLong = localValue.length > 80 || /desc|description|subheadline|items|gallery|bio/.test(item.key);
   const galleryItems = localValue.split(",").map(s => s.trim()).filter(Boolean);
 
-  const onDragEnd = (result: any) => {
+  const onDragEnd = (result: DropResult) => {
     if (!result.destination) {
       return;
     }
@@ -968,9 +976,11 @@ function DebugPanel({
 // ─────────────────────────────────────────────────────────────────────────────
 
 function PreviewPane({
-  activeSection, reloadKey,
+  activeSection,
+  content,
 }: {
-  activeSection: string; reloadKey: number;
+  activeSection: string;
+  content: ContentItem[];
 }) {
   const [device, setDevice] = useState<DeviceMode>("desktop");
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -984,11 +994,22 @@ function PreviewPane({
     return hash ? `${base}/#${hash}` : `${base}/`;
   }, [activeSection]);
 
-  // FIX #8: Catch iframe load errors gracefully
-  const handleLoad = useCallback(() => {
-    setIframeError(false);
+  const postContentToIframe = useCallback(() => {
+    const iframe = iframeRef.current;
+    const win = iframe?.contentWindow;
+    if (!iframe || !win) return;
+
+    try {
+      win.postMessage({ type: "VAAD_ADMIN_CONTENT_UPDATE", content }, window.location.origin);
+    } catch {
+      // Cross-origin or blocked – silently ignore
+    }
+  }, [content]);
+
+  const applyHighlightOverlay = useCallback(() => {
     const iframe = iframeRef.current;
     if (!iframe) return;
+
     try {
       // Inject WYSIWYG highlight overlay (same-origin only)
       const win = iframe.contentWindow;
@@ -1036,6 +1057,21 @@ function PreviewPane({
       // Cross-origin – silently ignore
     }
   }, [activeSection]);
+
+  // FIX #8: Catch iframe load errors gracefully
+  const handleLoad = useCallback(() => {
+    setIframeError(false);
+    applyHighlightOverlay();
+    postContentToIframe();
+  }, [applyHighlightOverlay, postContentToIframe]);
+
+  useEffect(() => {
+    applyHighlightOverlay();
+  }, [applyHighlightOverlay]);
+
+  useEffect(() => {
+    postContentToIframe();
+  }, [postContentToIframe]);
 
   const deviceButtons: DeviceMode[] = ["desktop", "tablet", "mobile"];
   const deviceIcons: Record<DeviceMode, React.ReactNode> = {
@@ -1089,7 +1125,6 @@ function PreviewPane({
             )}
             <iframe
               ref={iframeRef}
-              key={reloadKey}
               src={activeSection === SUBMISSIONS_TAB ? "/" : iframeSrc}
               onLoad={handleLoad}
               onError={() => setIframeError(true)}
@@ -1200,7 +1235,6 @@ export default function AdminDashboard() {
   const [fieldSearch, setFieldSearch] = useState("");
   const [showPreview, setShowPreview] = useState(true);
   const [showDebug, setShowDebug] = useState(false);
-  const [reloadKey, setReloadKey] = useState(0);
   const [seeding, setSeeding] = useState(false);
 
   // Confirm modal
@@ -1285,12 +1319,21 @@ export default function AdminDashboard() {
   const apiFetchLogged = useCallback(<T = unknown>(url: string, opts?: RequestInit) =>
     apiFetch<T>(url, opts, addLog), [addLog]);
 
+  async function fetchContent() {
+    return apiFetchLogged<ContentItem[]>(`/api/content?ts=${Date.now()}`);
+  }
+
+  async function loadContentOnly() {
+    const ct = await fetchContent();
+    setContent(ct);
+  }
+
   async function loadAll() {
     setLoading(true); setError("");
     try {
       const [subs, ct] = await Promise.all([
         apiFetchLogged<Submission[]>("/api/contact"),
-        apiFetchLogged<ContentItem[]>(`/api/content?ts=${Date.now()}`),
+        fetchContent(),
       ]);
       setSubmissions(subs);
       setContent(ct);
@@ -1348,17 +1391,27 @@ export default function AdminDashboard() {
     return created;
   }
 
-  async function createFieldIfMissing(section: string, key: string, value: string): Promise<ContentItem | undefined> {
-    const existing = lookupContent(contentMap, section, key);
-    if (existing) return undefined;
+  async function bulkUpsertContent(
+    items: Array<{ section: string; key: string; value: string }>,
+    mode: "upsert" | "insert_missing" = "upsert",
+  ) {
+    if (items.length === 0) return;
 
-    const created = await apiFetchLogged<ContentItem>("/api/content", {
+    await apiFetchLogged<ContentItem[]>("/api/content/bulk", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ section, key, value }),
+      body: JSON.stringify({ mode, items }),
     });
-    setContent(prev => [...prev, created]);
-    return created;
+  }
+
+  async function bulkDeleteContent(ids: number[]) {
+    if (ids.length === 0) return;
+
+    await apiFetchLogged("/api/content/bulk", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ids }),
+    });
   }
 
   async function seedSectionDefaults(section: string) {
@@ -1370,9 +1423,11 @@ export default function AdminDashboard() {
     try {
       const definition = homeSectionDefinitions[section];
 
-      for (const field of definition.fields) {
-        await createFieldIfMissing(section, field.key, field.fallback ?? "");
-      }
+      const seedItems: Array<{ section: string; key: string; value: string }> = definition.fields.map((field) => ({
+        section,
+        key: field.key,
+        value: field.fallback ?? "",
+      }));
 
       // Seed repeatable defaults only when the collection has no items.
       if (section === "portfolio") {
@@ -1381,15 +1436,15 @@ export default function AdminDashboard() {
           for (let i = 0; i < portfolioDefaults.length; i++) {
             const idx = i + 1;
             const project = portfolioDefaults[i];
-            await createFieldIfMissing(section, `project_${idx}_tag`, project.tag);
-            await createFieldIfMissing(section, `project_${idx}_name`, project.name);
-            await createFieldIfMissing(section, `project_${idx}_subtitle`, project.subtitle);
-            await createFieldIfMissing(section, `project_${idx}_desc`, project.description);
-            await createFieldIfMissing(section, `project_${idx}_url`, project.url);
-            await createFieldIfMissing(section, `project_${idx}_image`, project.image);
-            await createFieldIfMissing(section, `project_${idx}_gallery`, project.gallery.join(","));
+            seedItems.push({ section, key: `project_${idx}_tag`, value: project.tag });
+            seedItems.push({ section, key: `project_${idx}_name`, value: project.name });
+            seedItems.push({ section, key: `project_${idx}_subtitle`, value: project.subtitle });
+            seedItems.push({ section, key: `project_${idx}_desc`, value: project.description });
+            seedItems.push({ section, key: `project_${idx}_url`, value: project.url });
+            seedItems.push({ section, key: `project_${idx}_image`, value: project.image });
+            seedItems.push({ section, key: `project_${idx}_gallery`, value: project.gallery.join(",") });
           }
-          await createFieldIfMissing(section, "project_count", String(portfolioDefaults.length));
+          seedItems.push({ section, key: "project_count", value: String(portfolioDefaults.length) });
         }
       }
 
@@ -1399,18 +1454,18 @@ export default function AdminDashboard() {
           for (let i = 0; i < teamDefaults.length; i++) {
             const idx = i + 1;
             const member = teamDefaults[i];
-            await createFieldIfMissing(section, `member_${idx}_name`, member.name);
-            await createFieldIfMissing(section, `member_${idx}_initials`, member.initials);
-            await createFieldIfMissing(section, `member_${idx}_role`, member.role);
-            await createFieldIfMissing(section, `member_${idx}_desc`, member.description);
-            await createFieldIfMissing(section, `member_${idx}_image`, member.image);
+            seedItems.push({ section, key: `member_${idx}_name`, value: member.name });
+            seedItems.push({ section, key: `member_${idx}_initials`, value: member.initials });
+            seedItems.push({ section, key: `member_${idx}_role`, value: member.role });
+            seedItems.push({ section, key: `member_${idx}_desc`, value: member.description });
+            seedItems.push({ section, key: `member_${idx}_image`, value: member.image });
           }
-          await createFieldIfMissing(section, "member_count", String(teamDefaults.length));
+          seedItems.push({ section, key: "member_count", value: String(teamDefaults.length) });
         }
       }
 
-      await loadAll();
-      setReloadKey(k => k + 1);
+      await bulkUpsertContent(seedItems, "insert_missing");
+      await loadContentOnly();
     } catch (e) {
       setError(getErrorMessage(e));
     } finally {
@@ -1431,27 +1486,44 @@ export default function AdminDashboard() {
     const meta = COLLECTION_META[section];
     const fieldDefs = section === "portfolio" ? PORTFOLIO_FIELDS : TEAM_FIELDS;
 
-    // Save all items sequentially (avoids race conditions from FIX #5)
-    for (let i = 0; i < items.length; i++) {
-      const item = items[i];
-      const newIdx = i + 1;
-      for (const fd of fieldDefs) {
-        await ensureField(section, `${meta.prefix}_${newIdx}_${fd.key}`, item.values[fd.key] || "");
-      }
-    }
+    setLoading(true);
+    setError("");
 
-    // Delete items beyond new count
-    const existingItems = getCollectionItems(section);
-    for (const existing of existingItems) {
-      if (existing.index > items.length) {
+    try {
+      const upsertItems: Array<{ section: string; key: string; value: string }> = [];
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        const newIdx = i + 1;
         for (const fd of fieldDefs) {
-          const contentItem = existing.fields[fd.key];
-          if (contentItem) await deleteField(contentItem.id);
+          upsertItems.push({
+            section,
+            key: `${meta.prefix}_${newIdx}_${fd.key}`,
+            value: item.values[fd.key] || "",
+          });
         }
       }
-    }
+      upsertItems.push({ section, key: meta.countKey, value: String(items.length) });
 
-    await ensureField(section, meta.countKey, String(items.length));
+      // Delete items beyond new count
+      const existingItems = getCollectionItems(section);
+      const idsToDelete: number[] = [];
+      for (const existing of existingItems) {
+        if (existing.index > items.length) {
+          for (const fd of fieldDefs) {
+            const contentItem = existing.fields[fd.key];
+            if (contentItem) idsToDelete.push(contentItem.id);
+          }
+        }
+      }
+
+      await bulkUpsertContent(upsertItems, "upsert");
+      await bulkDeleteContent(idsToDelete);
+      await loadContentOnly();
+    } catch (e) {
+      setError(getErrorMessage(e));
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function addCollectionItem(section: CollectionSection) {
@@ -1506,8 +1578,6 @@ export default function AdminDashboard() {
       }
     } catch (e) { setError(getErrorMessage(e)); }
     setConfirm(null);
-    // Reload preview after structural change
-    setReloadKey(k => k + 1);
   }
 
   // Field save (for collection cards)
@@ -1517,7 +1587,6 @@ export default function AdminDashboard() {
       body: JSON.stringify({ id: item.id, value }),
     });
     setContent(prev => prev.map(c => c.id === item.id ? updated : c));
-    setReloadKey(k => k + 1);
   }, [apiFetchLogged]);
 
   // New field creation
@@ -1678,7 +1747,7 @@ export default function AdminDashboard() {
             sections={filteredSections}
             activeSection={activeSection}
             submissions={submissions}
-            onSelectSection={(s) => { setActiveSection(s); setFieldSearch(""); setReloadKey(k => k + 1); }}
+            onSelectSection={(s) => { setActiveSection(s); setFieldSearch(""); }}
             searchQuery={sectionSearch}
             onSearchChange={setSectionSearch}
           />
@@ -1735,7 +1804,6 @@ export default function AdminDashboard() {
                         item={field}
                         onUpdate={updated => {
                           setContent(prev => prev.map(c => c.id === updated.id ? updated : c));
-                          setReloadKey(k => k + 1);
                         }}
                         onDelete={(id, key) => setConfirm({ kind: "field", id, key, label: key })}
                         onLog={addLog}
@@ -1747,7 +1815,9 @@ export default function AdminDashboard() {
                 {collectionItems.length === 0 ? (
                   <div className="text-center py-12 text-white/25 text-[13px]">
                     No items yet.
-                    {showSeedDefaults ? " Click \"Seed defaults\" to populate this section." : ` Click \"Add ${activeSection === "portfolio" ? "project" : "member"}\" to start.`}
+                    {showSeedDefaults
+                      ? ' Click "Seed defaults" to populate this section.'
+                      : ` Click "Add ${activeSection === "portfolio" ? "project" : "member"}" to start.`}
                   </div>
                 ) : (
                   collectionItems.map(item => (
@@ -1818,7 +1888,6 @@ export default function AdminDashboard() {
                       item={field}
                       onUpdate={updated => {
                         setContent(prev => prev.map(c => c.id === updated.id ? updated : c));
-                        setReloadKey(k => k + 1);
                       }}
                       onDelete={(id, key) => setConfirm({ kind: "field", id, key, label: key })}
                       onLog={addLog}
@@ -1833,7 +1902,7 @@ export default function AdminDashboard() {
         {/* Preview pane */}
         {showPreview && (
           <div className="flex-1 overflow-hidden">
-            <PreviewPane activeSection={activeSection} reloadKey={reloadKey} />
+            <PreviewPane activeSection={activeSection} content={content} />
           </div>
         )}
       </div>

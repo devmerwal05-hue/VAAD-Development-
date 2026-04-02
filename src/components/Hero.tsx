@@ -135,7 +135,14 @@ export default function Hero() {
             <div className="grid grid-cols-1 md:grid-cols-[1.1fr_0.9fr]">
               <div className="relative min-h-[320px]">
                 {featuredProject?.image ? (
-                  <img src={featuredProject.image} alt={featuredProject.name} loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover opacity-80" />
+                  <img
+                    src={featuredProject.image}
+                    alt={featuredProject.name}
+                    loading="eager"
+                    fetchPriority="high"
+                    decoding="async"
+                    className="absolute inset-0 h-full w-full object-cover opacity-80"
+                  />
                 ) : (
                   <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(124,111,247,0.32), rgba(34,211,238,0.12), rgba(236,72,153,0.18))' }} />
                 )}
