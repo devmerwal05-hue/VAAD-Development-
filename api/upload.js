@@ -1,4 +1,4 @@
-import { getUploadsBucket, hasSupabaseConfig } from './_config.js';
+import { getUploadsBucket, getEnv, hasSupabaseConfig } from './_config.js';
 import { getSupabaseAdmin } from './_supabase.js';
 import { applySecurity, getErrorMessage, sanitize, verifyAdminSession } from './_security.js';
 
@@ -9,8 +9,12 @@ export default async function handler(req, res) {
   if (!verifyAdminSession(req, res)) return;
 
   try {
-    if (!hasSupabaseConfig()) {
-      return res.status(503).json({ error: 'Supabase is not configured yet.' });
+    const supabaseUrl = getEnv('SUPABASE_URL');
+    const serviceKey = getEnv('SUPABASE_SERVICE_ROLE_KEY');
+    
+    if (!supabaseUrl || !serviceKey) {
+      console.error('Missing Supabase config:', { hasUrl: !!supabaseUrl, hasKey: !!serviceKey });
+      return res.status(503).json({ error: 'Supabase is not configured. Please set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in Vercel environment variables.' });
     }
 
     if (req.method !== 'POST') {
@@ -25,7 +29,7 @@ export default async function handler(req, res) {
     const allowedTypes = ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/svg+xml'];
     const contentType = typeof content_type === 'string' ? content_type : 'image/png';
     if (!allowedTypes.includes(contentType)) {
-      return res.status(400).json({ error: 'Unsupported image type' });
+      return res.status(400).json({ error: 'Unsupported image type. Allowed: PNG, JPG, GIF, WebP, SVG' });
     }
 
     const fileName = sanitize(filename || `upload-${Date.now()}`, 120).replace(/[^a-zA-Z0-9._-]/g, '_');
@@ -40,6 +44,8 @@ export default async function handler(req, res) {
     const bucket = getUploadsBucket();
     const admin = getSupabaseAdmin();
 
+    console.log('Upload attempt:', { bucket, filePath, contentType, size: fileBuffer.length });
+
     const { error } = await admin.storage
       .from(bucket)
       .upload(filePath, fileBuffer, {
@@ -48,7 +54,10 @@ export default async function handler(req, res) {
         upsert: false,
       });
 
-    if (error) throw error;
+    if (error) {
+      console.error('Supabase storage error:', error);
+      return res.status(500).json({ error: `Upload failed: ${error.message}` });
+    }
 
     const { data: publicUrlData } = admin.storage.from(bucket).getPublicUrl(filePath);
 

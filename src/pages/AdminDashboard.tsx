@@ -867,17 +867,28 @@ export default function AdminDashboard() {
                       e.preventDefault();
                       const file = item.getAsFile();
                       if (file) {
-                        const formData = new FormData();
-                        formData.append('file', file);
-                        
                         try {
+                          const dataUrl = await new Promise<string>((resolve, reject) => {
+                            const reader = new FileReader();
+                            reader.onload = () => resolve(String(reader.result || ''));
+                            reader.onerror = () => reject(new Error('Unable to read the file.'));
+                            reader.readAsDataURL(file);
+                          });
+                          
                           const response = await fetch('/api/upload', {
                             method: 'POST',
-                            body: formData,
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                              filename: file.name,
+                              content_type: file.type,
+                              data: dataUrl,
+                            }),
                           });
-                          const data = await response.json();
-                          if (data.url) {
-                            setLocalValue(data.url);
+                          const payload = await response.json();
+                          if (payload.url) {
+                            setLocalValue(payload.url);
+                          } else if (payload.error) {
+                            setError(payload.error);
                           }
                         } catch (err) {
                           console.error('Upload failed:', err);

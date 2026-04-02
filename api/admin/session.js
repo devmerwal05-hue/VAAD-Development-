@@ -1,7 +1,14 @@
-// Simple session handler
+import { getAllowedOriginSet } from '../_config.js';
+import { hasAdminSession, startAdminSession, clearAdminSession, verifyAdminPassword } from '../_security.js';
+
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', 'https://vaad-development.vercel.app');
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  const allowedOrigins = getAllowedOriginSet(req);
+  const origin = req.headers.origin;
+  
+  if (origin && allowedOrigins.has(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+  }
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   
   if (req.method === 'OPTIONS') {
@@ -9,23 +16,26 @@ export default async function handler(req, res) {
   }
 
   if (req.method === 'GET') {
-    const cookieHeader = req.headers.cookie || '';
-    const hasCookie = cookieHeader.includes('vaad_admin_session');
-    return res.status(200).json({ authenticated: hasCookie });
+    const authenticated = hasAdminSession(req);
+    return res.status(200).json({ authenticated });
   }
 
   if (req.method === 'POST') {
     const { password } = req.body || {};
-    if (password === '2025') {
-      const token = Buffer.from(JSON.stringify({ exp: Date.now() + 8*60*60*1000 })).toString('base64');
-      res.setHeader('Set-Cookie', `vaad_admin_session=${token}; Path=/; HttpOnly; SameSite=Strict; Max-Age=28800`);
-      return res.status(200).json({ authenticated: true });
+    if (!password) {
+      return res.status(400).json({ error: 'Password is required' });
     }
-    return res.status(401).json({ error: 'Invalid password' });
+    
+    if (!verifyAdminPassword(password)) {
+      return res.status(401).json({ error: 'Invalid password' });
+    }
+    
+    startAdminSession(req, res);
+    return res.status(200).json({ authenticated: true });
   }
 
   if (req.method === 'DELETE') {
-    res.setHeader('Set-Cookie', 'vaad_admin_session=; Path=/; Max-Age=0');
+    clearAdminSession(req, res);
     return res.status(204).end();
   }
 

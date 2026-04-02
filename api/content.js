@@ -1,4 +1,4 @@
-import { hasSupabaseConfig } from './_config.js';
+import { getAllowedOriginSet, hasSupabaseConfig, getEnv } from './_config.js';
 import { getSupabaseAdmin, getSupabasePublic } from './_supabase.js';
 import { applySecurity, getErrorMessage, sanitize, verifyAdminSession } from './_security.js';
 
@@ -240,8 +240,13 @@ async function seedDefaultContent(supabase) {
 }
 
 export default async function handler(req, res) {
-  // Set CORS headers
-  res.setHeader('Access-Control-Allow-Origin', 'https://vaad-development.vercel.app');
+  const allowedOrigins = getAllowedOriginSet(req);
+  const origin = req.headers.origin;
+  
+  if (origin && allowedOrigins.has(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+  }
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   
   if (req.method === 'OPTIONS') {
@@ -249,12 +254,16 @@ export default async function handler(req, res) {
   }
 
   try {
-    if (!hasSupabaseConfig()) {
+    const supabaseUrl = getEnv('SUPABASE_URL');
+    const anonKey = getEnv('SUPABASE_ANON_KEY');
+    
+    if (!supabaseUrl || !anonKey) {
+      console.warn('Supabase not configured, serving empty content');
       if (req.method === 'GET') {
         res.setHeader('Cache-Control', 'no-store');
         return res.status(200).json([]);
       }
-      return res.status(503).json({ error: 'Supabase is not configured yet.' });
+      return res.status(503).json({ error: 'Supabase is not configured. Please add SUPABASE_URL and SUPABASE_ANON_KEY in Vercel environment variables.' });
     }
 
     if (req.method === 'GET') {
