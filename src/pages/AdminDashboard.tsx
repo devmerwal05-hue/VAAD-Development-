@@ -33,6 +33,7 @@ import React, {
   useReducer,
 } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES
@@ -427,7 +428,7 @@ function ImageUploader({
         ) : (
           <div className={`flex ${compact ? "items-center gap-2" : "flex-col items-center gap-1"}`}>
             <svg width={compact ? 13 : 16} height={compact ? 13 : 16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-white/30">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" />
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
             </svg>
             <span className={`${compact ? "text-[12px]" : "text-[13px]"} text-white/40`}>
               {compact ? "Drop, paste, or click" : "Drag image here, paste a screenshot, or click to browse"}
@@ -510,6 +511,18 @@ function FieldEditor({
   const isLong = localValue.length > 80 || /desc|description|subheadline|items|gallery|bio/.test(item.key);
   const galleryItems = localValue.split(",").map(s => s.trim()).filter(Boolean);
 
+  const onDragEnd = (result: any) => {
+    if (!result.destination) {
+      return;
+    }
+    const items = Array.from(galleryItems);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
+    const newValue = items.join(',');
+    setLocalValue(newValue);
+    save(newValue);
+  };
+
   return (
     <div className="bg-white/[0.03] rounded-2xl border border-white/6 p-4 flex flex-col gap-3">
       <div className="flex items-start justify-between gap-2">
@@ -583,18 +596,38 @@ function FieldEditor({
       )}
 
       {isGallery && galleryItems.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {galleryItems.map((src, i) => (
-            <div key={i} className="relative group">
-              <img src={src} alt="" className="h-16 w-24 rounded-lg border border-white/8 object-cover" loading="lazy" />
-              <button type="button"
-                onClick={() => { const next = galleryItems.filter((_, j) => j !== i).join(","); setLocalValue(next); save(next); }}
-                className="absolute top-1 right-1 p-0.5 rounded bg-black/70 text-red-400 opacity-0 group-hover:opacity-100 transition-opacity">
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
-              </button>
-            </div>
-          ))}
-        </div>
+        <DragDropContext onDragEnd={onDragEnd}>
+          <Droppable droppableId="gallery" direction="horizontal">
+            {(provided) => (
+              <div
+                {...provided.droppableProps}
+                ref={provided.innerRef}
+                className="flex flex-wrap gap-2"
+              >
+                {galleryItems.map((src, i) => (
+                  <Draggable key={src} draggableId={src} index={i}>
+                    {(provided) => (
+                      <div
+                        ref={provided.innerRef}
+                        {...provided.draggableProps}
+                        {...provided.dragHandleProps}
+                        className="relative group"
+                      >
+                        <img src={src} alt="" className="h-16 w-24 rounded-lg border border-white/8 object-cover" loading="lazy" />
+                        <button type="button"
+                          onClick={() => { const next = galleryItems.filter((_, j) => j !== i).join(","); setLocalValue(next); save(next); }}
+                          className="absolute top-1 right-1 p-0.5 rounded bg-black/70 text-red-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                        </button>
+                      </div>
+                    )}
+                  </Draggable>
+                ))}
+                {provided.placeholder}
+              </div>
+            )}
+          </Droppable>
+        </DragDropContext>
       )}
     </div>
   );
@@ -1166,8 +1199,8 @@ export default function AdminDashboard() {
   }, [content]);
 
   const filteredSections = useMemo(() => {
-    if (!sectionSearch) return allSections;
     const q = sectionSearch.toLowerCase();
+    if (!q) return allSections;
     return allSections.filter(s => (SECTION_LABELS[s] || s).toLowerCase().includes(q));
   }, [allSections, sectionSearch]);
 
