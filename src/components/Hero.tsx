@@ -66,7 +66,7 @@ export default function Hero() {
             initial={{ opacity: 0, y: 28 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.72, ease, delay: 0.12 }}
-            className="text-text-primary"
+            className="text-text-primary break-words [text-wrap:balance]"
             style={{ fontFamily: 'Syne', fontWeight: 800, lineHeight: 0.88, letterSpacing: '-0.06em', fontSize: 'clamp(46px, 8vw, 118px)' }}
           >
             <span className="block">{line1}</span>
@@ -155,7 +155,7 @@ export default function Hero() {
                   <p className="text-[11px] uppercase tracking-[0.14em] text-accent-light mb-2">
                     {featuredProject?.tag || getContentValue('hero', 'featured_fallback_tag', 'Featured release')}
                   </p>
-                  <h2 className="text-[28px] md:text-[36px] text-text-primary" style={{ fontFamily: 'Syne', fontWeight: 800, lineHeight: 0.95, letterSpacing: '-0.04em' }}>
+                  <h2 className="text-[28px] md:text-[36px] text-text-primary break-words [text-wrap:balance]" style={{ fontFamily: 'Syne', fontWeight: 800, lineHeight: 0.95, letterSpacing: '-0.04em' }}>
                     {featuredProject?.name || getContentValue('hero', 'featured_fallback_name', 'Launch-ready systems')}
                   </h2>
                   <p className="text-[14px] text-text-secondary mt-3 max-w-[40ch]" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>

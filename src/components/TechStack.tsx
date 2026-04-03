@@ -84,8 +84,8 @@ export default function TechStack() {
                       <Icon size={20} className="text-accent" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-[18px] md:text-[20px] text-text-primary mb-1" style={{ fontFamily: 'Syne', fontWeight: 700 }}>{category.name}</h3>
-                      <p className="text-[13px] md:text-[14px] text-text-secondary leading-[1.65]" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>{category.desc}</p>
+                      <h3 className="text-[18px] md:text-[20px] text-text-primary mb-1 break-words [text-wrap:balance]" style={{ fontFamily: 'Syne', fontWeight: 700 }}>{category.name}</h3>
+                      <p className="text-[13px] md:text-[14px] text-text-secondary leading-[1.65] break-words" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>{category.desc}</p>
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-1.5 mt-1">

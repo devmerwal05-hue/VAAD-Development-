@@ -89,8 +89,8 @@ export default function Stats() {
                 <div className="text-[48px] leading-none mb-2" style={{ fontFamily: 'Syne', fontWeight: 800 }}>
                   <AnimatedStat value={stat.value} suffix={stat.suffix} />
                 </div>
-                <div className="text-[11px] uppercase tracking-[0.1em] text-text-secondary mb-3" style={{ fontFamily: 'DM Sans', fontWeight: 500 }}>{stat.sublabel} - {stat.label}</div>
-                <p className="text-[14px] text-text-secondary leading-[1.7]" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>{stat.description}</p>
+                <div className="text-[11px] uppercase tracking-[0.1em] text-text-secondary mb-3 break-words [text-wrap:balance]" style={{ fontFamily: 'DM Sans', fontWeight: 500 }}>{stat.sublabel} - {stat.label}</div>
+                <p className="text-[14px] text-text-secondary leading-[1.7] break-words" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>{stat.description}</p>
               </div>
             </motion.div>
           ))}

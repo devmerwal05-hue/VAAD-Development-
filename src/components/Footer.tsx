@@ -74,13 +74,13 @@ export default function Footer() {
           className="max-w-[1320px] mx-auto px-5 md:px-6 py-16 md:py-20 text-center relative z-10"
         >
           <h2
-            className="text-[clamp(32px,6vw,60px)] text-text-primary mb-4"
+            className="text-[clamp(32px,6vw,60px)] text-text-primary mb-4 break-words [text-wrap:balance]"
             style={{ fontFamily: 'Syne', fontWeight: 800, lineHeight: 0.95, letterSpacing: '-0.04em' }}
           >
             {getContentValue('footer', 'cta_title', 'Need a site or app that can ship fast?')}
           </h2>
           <p
-            className="text-[15px] md:text-[16px] text-text-secondary mb-8 max-w-[520px] mx-auto"
+            className="text-[15px] md:text-[16px] text-text-secondary mb-8 max-w-[520px] mx-auto break-words"
             style={{ fontFamily: 'DM Sans', fontWeight: 300 }}
           >
             {getContentValue('footer', 'cta_description', 'Share the scope, timeline, and blockers. We will reply with a clear build path instead of a vague pitch deck.')}
@@ -106,7 +106,7 @@ export default function Footer() {
               <Logo size="lg" />
             </div>
             <p
-              className="text-[14px] text-text-secondary max-w-[380px]"
+              className="text-[14px] text-text-secondary max-w-[380px] break-words"
               style={{ fontFamily: 'DM Sans', fontWeight: 300 }}
             >
               {getContentValue(

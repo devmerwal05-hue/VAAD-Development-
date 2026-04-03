@@ -139,12 +139,12 @@ export default function Contact() {
             transition={{ duration: 0.7, ease }}
           >
             <h3
-              className="text-[28px] md:text-[32px] text-text-primary mb-5"
+              className="text-[28px] md:text-[32px] text-text-primary mb-5 break-words [text-wrap:balance]"
               style={{ fontFamily: 'Syne', fontWeight: 700, lineHeight: 1.1 }}
             >
               {getContentValue('contact', 'heading', 'Share the scope, timeline, and blockers.')}
             </h3>
-            <p className="text-[15px] text-text-secondary leading-[1.7] mb-10" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>
+            <p className="text-[15px] text-text-secondary leading-[1.7] mb-10 break-words" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>
               {getContentValue(
                 'contact',
                 'description',

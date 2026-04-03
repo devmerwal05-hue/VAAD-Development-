@@ -62,8 +62,8 @@ export default function Services() {
                     <div className="w-12 h-12 rounded-xl bg-[rgba(124,111,247,0.08)] flex items-center justify-center mb-6 group-hover:bg-[rgba(124,111,247,0.14)] transition-colors duration-300 glow-ring">
                       <Icon size={22} className="text-accent" />
                     </div>
-                    <h3 className="text-[22px] text-text-primary mb-3 gradient-text-enhanced" style={{ fontFamily: 'Syne', fontWeight: 700 }}>{service.title}</h3>
-                    <p className="text-[15px] text-text-secondary leading-[1.75] flex-1" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>{service.description}</p>
+                    <h3 className="text-[22px] text-text-primary mb-3 gradient-text-enhanced break-words [text-wrap:balance]" style={{ fontFamily: 'Syne', fontWeight: 700 }}>{service.title}</h3>
+                    <p className="text-[15px] text-text-secondary leading-[1.75] flex-1 break-words" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>{service.description}</p>
                   </div>
                 </div>
               </motion.div>

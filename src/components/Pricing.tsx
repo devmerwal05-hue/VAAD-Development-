@@ -50,15 +50,15 @@ export default function Pricing() {
               {plan.highlighted && <div className="absolute top-0 left-0 w-full h-[2px] gradient-bg" />}
               {plan.highlighted && <span className="absolute top-4 right-4 text-[10px] uppercase tracking-[0.08em] px-3 py-1 rounded-full z-10 badge-glow badge-glow-pulse" style={{ fontFamily: 'DM Sans', fontWeight: 500, background: 'rgba(124,111,247,0.12)', color: '#A89AF9' }}>{getContentValue('pricing', 'popular_badge', 'Popular')}</span>}
               <div className="relative z-10">
-                <h3 className="text-[18px] text-text-primary mb-3 gradient-text-enhanced" style={{ fontFamily: 'Syne', fontWeight: 700 }}>{plan.name}</h3>
+                <h3 className="text-[18px] text-text-primary mb-3 gradient-text-enhanced break-words [text-wrap:balance]" style={{ fontFamily: 'Syne', fontWeight: 700 }}>{plan.name}</h3>
                 <div className="text-[42px] text-text-primary mb-1" style={{ fontFamily: 'Syne', fontWeight: 800 }}>
                   <span className="text-text-secondary text-[22px]">$</span>{plan.price.replace('$', '')}
                 </div>
-                <p className="text-[14px] text-text-secondary mb-6" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>{plan.description}</p>
+                <p className="text-[14px] text-text-secondary mb-6 break-words" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>{plan.description}</p>
                 <div className="w-full h-[1px] mb-6" style={{ background: 'rgba(255,255,255,0.05)' }} />
                 <ul className="flex flex-col gap-3 flex-1 mb-8">
                   {plan.features.map((feature) => (
-                    <li key={feature} className="flex items-start gap-3 text-[14px] text-text-secondary" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>
+                    <li key={feature} className="flex items-start gap-3 text-[14px] text-text-secondary break-words" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>
                       <Check size={15} className="text-accent shrink-0 mt-0.5" />
                       {feature}
                     </li>

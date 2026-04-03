@@ -42,7 +42,7 @@ export default function Portfolio() {
                       />
                     ) : (
                       <div className="absolute inset-0 flex items-center justify-center px-6 text-center">
-                        <span className="text-[44px] md:text-[62px] font-[800] gradient-text" style={{ fontFamily: 'Syne', lineHeight: 0.95 }}>
+                        <span className="text-[44px] md:text-[62px] font-[800] gradient-text break-words [text-wrap:balance]" style={{ fontFamily: 'Syne', lineHeight: 0.95 }}>
                           {project.name}
                         </span>
                       </div>
@@ -58,10 +58,10 @@ export default function Portfolio() {
                       <span className="text-[12px] uppercase tracking-[0.18em] text-text-tertiary" style={{ fontFamily: 'JetBrains Mono' }}>
                         {String(index + 1).padStart(2, '0')}
                       </span>
-                      <h3 className="text-[28px] md:text-[36px] text-text-primary mt-3 mb-3" style={{ fontFamily: 'Syne', fontWeight: 800, lineHeight: 0.95, letterSpacing: '-0.04em' }}>
+                      <h3 className="text-[28px] md:text-[36px] text-text-primary mt-3 mb-3 break-words [text-wrap:balance]" style={{ fontFamily: 'Syne', fontWeight: 800, lineHeight: 0.95, letterSpacing: '-0.04em' }}>
                         {project.name}
                       </h3>
-                      <p className="text-[15px] text-accent-light mb-4">{project.subtitle}</p>
+                      <p className="text-[15px] text-accent-light mb-4 break-words [text-wrap:balance]">{project.subtitle}</p>
                       <p className="text-[15px] text-text-secondary leading-[1.8]" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>
                         {project.description}
                       </p>

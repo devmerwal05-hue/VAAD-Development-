@@ -53,9 +53,9 @@ export default function FAQ() {
                 aria-expanded={open === index}
                 aria-controls={`faq-panel-${index}`}
                 id={`faq-trigger-${index}`}
-                className="w-full flex items-center justify-between text-left px-6 py-5 group"
+                className="w-full flex items-center justify-between text-left px-6 py-5 group min-w-0"
               >
-                <span className="text-[16px] text-text-primary pr-4 group-hover:text-accent-light transition-colors" style={{ fontFamily: 'DM Sans', fontWeight: 500 }}>{faq.q}</span>
+                <span className="text-[16px] text-text-primary pr-4 group-hover:text-accent-light transition-colors min-w-0 break-words [text-wrap:balance]" style={{ fontFamily: 'DM Sans', fontWeight: 500 }}>{faq.q}</span>
                 <motion.span 
                   animate={{ rotate: open === index ? 180 : 0, scale: open === index ? 1.1 : 1 }} 
                   transition={{ duration: 0.2 }}
@@ -76,7 +76,7 @@ export default function FAQ() {
                     transition={{ duration: 0.35, ease }}
                     className="overflow-hidden"
                   >
-                    <p className="text-[15px] text-text-secondary leading-[1.75] px-6 pb-6" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>{faq.a}</p>
+                    <p className="text-[15px] text-text-secondary leading-[1.75] px-6 pb-6 break-words" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>{faq.a}</p>
                   </motion.div>
                 )}
               </AnimatePresence>

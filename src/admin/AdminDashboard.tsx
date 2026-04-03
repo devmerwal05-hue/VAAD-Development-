@@ -546,7 +546,7 @@ function ImageUploader({
 // SINGLE FIELD EDITOR
 // ─────────────────────────────────────────────────────────────────────────────
 
-function FieldEditor({
+const FieldEditor = React.memo(function FieldEditor({
   item, onUpdate, onDelete, onLog,
 }: {
   item: ContentItem;
@@ -709,7 +709,7 @@ function FieldEditor({
       )}
     </div>
   );
-}
+});
 
 // ─────────────────────────────────────────────────────────────────────────────
 // COLLECTION ITEM CARD  (portfolio / team)
@@ -881,7 +881,7 @@ function CollectionCard({
 // SUBMISSIONS PANEL
 // ─────────────────────────────────────────────────────────────────────────────
 
-function SubmissionsPanel({
+const SubmissionsPanel = React.memo(function SubmissionsPanel({
   submissions, onStatusChange, onDelete,
 }: {
   submissions: Submission[];
@@ -1006,7 +1006,7 @@ function SubmissionsPanel({
       ))}
     </div>
   );
-}
+});
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DEBUG LOG PANEL
@@ -1244,7 +1244,7 @@ function PreviewPane({
 // SECTION SIDEBAR
 // ─────────────────────────────────────────────────────────────────────────────
 
-function SectionSidebar({
+const SectionSidebar = React.memo(function SectionSidebar({
   groups, activeSection, submissions, onSelectSection, searchQuery, onSearchChange,
 }: {
   groups: SidebarGroup[];
@@ -1357,7 +1357,7 @@ function SectionSidebar({
       </nav>
     </div>
   );
-}
+});
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MAIN ADMIN DASHBOARD
@@ -1492,6 +1492,23 @@ export default function AdminDashboard() {
     });
     setFieldSearch('');
   }, [syncPreview]);
+
+  const handleSelectSection = useCallback((section: string) => {
+    setActiveSection(section as ActiveTab);
+    setFieldSearch("");
+  }, []);
+
+  const handleUpdateContentItem = useCallback((updated: ContentItem) => {
+    setContent(prev => prev.map(c => c.id === updated.id ? updated : c));
+  }, []);
+
+  const handleFieldDeleteRequest = useCallback((id: number, key: string) => {
+    setConfirm({ kind: "field", id, key, label: key });
+  }, []);
+
+  const handleSubmissionDeleteRequest = useCallback((id: number, label: string) => {
+    setConfirm({ kind: "submission", id, label });
+  }, []);
 
   // Collection items for portfolio/team
   function getCollectionItems(section: CollectionSection): CollectionItem[] {
@@ -1792,13 +1809,13 @@ export default function AdminDashboard() {
   }
 
   // Submissions
-  async function setSubmissionStatus(id: number, status: Submission["status"]) {
+  const setSubmissionStatus = useCallback(async (id: number, status: Submission["status"]) => {
     const updated = await apiFetchLogged<Submission>("/api/contact", {
       method: "PUT", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id, status }),
     });
     setSubmissions(prev => prev.map(s => s.id === id ? updated : s));
-  }
+  }, [apiFetchLogged]);
 
   async function deleteSubmission(id: number) {
     await apiFetchLogged("/api/contact", {
@@ -2005,7 +2022,7 @@ export default function AdminDashboard() {
             groups={sidebarGroups}
             activeSection={activeSection}
             submissions={submissions}
-            onSelectSection={(s) => { setActiveSection(s); setFieldSearch(""); }}
+            onSelectSection={handleSelectSection}
             searchQuery={sectionSearch}
             onSearchChange={setSectionSearch}
           />
@@ -2065,7 +2082,7 @@ export default function AdminDashboard() {
               <SubmissionsPanel
                 submissions={submissions}
                 onStatusChange={setSubmissionStatus}
-                onDelete={(id, label) => setConfirm({ kind: "submission", id, label })}
+                onDelete={handleSubmissionDeleteRequest}
               />
             ) : isCollection ? (
               <div className="flex flex-col gap-3">
@@ -2075,10 +2092,8 @@ export default function AdminDashboard() {
                       <FieldEditor
                         key={field.id}
                         item={field}
-                        onUpdate={updated => {
-                          setContent(prev => prev.map(c => c.id === updated.id ? updated : c));
-                        }}
-                        onDelete={(id, key) => setConfirm({ kind: "field", id, key, label: key })}
+                        onUpdate={handleUpdateContentItem}
+                        onDelete={handleFieldDeleteRequest}
                         onLog={addLog}
                       />
                     ))}
@@ -2159,10 +2174,8 @@ export default function AdminDashboard() {
                     <FieldEditor
                       key={field.id}
                       item={field}
-                      onUpdate={updated => {
-                        setContent(prev => prev.map(c => c.id === updated.id ? updated : c));
-                      }}
-                      onDelete={(id, key) => setConfirm({ kind: "field", id, key, label: key })}
+                      onUpdate={handleUpdateContentItem}
+                      onDelete={handleFieldDeleteRequest}
                       onLog={addLog}
                     />
                   ))

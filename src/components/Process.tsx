@@ -47,8 +47,8 @@ export default function Process() {
             >
               <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(124,111,247,0.08), transparent 70%)' }} />
               <span className="text-[64px] leading-none font-[800] block mb-4 gradient-text-enhanced" style={{ fontFamily: 'Syne' }}>{step.number}</span>
-              <h3 className="text-[20px] text-text-primary mb-3 group-hover:text-accent-light transition-colors duration-300" style={{ fontFamily: 'Syne', fontWeight: 700 }}>{step.title}</h3>
-              <p className="text-[14px] text-text-secondary leading-[1.7]" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>{step.description}</p>
+              <h3 className="text-[20px] text-text-primary mb-3 group-hover:text-accent-light transition-colors duration-300 break-words [text-wrap:balance]" style={{ fontFamily: 'Syne', fontWeight: 700 }}>{step.title}</h3>
+              <p className="text-[14px] text-text-secondary leading-[1.7] break-words" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>{step.description}</p>
             </motion.div>
           ))}
         </div>
