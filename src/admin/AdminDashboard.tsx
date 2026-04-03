@@ -82,6 +82,18 @@ interface CollectionItem {
   values: Record<string, string>;
 }
 
+type VirtualizedFieldWrapperStyle = React.CSSProperties & {
+  contentVisibility?: 'auto' | 'visible' | 'hidden';
+  containIntrinsicSize?: string;
+};
+
+const VIRTUALIZED_FIELD_WRAPPER_STYLE: VirtualizedFieldWrapperStyle = {
+  // Browser-level list virtualization: skip offscreen rendering while keeping
+  // DOM mounted (prevents losing unsaved edits).
+  contentVisibility: 'auto',
+  containIntrinsicSize: '0 220px',
+};
+
 type DeviceMode = "desktop" | "tablet" | "mobile";
 type ActiveTab = "submissions" | string;
 
@@ -1914,6 +1926,7 @@ export default function AdminDashboard() {
   // ─────────────────────────────────────────────────────────────────────────
 
   const isCollection = COLLECTION_SECTIONS.includes(activeSection as CollectionSection);
+  const enableFieldVirtualization = activeSection !== SUBMISSIONS_TAB && sectionFields.length >= 200;
   const collectionItems = isCollection ? getCollectionItems(activeSection as CollectionSection) : [];
   const missingDefaultsCount = (() => {
     if (activeSection === SUBMISSIONS_TAB) return 0;
@@ -2089,13 +2102,17 @@ export default function AdminDashboard() {
                 {sectionFields.length > 0 && (
                   <div className="flex flex-col gap-3">
                     {sectionFields.map(field => (
-                      <FieldEditor
+                      <div
                         key={field.id}
-                        item={field}
-                        onUpdate={handleUpdateContentItem}
-                        onDelete={handleFieldDeleteRequest}
-                        onLog={addLog}
-                      />
+                        style={enableFieldVirtualization ? VIRTUALIZED_FIELD_WRAPPER_STYLE : undefined}
+                      >
+                        <FieldEditor
+                          item={field}
+                          onUpdate={handleUpdateContentItem}
+                          onDelete={handleFieldDeleteRequest}
+                          onLog={addLog}
+                        />
+                      </div>
                     ))}
                     <div className="border-t border-white/6" />
                   </div>
@@ -2171,13 +2188,17 @@ export default function AdminDashboard() {
                   <p className="text-center py-10 text-[13px] text-white/25">No fields in this section yet.</p>
                 ) : (
                   sectionFields.map(field => (
-                    <FieldEditor
+                    <div
                       key={field.id}
-                      item={field}
-                      onUpdate={handleUpdateContentItem}
-                      onDelete={handleFieldDeleteRequest}
-                      onLog={addLog}
-                    />
+                      style={enableFieldVirtualization ? VIRTUALIZED_FIELD_WRAPPER_STYLE : undefined}
+                    >
+                      <FieldEditor
+                        item={field}
+                        onUpdate={handleUpdateContentItem}
+                        onDelete={handleFieldDeleteRequest}
+                        onLog={addLog}
+                      />
+                    </div>
                   ))
                 )}
               </div>
