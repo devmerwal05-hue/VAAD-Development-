@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, m as motion } from 'framer-motion';
-import { Menu, X } from 'lucide-react';
+import { BadgeDollarSign, Briefcase, Mail, Menu, RefreshCw, Sparkles, Users, X } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import { useContent } from '../lib/useContent';
+import FloatingDock from './FloatingDock';
 import Logo from './Logo';
 
 interface NavLinkItem {
@@ -15,14 +16,30 @@ export default function Navigation() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { getContentValue } = useContent();
 
-  const navLinks: NavLinkItem[] = [
-    { label: getContentValue('nav', 'link_1', 'Work'), href: getContentValue('nav', 'link_1_href', '/work') },
-    { label: getContentValue('nav', 'link_2', 'Services'), href: getContentValue('nav', 'link_2_href', '/services') },
-    { label: getContentValue('nav', 'link_3', 'Process'), href: getContentValue('nav', 'link_3_href', '/process') },
-    { label: getContentValue('nav', 'link_4', 'Team'), href: getContentValue('nav', 'link_4_href', '/team') },
-    { label: getContentValue('nav', 'link_5', 'Pricing'), href: getContentValue('nav', 'link_5_href', '/pricing') },
-    { label: getContentValue('nav', 'link_6', 'Contact'), href: getContentValue('nav', 'link_6_href', '/contact') },
-  ];
+  const navLinks: NavLinkItem[] = useMemo(() => {
+    return [
+      { label: getContentValue('nav', 'link_1', 'Work'), href: getContentValue('nav', 'link_1_href', '/work') },
+      { label: getContentValue('nav', 'link_2', 'Services'), href: getContentValue('nav', 'link_2_href', '/services') },
+      { label: getContentValue('nav', 'link_3', 'Process'), href: getContentValue('nav', 'link_3_href', '/process') },
+      { label: getContentValue('nav', 'link_4', 'Team'), href: getContentValue('nav', 'link_4_href', '/team') },
+      { label: getContentValue('nav', 'link_5', 'Pricing'), href: getContentValue('nav', 'link_5_href', '/pricing') },
+      { label: getContentValue('nav', 'link_6', 'Contact'), href: getContentValue('nav', 'link_6_href', '/contact') },
+    ];
+  }, [getContentValue]);
+
+  const dockItems = useMemo(() => {
+    const icons = [Briefcase, Sparkles, RefreshCw, Users, BadgeDollarSign, Mail];
+
+    return navLinks.map((link, index) => {
+      const Icon = icons[index] || Briefcase;
+
+      return {
+        title: link.label,
+        href: link.href,
+        icon: <Icon size={18} className="text-current" aria-hidden="true" />,
+      };
+    });
+  }, [navLinks]);
 
   useEffect(() => {
     let ticking = false;
@@ -67,33 +84,8 @@ export default function Navigation() {
         <div className="w-full max-w-[1320px] mx-auto px-5 md:px-6 flex items-center justify-between gap-4">
           <Logo size="md" />
 
-          <div className="hidden md:flex items-center gap-0.5">
-            {navLinks.map((link) => (
-              <NavLink
-                key={link.href}
-                to={link.href}
-                className={({ isActive }) =>
-                  `relative px-4 py-2 rounded-lg text-[13px] transition-colors duration-200 ${
-                    isActive
-                      ? 'text-text-primary bg-[rgba(124,111,247,0.08)]'
-                      : 'text-text-secondary hover:text-text-primary hover:bg-[rgba(255,255,255,0.03)]'
-                  }`
-                }
-                style={{ fontFamily: 'DM Sans', fontWeight: 400 }}
-              >
-                {({ isActive }) => (
-                  <>
-                    {link.label}
-                    {isActive && (
-                      <span
-                        aria-hidden="true"
-                        className="absolute bottom-0 left-1/2 -translate-x-1/2 w-5 h-[2px] rounded-full bg-accent"
-                      />
-                    )}
-                  </>
-                )}
-              </NavLink>
-            ))}
+          <div className="hidden md:flex items-center">
+            <FloatingDock items={dockItems} />
           </div>
 
           <button
