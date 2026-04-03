@@ -2,35 +2,8 @@ import { m } from 'framer-motion';
 import SectionLabel from './SectionLabel';
 import SectionTitle from './SectionTitle';
 import { useThreeDCardEffect } from './ThreeDCardEffect';
-import { teamDefaults } from '../lib/homeContent';
 import { useContent } from '../lib/useContent';
-
-const gradients = [
-  'linear-gradient(135deg, #7C6FF7, #5548D9)',
-  'linear-gradient(135deg, #A855F7, #7C6FF7)',
-  'linear-gradient(135deg, #EC4899, #A855F7)',
-  'linear-gradient(135deg, #22D3EE, #7C6FF7)',
-  'linear-gradient(135deg, #FB923C, #EC4899)',
-  'linear-gradient(135deg, #34D399, #22D3EE)',
-];
-
-function fallbackInitials(name: string) {
-  return name
-    .split(' ')
-    .map((part) => part[0] || '')
-    .join('')
-    .slice(0, 2)
-    .toUpperCase();
-}
-
-type TeamMember = {
-  name: string;
-  initials: string;
-  role: string;
-  description: string;
-  image: string;
-  gradient: string;
-};
+import type { TeamMember } from '../lib/content-context';
 
 function TeamMemberCard({ member, index, featured, enable3d }: { member: TeamMember; index: number; featured: boolean; enable3d: boolean }) {
   const { cardRef, tiltStyle, onPointerEnter, onPointerMove, onPointerLeave } = useThreeDCardEffect({ enabled: enable3d });
@@ -107,28 +80,11 @@ function TeamMemberCard({ member, index, featured, enable3d }: { member: TeamMem
 }
 
 export default function Team() {
-  const { content, getContentValue, teamCount } = useContent();
+  const { getContentValue, teamMembers } = useContent();
   const labelParts = getContentValue('team', 'label', '05 / Team').split(' / ');
-  const hasStoredCount = content.some((item) => item.section === 'team' && item.key === 'member_count');
-  const totalMembers = hasStoredCount ? teamCount : Math.max(teamCount, teamDefaults.length);
   const enable3d = getContentValue('ui', 'enable_3d_card_effect', 'false') === 'true';
 
-  const members = Array.from({ length: totalMembers }, (_, index) => {
-    const memberNumber = index + 1;
-    const fallback = teamDefaults[index];
-    const name = getContentValue('team', `member_${memberNumber}_name`, fallback?.name || '');
-
-    return {
-      name,
-      initials: getContentValue('team', `member_${memberNumber}_initials`, fallback?.initials || fallbackInitials(name)),
-      role: getContentValue('team', `member_${memberNumber}_role`, fallback?.role || ''),
-      description: getContentValue('team', `member_${memberNumber}_desc`, fallback?.description || ''),
-      image: getContentValue('team', `member_${memberNumber}_image`, fallback?.image || ''),
-      gradient: gradients[index % gradients.length],
-    };
-  }).filter((member) => member.name);
-
-  if (members.length === 0) return null;
+  if (teamMembers.length === 0) return null;
 
   return (
     <section className="py-24 md:py-32 relative overflow-hidden">
@@ -143,7 +99,7 @@ export default function Team() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-          {members.map((member, index) => (
+          {teamMembers.map((member, index) => (
             <TeamMemberCard
               key={`${member.name}-${index}`}
               member={member}

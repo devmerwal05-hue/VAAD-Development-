@@ -4,15 +4,12 @@ import { Link } from 'react-router-dom';
 import Marquee from '../components/Marquee';
 import PageWrapper from '../components/PageWrapper';
 import { usePageMetadata } from '../hooks/usePageMetadata';
-import { buildPortfolioProjects } from '../lib/portfolio';
 import { useContent } from '../lib/useContent';
 
 const ease: [number, number, number, number] = [0.22, 0.03, 0.26, 1];
 
 export default function WorkPage() {
-  const { content, getContentValue, projectCount } = useContent();
-  const hasStoredCount = content.some((item) => item.section === 'portfolio' && item.key === 'project_count');
-  const projects = buildPortfolioProjects(getContentValue, projectCount, !hasStoredCount);
+  const { getContentValue, portfolioProjects } = useContent();
 
   usePageMetadata({
     title: getContentValue('seo', 'work_title', 'VAAD Development | Selected projects'),
@@ -47,7 +44,7 @@ export default function WorkPage() {
 
       <section className="py-12">
         <div className="max-w-[1320px] mx-auto px-6 flex flex-col gap-20">
-          {projects.map((project, index) => (
+          {portfolioProjects.map((project, index) => (
             <motion.div
               key={`${project.name}-${index}`}
               initial={{ opacity: 0, y: 40 }}

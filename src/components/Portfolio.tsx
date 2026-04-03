@@ -2,16 +2,13 @@ import { m as motion } from 'framer-motion';
 import { ExternalLink } from 'lucide-react';
 import SectionLabel from './SectionLabel';
 import SectionTitle from './SectionTitle';
-import { buildPortfolioProjects } from '../lib/portfolio';
 import { useContent } from '../lib/useContent';
 
 export default function Portfolio() {
-  const { content, getContentValue, projectCount } = useContent();
+  const { getContentValue, portfolioProjects } = useContent();
   const labelParts = getContentValue('portfolio', 'label', '04 / Work').split(' / ');
-  const hasStoredCount = content.some((item) => item.section === 'portfolio' && item.key === 'project_count');
-  const projects = buildPortfolioProjects(getContentValue, projectCount, !hasStoredCount);
 
-  if (projects.length === 0) return null;
+  if (portfolioProjects.length === 0) return null;
 
   return (
     <section className="py-28 md:py-36 relative overflow-hidden">
@@ -23,7 +20,7 @@ export default function Portfolio() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-          {projects.map((project, index) => {
+          {portfolioProjects.map((project, index) => {
             const featured = index === 0;
             const card = (
               <div className={`group rounded-[30px] overflow-hidden border border-[rgba(255,255,255,0.06)] bg-surface-1 h-full ${featured ? 'lg:col-span-7' : 'lg:col-span-5'}`}>

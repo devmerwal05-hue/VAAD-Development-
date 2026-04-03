@@ -18,41 +18,18 @@ const glowColors = [
   'rgba(168,85,249,0.10)',
 ];
 const ease: [number, number, number, number] = [0.16, 0.77, 0.47, 0.97];
-const fallbackCategories = [
-  { name: 'Frontend systems', desc: 'React interfaces with durable component patterns and content-aware layouts.', tags: ['React', 'TypeScript', 'Routing'] },
-  { name: 'Backend workflows', desc: 'Serverless endpoints and operational logic built for forms, content, and admin tooling.', tags: ['Node', 'Vercel Functions', 'Validation'] },
-  { name: 'Data models', desc: 'Supabase tables and policies shaped around actual editing, intake, and reporting needs.', tags: ['Supabase', 'Postgres', 'RLS'] },
-  { name: 'Media delivery', desc: 'Storage-backed image workflows so content editors are not blocked by manual asset handling.', tags: ['Storage', 'Caching', 'Optimization'] },
-  { name: 'Integrations', desc: 'Analytics, email, CRM, and ops touchpoints connected where they support the workflow.', tags: ['Webhooks', 'Forms', 'Automation'] },
-  { name: 'Deployment', desc: 'Preview-to-production delivery on infrastructure that is simple to hand off and maintain.', tags: ['Vercel', 'CDN', 'Rollbacks'] },
-];
 
 export default function TechStack() {
-  const { getContentValue } = useContent();
+  const { getContentValue, capabilities } = useContent();
   const labelParts = getContentValue('techstack', 'label', '09 / Capabilities').split(' / ');
   
-  const storedCategoryCount = Number(getContentValue('techstack', 'cat_count', ''));
-  const maxCategories = (!isNaN(storedCategoryCount) && storedCategoryCount > 0) ? storedCategoryCount : 10;
+  const displayCapabilities = capabilities.map((cap, index) => ({
+    ...cap,
+    Icon: (iconMap[index] || Globe) as LucideIcon,
+    glow: glowColors[index] || glowColors[0],
+  }));
 
-  const categories = Array.from({ length: maxCategories }, (_, index) => {
-    const categoryNumber = index + 1;
-    const fallback = fallbackCategories[index];
-    const name = getContentValue('techstack', `cat_${categoryNumber}_name`, fallback?.name || '');
-    if (!name) return null;
-
-    return {
-      name,
-      desc: getContentValue('techstack', `cat_${categoryNumber}_desc`, fallback?.desc || ''),
-      tags: getContentValue('techstack', `cat_${categoryNumber}_tags`, fallback?.tags.join(', ') || '')
-        .split(',')
-        .map((entry) => entry.trim())
-        .filter(Boolean),
-      Icon: (iconMap[index] || Globe) as LucideIcon,
-      glow: glowColors[index] || glowColors[0],
-    };
-  }).filter(Boolean) as { name: string; desc: string; tags: string[]; Icon: LucideIcon; glow: string }[];
-
-  if (categories.length === 0) return null;
+  if (displayCapabilities.length === 0) return null;
 
   return (
     <section className="py-28 md:py-36 relative overflow-hidden">
@@ -64,7 +41,7 @@ export default function TechStack() {
           {getContentValue('techstack', 'subtitle', 'The stack is chosen around delivery speed, maintainability, and how much control your team needs after launch.')}
         </motion.p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {categories.map((category, index) => {
+          {displayCapabilities.map((category, index) => {
             const Icon = category.Icon;
             return (
               <motion.div
