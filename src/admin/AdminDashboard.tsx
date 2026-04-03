@@ -31,6 +31,7 @@ import React, {
   useRef,
   useMemo,
   useReducer,
+  useDeferredValue,
 } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { DragDropContext, Droppable, Draggable, type DropResult } from 'react-beautiful-dnd';
@@ -100,7 +101,7 @@ const SECTION_ORDER = [
 const SECTION_LABELS: Record<string, string> = {
   nav: "Navigation", hero: "Hero", marquee: "Marquee", services: "Services",
   techstack: "Tech Stack", stats: "Stats", process: "Process",
-  portfolio: "Portfolio", team: "Team", pricing: "Pricing", faq: "FAQ",
+  portfolio: "Work / Projects", team: "Team", pricing: "Pricing", faq: "FAQ",
   contact: "Contact", footer: "Footer", work_page: "Work Page",
   services_page: "Services Page", process_page: "Process Page",
   team_page: "Team Page", pricing_page: "Pricing Page", contact_page: "Contact Page",
@@ -188,6 +189,37 @@ const BUDGET_RANGE_LABELS: Record<string, string> = {
   "10k_plus": "£10k+",
   discuss: "Let's discuss",
 };
+
+type SidebarGroup = {
+  id: string;
+  label: string;
+  sections: string[];
+};
+
+function inferSectionFromPreviewLocation(pathname: string, hash: string) {
+  const normPath = (() => {
+    if (!pathname) return '/';
+    const trimmed = pathname.trim();
+    if (!trimmed.startsWith('/')) return `/${trimmed}`;
+    return trimmed;
+  })();
+
+  const pathNoTrailingSlash = normPath.length > 1 ? normPath.replace(/\/$/, '') : normPath;
+  if (pathNoTrailingSlash === '/admin') return null;
+
+  for (const [section, path] of Object.entries(PAGE_SECTIONS)) {
+    if (path === pathNoTrailingSlash) return section;
+  }
+
+  const hashId = (hash || '').replace(/^#/, '');
+  if (hashId) {
+    for (const [section, sectionHash] of Object.entries(SECTION_HASH)) {
+      if (sectionHash === hashId) return section;
+    }
+  }
+
+  return null;
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // UTILITIES
@@ -993,9 +1025,13 @@ function DebugPanel({
 function PreviewPane({
   activeSection,
   content,
+  syncEnabled,
+  onPreviewNavigate,
 }: {
   activeSection: string;
   content: ContentItem[];
+  syncEnabled: boolean;
+  onPreviewNavigate: (info: { pathname: string; hash: string }) => void;
 }) {
   const [device, setDevice] = useState<DeviceMode>("desktop");
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -1020,6 +1056,28 @@ function PreviewPane({
       // Cross-origin or blocked – silently ignore
     }
   }, [content]);
+
+  useEffect(() => {
+    if (!syncEnabled) return;
+
+    const handler = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) return;
+      const iframeWin = iframeRef.current?.contentWindow;
+      if (!iframeWin || event.source !== iframeWin) return;
+
+      const data = event.data as unknown;
+      if (!data || typeof data !== 'object') return;
+      const msg = data as { type?: string; pathname?: unknown; hash?: unknown };
+      if (msg.type !== 'VAAD_PREVIEW_LOCATION') return;
+
+      const pathname = typeof msg.pathname === 'string' ? msg.pathname : '';
+      const hash = typeof msg.hash === 'string' ? msg.hash : '';
+      onPreviewNavigate({ pathname, hash });
+    };
+
+    window.addEventListener('message', handler);
+    return () => window.removeEventListener('message', handler);
+  }, [onPreviewNavigate, syncEnabled]);
 
   const applyHighlightOverlay = useCallback(() => {
     const iframe = iframeRef.current;
@@ -1160,9 +1218,9 @@ function PreviewPane({
 // ─────────────────────────────────────────────────────────────────────────────
 
 function SectionSidebar({
-  sections, activeSection, submissions, onSelectSection, searchQuery, onSearchChange,
+  groups, activeSection, submissions, onSelectSection, searchQuery, onSearchChange,
 }: {
-  sections: string[];
+  groups: SidebarGroup[];
   activeSection: string;
   submissions: Submission[];
   onSelectSection: (s: string) => void;
@@ -1170,6 +1228,27 @@ function SectionSidebar({
   onSearchChange: (q: string) => void;
 }) {
   const searchRef = useRef<HTMLInputElement>(null);
+
+  const STORAGE_KEY = 'vaad_admin_sidebar_groups_v1';
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return {};
+      const parsed = JSON.parse(raw) as unknown;
+      if (!parsed || typeof parsed !== 'object') return {};
+      return parsed as Record<string, boolean>;
+    } catch {
+      return {};
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(collapsed));
+    } catch {
+      // ignore
+    }
+  }, [collapsed]);
 
   // ⌘K / Ctrl+K to focus search
   useEffect(() => {
@@ -1181,6 +1260,11 @@ function SectionSidebar({
   }, []);
 
   const newCount = submissions.filter(s => s.status === "new").length;
+
+  const forceOpen = Boolean(searchQuery.trim());
+  const activeGroupId = useMemo(() => {
+    return groups.find(g => g.sections.includes(activeSection))?.id || null;
+  }, [activeSection, groups]);
 
   return (
     <div className="flex flex-col h-full">
@@ -1214,15 +1298,35 @@ function SectionSidebar({
 
         <div className="border-t border-white/5 my-2" />
 
-        {/* Content sections */}
-        {sections.map(section => (
-          <button key={section} type="button" onClick={() => onSelectSection(section)}
-            className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left transition-colors
-              ${activeSection === section ? "bg-accent/15 text-accent" : "text-white/50 hover:text-white/80 hover:bg-white/4"}`}>
-            <span className="text-[13px] w-4 text-center shrink-0 opacity-70">{SECTION_ICONS[section] || "·"}</span>
-            <span className="text-[13px] truncate">{SECTION_LABELS[section] || humanKey(section)}</span>
-          </button>
-        ))}
+        {/* Content sections (grouped) */}
+        {groups.map((group) => {
+          if (group.sections.length === 0) return null;
+          const isCollapsed = !forceOpen && Boolean(collapsed[group.id]) && group.id !== activeGroupId;
+          return (
+            <div key={group.id} className="mb-2">
+              <button
+                type="button"
+                onClick={() => setCollapsed((prev) => ({ ...prev, [group.id]: !prev[group.id] }))}
+                className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-left text-white/35 hover:text-white/60 hover:bg-white/3 transition-colors"
+              >
+                <span className="text-[10px] uppercase tracking-[0.14em]">{group.label}</span>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+                  className={`text-white/25 transition-transform ${isCollapsed ? "-rotate-90" : "rotate-0"}`}>
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              </button>
+
+              {!isCollapsed && group.sections.map(section => (
+                <button key={section} type="button" onClick={() => onSelectSection(section)}
+                  className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left transition-colors
+                    ${activeSection === section ? "bg-accent/15 text-accent" : "text-white/50 hover:text-white/80 hover:bg-white/4"}`}>
+                  <span className="text-[13px] w-4 text-center shrink-0 opacity-70">{SECTION_ICONS[section] || "·"}</span>
+                  <span className="text-[13px] truncate">{SECTION_LABELS[section] || humanKey(section)}</span>
+                </button>
+              ))}
+            </div>
+          );
+        })}
       </nav>
     </div>
   );
@@ -1251,6 +1355,7 @@ export default function AdminDashboard() {
   const [showPreview, setShowPreview] = useState(true);
   const [showDebug, setShowDebug] = useState(false);
   const [seeding, setSeeding] = useState(false);
+  const [syncPreview, setSyncPreview] = useState(true);
 
   // Responsive: disable inline preview on small screens.
   const [isMobileViewport, setIsMobileViewport] = useState(() => {
@@ -1294,11 +1399,42 @@ export default function AdminDashboard() {
     return [...SECTION_ORDER, ...extra];
   }, [content]);
 
+  const deferredSectionSearch = useDeferredValue(sectionSearch);
+  const deferredFieldSearch = useDeferredValue(fieldSearch);
+
   const filteredSections = useMemo(() => {
-    const q = sectionSearch.toLowerCase();
+    const q = deferredSectionSearch.toLowerCase();
     if (!q) return allSections;
     return allSections.filter(s => (SECTION_LABELS[s] || s).toLowerCase().includes(q));
-  }, [allSections, sectionSearch]);
+  }, [allSections, deferredSectionSearch]);
+
+  const sidebarGroups = useMemo((): SidebarGroup[] => {
+    const site = new Set([
+      'nav', 'hero', 'marquee', 'services', 'techstack', 'stats', 'process',
+      'portfolio', 'team', 'pricing', 'faq', 'contact', 'footer',
+    ]);
+    const pages = new Set(Object.keys(PAGE_SECTIONS));
+    const global = new Set(['ui', 'seo', 'contact_form', 'intro_splash', 'error_boundary']);
+
+    const siteSections: string[] = [];
+    const pageSections: string[] = [];
+    const globalSections: string[] = [];
+    const otherSections: string[] = [];
+
+    for (const section of filteredSections) {
+      if (site.has(section)) siteSections.push(section);
+      else if (pages.has(section)) pageSections.push(section);
+      else if (global.has(section)) globalSections.push(section);
+      else otherSections.push(section);
+    }
+
+    return [
+      { id: 'site', label: 'Site', sections: siteSections },
+      { id: 'pages', label: 'Pages', sections: pageSections },
+      { id: 'global', label: 'Global', sections: globalSections },
+      { id: 'other', label: 'Other', sections: otherSections },
+    ];
+  }, [filteredSections]);
 
   // Fields for the current section
   const sectionFields = useMemo(() => {
@@ -1311,13 +1447,24 @@ export default function AdminDashboard() {
     if (activeSection === "team") fields = fields.filter(c => !/^member_\d+_/.test(c.key) && c.key !== "member_count");
 
     // Only apply field search to non-collection sections.
-    if (fieldSearch && !COLLECTION_SECTIONS.includes(activeSection as CollectionSection)) {
-      const q = fieldSearch.toLowerCase();
+    if (deferredFieldSearch && !COLLECTION_SECTIONS.includes(activeSection as CollectionSection)) {
+      const q = deferredFieldSearch.toLowerCase();
       fields = fields.filter(f => f.key.toLowerCase().includes(q) || f.value.toLowerCase().includes(q));
     }
 
     return fields.sort((a, b) => a.key.localeCompare(b.key, undefined, { numeric: true }));
-  }, [activeSection, content, fieldSearch]);
+  }, [activeSection, content, deferredFieldSearch]);
+
+  const handlePreviewNavigate = useCallback((info: { pathname: string; hash: string }) => {
+    if (!syncPreview) return;
+    const next = inferSectionFromPreviewLocation(info.pathname, info.hash);
+    if (!next) return;
+    setActiveSection((prev) => {
+      if (prev === next) return prev;
+      return next;
+    });
+    setFieldSearch('');
+  }, [syncPreview]);
 
   // Collection items for portfolio/team
   function getCollectionItems(section: CollectionSection): CollectionItem[] {
@@ -1768,6 +1915,21 @@ export default function AdminDashboard() {
             </svg>
             Debug {apiLog.length > 0 && <span className="text-[10px] opacity-60">({apiLog.length})</span>}
           </button>
+          {/* Sync toggle */}
+          {!isMobileViewport && showPreview && (
+            <button type="button" onClick={() => setSyncPreview(v => !v)}
+              className={`px-3 py-1.5 rounded-lg border text-[12px] flex items-center gap-1.5 transition-all
+                ${syncPreview ? "border-accent/30 text-accent bg-accent/10" : "border-white/10 text-white/40 hover:text-white/70"}`}
+              title="When enabled, navigating inside the preview updates the active section in the admin.">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M7 7h10v10" />
+                <path d="M7 17 17 7" />
+                <path d="M5 5h4" />
+                <path d="M15 19h4" />
+              </svg>
+              Sync
+            </button>
+          )}
           {/* Refresh */}
           <button type="button" onClick={loadAll} disabled={loading}
             className="px-3 py-1.5 rounded-lg border border-white/10 text-[12px] text-white/40 hover:text-white/70 flex items-center gap-1.5 disabled:opacity-40 transition-all">
@@ -1793,7 +1955,7 @@ export default function AdminDashboard() {
         {/* Sidebar */}
         <aside className="w-full md:w-[220px] h-[240px] md:h-auto border-b md:border-b-0 md:border-r border-white/6 bg-[#08080f] shrink-0 overflow-hidden flex flex-col">
           <SectionSidebar
-            sections={filteredSections}
+            groups={sidebarGroups}
             activeSection={activeSection}
             submissions={submissions}
             onSelectSection={(s) => { setActiveSection(s); setFieldSearch(""); }}
@@ -1829,6 +1991,21 @@ export default function AdminDashboard() {
                     className="px-3 py-1.5 rounded-lg border border-accent/25 text-accent text-[12px] flex items-center gap-1.5 hover:border-accent/40 transition-all disabled:opacity-50">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
                     Add {activeSection === "portfolio" ? "project" : "member"}
+                  </button>
+                )}
+                {activeSection === 'work_page' && (
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      await addCollectionItem('portfolio');
+                      setActiveSection('portfolio');
+                      setFieldSearch('');
+                    }}
+                    disabled={loading}
+                    className="px-3 py-1.5 rounded-lg border border-accent/25 text-accent text-[12px] flex items-center gap-1.5 hover:border-accent/40 transition-all disabled:opacity-50"
+                    title="Adds a new project card to Work / Projects">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+                    Add project
                   </button>
                 )}
               </div>
@@ -1951,7 +2128,12 @@ export default function AdminDashboard() {
         {/* Preview pane */}
         {previewEnabled && (
           <div className="flex-1 overflow-hidden hidden md:block">
-            <PreviewPane activeSection={activeSection} content={content} />
+            <PreviewPane
+              activeSection={activeSection}
+              content={content}
+              syncEnabled={syncPreview}
+              onPreviewNavigate={handlePreviewNavigate}
+            />
           </div>
         )}
       </div>
