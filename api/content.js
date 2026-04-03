@@ -32,7 +32,7 @@ const defaultContent = [
   { section: 'hero', key: 'proof_kicker', value: 'Live delivery board' },
   { section: 'hero', key: 'proof_title', value: 'Creative builds that still respect real deadlines.' },
   { section: 'hero', key: 'proof_description', value: 'Each release is scoped against launch pressure, content reality, and what your team can maintain after handoff.' },
-  { section: 'hero', key: 'proof_note', value: 'The homepage pulls from the same editable content system used by the admin panel.' },
+  { section: 'hero', key: 'proof_image', value: '' },
   { section: 'marquee', key: 'items', value: 'Scoped delivery,Operations dashboards,Marketing sites with real CMS,Fast launch cycles,Conversion-focused landing pages,React and TypeScript,Node and Supabase,Vercel deployment,Admin tooling' },
   { section: 'services', key: 'label', value: '01 / Services' },
   { section: 'services', key: 'title', value: 'What we build' },

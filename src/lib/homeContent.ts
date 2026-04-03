@@ -60,7 +60,7 @@ export const heroDefaults = {
   proof_kicker: 'Live delivery board',
   proof_title: 'Creative builds that still respect real deadlines.',
   proof_description: 'Each release is scoped against launch pressure, content reality, and what your team can maintain after handoff.',
-  proof_note: 'The homepage pulls from the same editable content system used by the admin panel.',
+  proof_image: '',
 };
 
 export const marqueeDefaults = {
@@ -300,7 +300,7 @@ const heroFields: AdminFieldDefinition[] = [
   { key: 'proof_kicker', label: 'Proof card kicker', fallback: heroDefaults.proof_kicker },
   { key: 'proof_title', label: 'Proof card title', fallback: heroDefaults.proof_title, type: 'textarea' },
   { key: 'proof_description', label: 'Proof card description', fallback: heroDefaults.proof_description, type: 'textarea' },
-  { key: 'proof_note', label: 'Proof card note', fallback: heroDefaults.proof_note, type: 'textarea' },
+  { key: 'proof_image', label: 'Proof card image', fallback: heroDefaults.proof_image, type: 'image', description: 'Optional. Upload an image for the delivery board panel. If empty, the first portfolio project image is used.' },
 ];
 
 const serviceFields: AdminFieldDefinition[] = [

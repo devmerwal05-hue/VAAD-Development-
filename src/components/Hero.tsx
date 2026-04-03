@@ -12,6 +12,8 @@ export default function Hero() {
   const featuredProject = buildPortfolioProjects(getContentValue, projectCount, !hasStoredCount)[0];
   const line1 = getContentValue('hero', 'headline_line1', 'Small teams need fast systems');
   const line2 = getContentValue('hero', 'headline_line2', 'not vague agency timelines.');
+  const proofImage = getContentValue('hero', 'proof_image', '').trim();
+  const deliveryBoardImage = proofImage || featuredProject?.image || '';
 
   const statDefaults = [
     { value: '5', label: 'Senior builders' },
@@ -134,10 +136,10 @@ export default function Hero() {
 
             <div className="grid grid-cols-1 md:grid-cols-[1.1fr_0.9fr]">
               <div className="relative min-h-[320px]">
-                {featuredProject?.image ? (
+                {deliveryBoardImage ? (
                   <img
-                    src={featuredProject.image}
-                    alt={featuredProject.name}
+                    src={deliveryBoardImage}
+                    alt={featuredProject?.name || 'Featured release'}
                     loading="eager"
                     fetchPriority="high"
                     decoding="async"
@@ -170,11 +172,6 @@ export default function Hero() {
                     <p className="text-[13px] text-text-secondary mt-2">{stat.label}</p>
                   </div>
                 ))}
-                <div className="rounded-2xl border border-[rgba(124,111,247,0.16)] bg-[rgba(124,111,247,0.08)] p-4">
-                  <p className="text-[12px] text-accent-light leading-[1.7]" style={{ fontFamily: 'DM Sans', fontWeight: 400 }}>
-                    {getContentValue('hero', 'proof_note', 'The homepage pulls from the same editable content system used by the admin panel.')}
-                  </p>
-                </div>
               </div>
             </div>
           </div>
