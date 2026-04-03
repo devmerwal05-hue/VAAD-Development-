@@ -11,8 +11,12 @@ export default function TeamPage() {
   const { getContentValue } = useContent();
 
   usePageMetadata({
-    title: 'VAAD Development | Team',
-    description: 'Meet the small delivery team behind VAAD Development and how the work is split across design, engineering, and project delivery.',
+    title: getContentValue('seo', 'team_title', 'VAAD Development | Team'),
+    description: getContentValue(
+      'seo',
+      'team_description',
+      'Meet the small delivery team behind VAAD Development and how the work is split across design, engineering, and project delivery.'
+    ),
     path: '/team',
   });
 

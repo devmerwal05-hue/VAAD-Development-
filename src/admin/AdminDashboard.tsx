@@ -93,6 +93,7 @@ const SUBMISSIONS_TAB = "submissions";
 const SECTION_ORDER = [
   "nav", "hero", "marquee", "services", "techstack", "stats",
   "process", "portfolio", "team", "pricing", "faq", "contact", "footer",
+  "ui", "seo", "contact_form", "intro_splash", "not_found", "error_boundary",
   "work_page", "services_page", "process_page", "team_page", "pricing_page", "contact_page",
 ];
 
@@ -103,6 +104,12 @@ const SECTION_LABELS: Record<string, string> = {
   contact: "Contact", footer: "Footer", work_page: "Work Page",
   services_page: "Services Page", process_page: "Process Page",
   team_page: "Team Page", pricing_page: "Pricing Page", contact_page: "Contact Page",
+  ui: "UI",
+  seo: "SEO",
+  contact_form: "Contact Form",
+  intro_splash: "Intro Splash",
+  not_found: "404 Page",
+  error_boundary: "Error Page",
 };
 
 const SECTION_ICONS: Record<string, string> = {
@@ -110,6 +117,12 @@ const SECTION_ICONS: Record<string, string> = {
   stats: "▦", process: "◉", portfolio: "◻", team: "◯", pricing: "◇",
   faq: "?", contact: "✉", footer: "▁", work_page: "☰", services_page: "☰",
   process_page: "☰", team_page: "☰", pricing_page: "☰", contact_page: "☰",
+  ui: "⚙",
+  seo: "🔎",
+  contact_form: "✎",
+  intro_splash: "✨",
+  not_found: "404",
+  error_boundary: "⛑",
 };
 
 // Section id → hash used on the public site
@@ -118,12 +131,14 @@ const SECTION_HASH: Record<string, string> = {
   techstack: "techstack", stats: "stats", process: "process",
   portfolio: "portfolio", team: "team", pricing: "pricing",
   faq: "faq", contact: "contact", footer: "footer",
+  contact_form: "contact",
 };
 
 // Page-level sections that correspond to routes
 const PAGE_SECTIONS: Record<string, string> = {
   work_page: "/work", services_page: "/services", process_page: "/process",
   team_page: "/team", pricing_page: "/pricing", contact_page: "/contact",
+  not_found: "/404",
 };
 
 const COLLECTION_SECTIONS = ["portfolio", "team"] as const;
@@ -1384,7 +1399,16 @@ export default function AdminDashboard() {
         body: JSON.stringify({ password }),
       });
       setAuthenticated(true); setPassword(""); await loadAll();
-    } catch (err) { setError(getErrorMessage(err)); } finally { setLoading(false); }
+    } catch (err) {
+      const message = getErrorMessage(err);
+      if (/failed to fetch/i.test(message) || /networkerror/i.test(message)) {
+        setError(
+          "Admin API not reachable. Start `vercel dev --local --yes --listen 3000` in the project root, then refresh and try again. (Password defaults to ADMIN_PASSWORD or 2025.)"
+        );
+      } else {
+        setError(message);
+      }
+    } finally { setLoading(false); }
   }
 
   async function logout() {

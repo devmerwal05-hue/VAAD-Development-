@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { lazy, Suspense, useState, useCallback } from 'react';
 import { ContentProvider } from './lib/ContentContext';
+import { useContent } from './lib/useContent';
 import ErrorBoundary from './components/ErrorBoundary';
 import IntroSplash from './components/IntroSplash';
 import HomePage from './pages/HomePage';
@@ -16,11 +17,15 @@ const AdminDashboard = lazy(() => import('./admin/AdminDashboard'));
 const NotFound = lazy(() => import('./components/NotFound'));
 
 function PageLoader() {
+  const { getContentValue } = useContent();
+
   return (
     <div className="min-h-screen bg-page-bg flex items-center justify-center">
       <div className="flex flex-col items-center gap-3">
         <div className="w-6 h-6 border-2 border-accent border-t-transparent rounded-full animate-spin" />
-        <span className="text-[11px] text-text-tertiary uppercase tracking-[0.1em]" style={{ fontFamily: 'DM Sans' }}>Loading</span>
+        <span className="text-[11px] text-text-tertiary uppercase tracking-[0.1em]" style={{ fontFamily: 'DM Sans' }}>
+          {getContentValue('ui', 'loading', 'Loading')}
+        </span>
       </div>
     </div>
   );
@@ -53,6 +58,7 @@ export default function App() {
               <Route path="/pricing" element={<PricingPage />} />
               <Route path="/contact" element={<ContactPage />} />
               <Route path="/admin" element={<AdminDashboard />} />
+              <Route path="/404" element={<NotFound />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>

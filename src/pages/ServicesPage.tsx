@@ -13,8 +13,12 @@ export default function ServicesPage() {
   const { getContentValue } = useContent();
 
   usePageMetadata({
-    title: 'VAAD Development | Services',
-    description: 'Website builds, product interfaces, internal tools, and launch support from VAAD Development.',
+    title: getContentValue('seo', 'services_title', 'VAAD Development | Services'),
+    description: getContentValue(
+      'seo',
+      'services_description',
+      'Website builds, product interfaces, internal tools, and launch support from VAAD Development.'
+    ),
     path: '/services',
   });
 

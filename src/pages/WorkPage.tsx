@@ -15,8 +15,12 @@ export default function WorkPage() {
   const projects = buildPortfolioProjects(getContentValue, projectCount, !hasStoredCount);
 
   usePageMetadata({
-    title: 'VAAD Development | Selected projects',
-    description: 'Recent website and web application builds from VAAD Development, including e-commerce, operations tooling, and launch-focused product work.',
+    title: getContentValue('seo', 'work_title', 'VAAD Development | Selected projects'),
+    description: getContentValue(
+      'seo',
+      'work_description',
+      'Recent website and web application builds from VAAD Development, including e-commerce, operations tooling, and launch-focused product work.'
+    ),
     path: '/work',
   });
 
@@ -124,7 +128,7 @@ export default function WorkPage() {
                       className="shimmer-btn inline-flex items-center gap-2 gradient-bg text-white px-7 py-3.5 rounded-xl text-[14px] font-medium shadow-[0_0_30px_rgba(124,111,247,0.2)] hover:shadow-[0_0_50px_rgba(124,111,247,0.3)] transition-all duration-300"
                       style={{ fontFamily: 'DM Sans', fontWeight: 500 }}
                     >
-                      View live project
+                      {getContentValue('portfolio', 'link_label_live', 'View live project')}
                       <ExternalLink size={14} />
                     </a>
                   )}

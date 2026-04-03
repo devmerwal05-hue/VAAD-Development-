@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useContent } from '../lib/useContent';
 
 const ease: [number, number, number, number] = [0.16, 0.77, 0.47, 0.97];
 
 export default function IntroSplash({ onComplete }: { onComplete: () => void }) {
   const [phase, setPhase] = useState<'letters' | 'diamond' | 'glow' | 'exit'>('letters');
+  const { getContentValue } = useContent();
 
   useEffect(() => {
     // Letter animation: 0-800ms
@@ -127,7 +129,7 @@ export default function IntroSplash({ onComplete }: { onComplete: () => void }) 
           className="absolute mt-[120px] md:mt-[140px] text-[11px] md:text-[12px] text-text-tertiary tracking-[0.2em] uppercase"
           style={{ fontFamily: 'DM Sans', fontWeight: 500 }}
         >
-          Development
+          {getContentValue('intro_splash', 'tagline', 'Development')}
         </motion.p>
       </motion.div>
     </AnimatePresence>

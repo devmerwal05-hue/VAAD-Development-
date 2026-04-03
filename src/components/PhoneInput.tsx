@@ -1,3 +1,5 @@
+import { useContent } from '../lib/useContent';
+
 interface PhoneInputProps {
   descriptionId: string;
   error?: string;
@@ -17,6 +19,7 @@ export default function PhoneInput({
   onClearError,
   value,
 }: PhoneInputProps) {
+  const { getContentValue } = useContent();
   const describedBy = [descriptionId, error ? errorId : ''].filter(Boolean).join(' ');
 
   return (
@@ -26,7 +29,7 @@ export default function PhoneInput({
         className="block text-[13px] text-text-secondary mb-2"
         style={{ fontFamily: 'DM Sans', fontWeight: 500 }}
       >
-        Phone number
+        {getContentValue('contact_form', 'phone_label', 'Phone number')}
       </label>
       <input
         id={id}
@@ -34,7 +37,7 @@ export default function PhoneInput({
         type="tel"
         autoComplete="tel"
         inputMode="tel"
-        placeholder="+91 98765 43210"
+        placeholder={getContentValue('contact_form', 'phone_placeholder', '+91 98765 43210')}
         value={value}
         onChange={(event) => {
           onChange(event.target.value);
@@ -50,7 +53,11 @@ export default function PhoneInput({
         style={{ fontFamily: 'DM Sans', fontWeight: 400 }}
       />
       <p id={descriptionId} className="text-[12px] text-text-tertiary mt-2" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>
-        Optional. Include the country code so we can reach you on WhatsApp or by phone.
+        {getContentValue(
+          'contact_form',
+          'phone_help',
+          'Optional. Include the country code so we can reach you on WhatsApp or by phone.'
+        )}
       </p>
       {error && (
         <p id={errorId} className="text-[12px] text-red-400 mt-1" style={{ fontFamily: 'DM Sans', fontWeight: 400 }}>

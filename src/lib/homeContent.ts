@@ -281,6 +281,8 @@ const navFields: AdminFieldDefinition[] = [
   { key: 'link_5_href', label: 'Link 5 URL', fallback: '/pricing', type: 'url' },
   { key: 'link_6', label: 'Link 6 label', fallback: 'Contact' },
   { key: 'link_6_href', label: 'Link 6 URL', fallback: '/contact', type: 'url' },
+  { key: 'mobile_open_aria', label: 'Mobile menu open (ARIA label)', fallback: 'Open navigation menu', description: 'Screen reader label for the mobile navigation toggle when the menu is closed.' },
+  { key: 'mobile_close_aria', label: 'Mobile menu close (ARIA label)', fallback: 'Close navigation menu', description: 'Screen reader label for the mobile navigation toggle when the menu is open.' },
 ];
 
 const heroFields: AdminFieldDefinition[] = [
@@ -301,6 +303,12 @@ const heroFields: AdminFieldDefinition[] = [
   { key: 'proof_title', label: 'Proof card title', fallback: heroDefaults.proof_title, type: 'textarea' },
   { key: 'proof_description', label: 'Proof card description', fallback: heroDefaults.proof_description, type: 'textarea' },
   { key: 'proof_image', label: 'Proof card image', fallback: heroDefaults.proof_image, type: 'image', description: 'Optional. Upload an image for the delivery board panel. If empty, the first portfolio project image is used.' },
+  { key: 'proof_location', label: 'Proof card location label', fallback: 'Home', description: 'Small label in the proof-card header (top right).' },
+  { key: 'featured_fallback_alt', label: 'Featured image alt (fallback)', fallback: 'Featured release' },
+  { key: 'featured_fallback_tag', label: 'Featured tag (fallback)', fallback: 'Featured release' },
+  { key: 'featured_fallback_name', label: 'Featured title (fallback)', fallback: 'Launch-ready systems' },
+  { key: 'proof_panel_label', label: 'Panel label prefix', fallback: 'Panel', description: 'Shown as “Panel 01”, “Panel 02”… in the proof-card sidebar.' },
+  { key: 'scroll_hint', label: 'Scroll hint label', fallback: 'scroll' },
 ];
 
 const serviceFields: AdminFieldDefinition[] = [
@@ -366,6 +374,87 @@ const portfolioMetaFields: AdminFieldDefinition[] = [
   { key: 'label', label: 'Section label', fallback: '04 / Work' },
   { key: 'title', label: 'Section title', fallback: 'Selected work' },
   { key: 'footer_text', label: 'Footer text', fallback: 'Detailed breakdowns are available during discovery for projects that match your workflow, audience, and launch window.', type: 'textarea' },
+  { key: 'link_label_live', label: 'Project link label (when URL exists)', fallback: 'View live project' },
+  { key: 'link_label_internal', label: 'Project link label (when no URL)', fallback: 'Internal showcase' },
+];
+
+const uiFields: AdminFieldDefinition[] = [
+  { key: 'skip_to_content', label: 'Skip link label', fallback: 'Skip to content', description: 'Accessible skip-to-content link shown on focus.' },
+  { key: 'loading', label: 'Generic loading label', fallback: 'Loading' },
+  { key: 'content_loading_banner', label: 'Content banner (loading)', fallback: 'Loading live content from Supabase.', type: 'textarea' },
+  { key: 'content_error_banner', label: 'Content banner (error)', fallback: 'Live content is unavailable right now. Showing fallback content until Supabase is configured.', type: 'textarea' },
+];
+
+const seoFields: AdminFieldDefinition[] = [
+  { key: 'home_title', label: 'Home page title', fallback: 'VAAD Development | Fast websites and web apps' },
+  { key: 'home_description', label: 'Home page description', fallback: 'VAAD Development designs, builds, and ships conversion-focused websites and operational web apps for small teams that need momentum.', type: 'textarea' },
+  { key: 'work_title', label: 'Work page title', fallback: 'VAAD Development | Selected projects' },
+  { key: 'work_description', label: 'Work page description', fallback: 'Recent website and web application builds from VAAD Development, including e-commerce, operations tooling, and launch-focused product work.', type: 'textarea' },
+  { key: 'services_title', label: 'Services page title', fallback: 'VAAD Development | Services' },
+  { key: 'services_description', label: 'Services page description', fallback: 'Website builds, product interfaces, internal tools, and launch support from VAAD Development.', type: 'textarea' },
+  { key: 'process_title', label: 'Process page title', fallback: 'VAAD Development | Process' },
+  { key: 'process_description', label: 'Process page description', fallback: 'How VAAD Development scopes, designs, builds, and launches projects without losing visibility or momentum.', type: 'textarea' },
+  { key: 'team_title', label: 'Team page title', fallback: 'VAAD Development | Team' },
+  { key: 'team_description', label: 'Team page description', fallback: 'Meet the small delivery team behind VAAD Development and how the work is split across design, engineering, and project delivery.', type: 'textarea' },
+  { key: 'pricing_title', label: 'Pricing page title', fallback: 'VAAD Development | Pricing' },
+  { key: 'pricing_description', label: 'Pricing page description', fallback: 'Project pricing, delivery ranges, and what is included in a typical VAAD Development engagement.', type: 'textarea' },
+  { key: 'contact_title', label: 'Contact page title', fallback: 'VAAD Development | Contact' },
+  { key: 'contact_description', label: 'Contact page description', fallback: 'Contact VAAD Development to scope a website, internal tool, or web application build.', type: 'textarea' },
+  { key: 'not_found_title', label: '404 page title', fallback: 'VAAD Development | Page not found' },
+  { key: 'not_found_description', label: '404 page description', fallback: 'The page you requested could not be found.', type: 'textarea' },
+];
+
+const notFoundFields: AdminFieldDefinition[] = [
+  { key: 'heading', label: 'Heading', fallback: 'Page not found' },
+  { key: 'description', label: 'Description', fallback: 'The route does not exist, or the page was removed while the site structure changed.', type: 'textarea' },
+  { key: 'button', label: 'Button label', fallback: 'Return home' },
+];
+
+const errorBoundaryFields: AdminFieldDefinition[] = [
+  { key: 'title', label: 'Title', fallback: 'Something went wrong' },
+  { key: 'description', label: 'Description', fallback: 'An unexpected error occurred. Please refresh the page.', type: 'textarea' },
+  { key: 'button', label: 'Button label', fallback: 'Refresh Page' },
+];
+
+const introSplashFields: AdminFieldDefinition[] = [
+  { key: 'tagline', label: 'Tagline', fallback: 'Development' },
+];
+
+const contactFormFields: AdminFieldDefinition[] = [
+  { key: 'honeypot_label', label: 'Honeypot label', fallback: 'Website' },
+  { key: 'name_label', label: 'Name label', fallback: 'Name' },
+  { key: 'name_placeholder', label: 'Name placeholder', fallback: 'Your name' },
+  { key: 'email_label', label: 'Email label', fallback: 'Email' },
+  { key: 'email_placeholder', label: 'Email placeholder', fallback: 'you@company.com' },
+  { key: 'phone_label', label: 'Phone label', fallback: 'Phone number' },
+  { key: 'phone_placeholder', label: 'Phone placeholder', fallback: '+91 98765 43210' },
+  { key: 'phone_help', label: 'Phone help text', fallback: 'Optional. Include the country code so we can reach you on WhatsApp or by phone.', type: 'textarea' },
+  { key: 'company_label', label: 'Company label', fallback: 'Company or brand' },
+  { key: 'company_placeholder', label: 'Company placeholder', fallback: 'Optional' },
+  { key: 'project_type_label', label: 'Project type label', fallback: 'Project type' },
+  { key: 'budget_range_label', label: 'Budget range label', fallback: 'Budget range' },
+  { key: 'select_placeholder', label: 'Select placeholder', fallback: 'Select one' },
+  { key: 'message_label', label: 'Message label', fallback: 'Project details' },
+  { key: 'message_placeholder', label: 'Message placeholder', fallback: 'What are you building, who is it for, and what should happen next?', type: 'textarea' },
+  { key: 'message_help', label: 'Message help text', fallback: 'Include launch pressure, approvals, integrations, or anything else that affects delivery.', type: 'textarea' },
+  { key: 'submit_sending', label: 'Submit button (sending)', fallback: 'Sending...' },
+  { key: 'submit_error_generic', label: 'Submit error (generic)', fallback: 'Something went wrong.' },
+  { key: 'validation_name_required', label: 'Validation: name', fallback: 'Name is required.' },
+  { key: 'validation_email_invalid', label: 'Validation: email', fallback: 'Enter a valid email address.' },
+  { key: 'validation_phone_digits', label: 'Validation: phone digits', fallback: 'Phone number must contain 7 to 15 digits.' },
+  { key: 'validation_phone_country_code', label: 'Validation: phone country code', fallback: 'Include a country code, for example +91.' },
+  { key: 'validation_project_type_required', label: 'Validation: project type', fallback: 'Choose the type of project you need.' },
+  { key: 'validation_budget_required', label: 'Validation: budget range', fallback: 'Choose a budget range.' },
+  { key: 'validation_message_min', label: 'Validation: message', fallback: 'Message must be at least 10 characters.' },
+  { key: 'project_type_website', label: 'Project type option: website', fallback: 'Website' },
+  { key: 'project_type_web_application', label: 'Project type option: web application', fallback: 'Web Application' },
+  { key: 'project_type_ecommerce', label: 'Project type option: e-commerce', fallback: 'E-commerce Store' },
+  { key: 'project_type_not_sure', label: 'Project type option: not sure', fallback: 'Not sure yet' },
+  { key: 'budget_range_under_500', label: 'Budget option: under 500', fallback: 'Under $500' },
+  { key: 'budget_range_between_500_1500', label: 'Budget option: 500-1500', fallback: '$500-$1,500' },
+  { key: 'budget_range_between_1500_3000', label: 'Budget option: 1500-3000', fallback: '$1,500-$3,000' },
+  { key: 'budget_range_above_3000', label: 'Budget option: above 3000', fallback: '$3,000+' },
+  { key: 'budget_range_lets_discuss', label: 'Budget option: lets discuss', fallback: "Let's discuss" },
 ];
 
 const teamMetaFields: AdminFieldDefinition[] = [
@@ -559,6 +648,36 @@ export const homeSectionDefinitions: Record<string, AdminSectionDefinition> = {
     title: 'Footer',
     description: 'Footer CTA and supporting footer copy.',
     fields: footerFields,
+  },
+  ui: {
+    title: 'UI',
+    description: 'Global UI strings such as skip links, loading labels, and the live-content status banner.',
+    fields: uiFields,
+  },
+  seo: {
+    title: 'SEO',
+    description: 'Per-page document titles and meta descriptions used for social previews and search engines.',
+    fields: seoFields,
+  },
+  contact_form: {
+    title: 'Contact Form',
+    description: 'Labels, placeholders, dropdown option labels, and validation copy used in the contact form.',
+    fields: contactFormFields,
+  },
+  not_found: {
+    title: '404 Page',
+    description: 'Copy shown on the not-found page.',
+    fields: notFoundFields,
+  },
+  error_boundary: {
+    title: 'Error Page',
+    description: 'Copy shown when the site hits an unexpected runtime error.',
+    fields: errorBoundaryFields,
+  },
+  intro_splash: {
+    title: 'Intro Splash',
+    description: 'Intro animation copy shown on first visit in a session.',
+    fields: introSplashFields,
   },
   work_page: {
     title: 'Work Page',

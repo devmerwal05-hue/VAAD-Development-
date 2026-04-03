@@ -2,7 +2,7 @@ import { AlertCircle, LoaderCircle } from 'lucide-react';
 import { useContent } from '../lib/useContent';
 
 export default function ContentStatusBanner() {
-  const { loading, error } = useContent();
+  const { loading, error, getContentValue } = useContent();
 
   if (!loading && !error) return null;
 
@@ -19,8 +19,8 @@ export default function ContentStatusBanner() {
         {error ? <AlertCircle size={15} className="shrink-0 text-red-300" /> : <LoaderCircle size={15} className="shrink-0 animate-spin text-accent" />}
         <span>
           {error
-            ? 'Live content is unavailable right now. Showing fallback content until Supabase is configured.'
-            : 'Loading live content from Supabase.'}
+            ? getContentValue('ui', 'content_error_banner', 'Live content is unavailable right now. Showing fallback content until Supabase is configured.')
+            : getContentValue('ui', 'content_loading_banner', 'Loading live content from Supabase.')}
         </span>
       </div>
     </div>

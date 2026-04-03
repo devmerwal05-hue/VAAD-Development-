@@ -78,7 +78,9 @@ export default function Portfolio() {
                         </div>
                       )}
                       <span className="inline-flex items-center gap-2 text-accent-light text-[14px] font-medium">
-                        {project.url ? 'View live project' : 'Internal showcase'}
+                        {project.url
+                          ? getContentValue('portfolio', 'link_label_live', 'View live project')
+                          : getContentValue('portfolio', 'link_label_internal', 'Internal showcase')}
                         {project.url ? <ExternalLink size={14} /> : null}
                       </span>
                     </div>

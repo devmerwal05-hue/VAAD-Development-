@@ -131,7 +131,9 @@ export default function Hero() {
                   {getContentValue('hero', 'proof_title', 'Creative builds that still respect real deadlines.')}
                 </p>
               </div>
-              <span className="text-[12px] text-text-tertiary">Home</span>
+              <span className="text-[12px] text-text-tertiary">
+                {getContentValue('hero', 'proof_location', 'Home')}
+              </span>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-[1.1fr_0.9fr]">
@@ -139,7 +141,7 @@ export default function Hero() {
                 {deliveryBoardImage ? (
                   <img
                     src={deliveryBoardImage}
-                    alt={featuredProject?.name || 'Featured release'}
+                    alt={featuredProject?.name || getContentValue('hero', 'featured_fallback_alt', 'Featured release')}
                     loading="eager"
                     fetchPriority="high"
                     decoding="async"
@@ -150,9 +152,11 @@ export default function Hero() {
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-[rgba(5,5,9,0.95)] via-[rgba(5,5,9,0.24)] to-transparent" />
                 <div className="absolute left-5 right-5 bottom-5">
-                  <p className="text-[11px] uppercase tracking-[0.14em] text-accent-light mb-2">{featuredProject?.tag || 'Featured release'}</p>
+                  <p className="text-[11px] uppercase tracking-[0.14em] text-accent-light mb-2">
+                    {featuredProject?.tag || getContentValue('hero', 'featured_fallback_tag', 'Featured release')}
+                  </p>
                   <h2 className="text-[28px] md:text-[36px] text-text-primary" style={{ fontFamily: 'Syne', fontWeight: 800, lineHeight: 0.95, letterSpacing: '-0.04em' }}>
-                    {featuredProject?.name || 'Launch-ready systems'}
+                    {featuredProject?.name || getContentValue('hero', 'featured_fallback_name', 'Launch-ready systems')}
                   </h2>
                   <p className="text-[14px] text-text-secondary mt-3 max-w-[40ch]" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>
                     {getContentValue('hero', 'proof_description', 'Each release is scoped against launch pressure, content reality, and what your team can maintain after handoff.')}
@@ -164,7 +168,7 @@ export default function Hero() {
                 {stats.map((stat, index) => (
                   <div key={`${stat.label}-${index}`} className="rounded-2xl border border-[rgba(255,255,255,0.06)] bg-[rgba(255,255,255,0.02)] p-4">
                     <p className="text-[12px] uppercase tracking-[0.14em] text-text-tertiary" style={{ fontFamily: 'JetBrains Mono' }}>
-                      Panel {String(index + 1).padStart(2, '0')}
+                      {getContentValue('hero', 'proof_panel_label', 'Panel')} {String(index + 1).padStart(2, '0')}
                     </p>
                     <p className="text-[26px] text-text-primary mt-3" style={{ fontFamily: 'Syne', fontWeight: 800 }}>
                       {stat.value}
@@ -179,7 +183,9 @@ export default function Hero() {
       </div>
 
       <div className="absolute bottom-6 md:bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2">
-        <span className="text-[9px] uppercase tracking-[0.2em] text-text-secondary" style={{ fontFamily: 'DM Sans', fontWeight: 500 }}>scroll</span>
+        <span className="text-[9px] uppercase tracking-[0.2em] text-text-secondary" style={{ fontFamily: 'DM Sans', fontWeight: 500 }}>
+          {getContentValue('hero', 'scroll_hint', 'scroll')}
+        </span>
         <div className="w-[1px] h-[24px] bg-accent/30 scroll-indicator-line" />
       </div>
     </section>

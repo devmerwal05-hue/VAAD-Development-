@@ -23,8 +23,11 @@ Marketing site and lightweight admin CMS for VAAD Development, built with React,
    - `ALLOWED_ORIGINS`
 3. Run the schema in [supabase/schema.sql](supabase/schema.sql).
 4. Install dependencies with `npm install`.
-5. Start the API (Vercel Functions) with `vercel dev --listen 3000`.
-6. Start the frontend with `npm run dev`.
+5. Start the local dev server (includes Vercel Functions under `/api`) with `vercel dev --local --yes --listen 3000`.
+  - Open the site at `http://localhost:3000/` (admin at `/admin`).
+  - Admin password is `ADMIN_PASSWORD` (fallback: `2025`).
+
+Optional (frontend-only): You can run `npm run dev` to start Vite on `http://127.0.0.1:5173/`, but admin/content APIs (and the admin password) require `vercel dev`.
 
 ## Supabase setup
 

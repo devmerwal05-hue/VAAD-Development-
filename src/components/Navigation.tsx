@@ -102,7 +102,9 @@ export default function Navigation() {
             onClick={() => setMobileOpen((current) => !current)}
             aria-controls="mobile-navigation"
             aria-expanded={mobileOpen}
-            aria-label={mobileOpen ? 'Close navigation menu' : 'Open navigation menu'}
+            aria-label={mobileOpen
+              ? getContentValue('nav', 'mobile_close_aria', 'Close navigation menu')
+              : getContentValue('nav', 'mobile_open_aria', 'Open navigation menu')}
           >
             {mobileOpen ? <X size={22} /> : <Menu size={22} />}
           </button>

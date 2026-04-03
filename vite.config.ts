@@ -15,16 +15,45 @@ export default defineConfig(async () => {
   } catch {
     // Source tags are optional in local development.
   }
+
+  const apiProxyTarget = process.env.VITE_API_PROXY_TARGET || 'http://localhost:3000';
+
+  const getCliPort = () => {
+    const argv = process.argv;
+    const direct = argv.find((arg) => arg.startsWith('--port='));
+    if (direct) {
+      const value = direct.split('=')[1];
+      return value ? String(value) : undefined;
+    }
+    const idx = argv.findIndex((arg) => arg === '--port' || arg === '-p');
+    if (idx >= 0 && argv[idx + 1]) return String(argv[idx + 1]);
+    return undefined;
+  };
+
+  const selfPort = getCliPort() || process.env.PORT;
+  const shouldEnableApiProxy = (() => {
+    if (!selfPort) return true;
+    try {
+      const url = new URL(apiProxyTarget);
+      const targetPort = url.port || (url.protocol === 'https:' ? '443' : '80');
+      return targetPort !== String(selfPort);
+    } catch {
+      return true;
+    }
+  })();
+
   return {
     plugins,
     server: {
-      proxy: {
-        '/api': {
-          target: 'http://localhost:3000',
-          changeOrigin: true,
-          rewrite: (path: string) => path
-        }
-      }
+      proxy: shouldEnableApiProxy
+        ? {
+            '/api': {
+              target: apiProxyTarget,
+              changeOrigin: true,
+              rewrite: (path: string) => path,
+            },
+          }
+        : undefined,
     }
   };
 })
