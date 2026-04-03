@@ -381,6 +381,7 @@ const portfolioMetaFields: AdminFieldDefinition[] = [
 const uiFields: AdminFieldDefinition[] = [
   { key: 'skip_to_content', label: 'Skip link label', fallback: 'Skip to content', description: 'Accessible skip-to-content link shown on focus.' },
   { key: 'loading', label: 'Generic loading label', fallback: 'Loading' },
+  { key: 'enable_3d_card_effect', label: 'Enable 3D card effect', fallback: 'false', type: 'boolean', description: 'Toggles the interactive 3D tilt effect on supported cards (disabled on touch/coarse pointers and when reduced-motion is enabled).' },
   { key: 'content_loading_banner', label: 'Content banner (loading)', fallback: 'Loading live content from Supabase.', type: 'textarea' },
   { key: 'content_error_banner', label: 'Content banner (error)', fallback: 'Live content is unavailable right now. Showing fallback content until Supabase is configured.', type: 'textarea' },
 ];

@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import SectionLabel from './SectionLabel';
 import SectionTitle from './SectionTitle';
+import { useThreeDCardEffect } from './ThreeDCardEffect';
 import { teamDefaults } from '../lib/homeContent';
 import { useContent } from '../lib/useContent';
 
@@ -22,11 +23,95 @@ function fallbackInitials(name: string) {
     .toUpperCase();
 }
 
+type TeamMember = {
+  name: string;
+  initials: string;
+  role: string;
+  description: string;
+  image: string;
+  gradient: string;
+};
+
+function TeamMemberCard({ member, index, featured, enable3d }: { member: TeamMember; index: number; featured: boolean; enable3d: boolean }) {
+  const { cardRef, tiltStyle, onPointerEnter, onPointerMove, onPointerLeave } = useThreeDCardEffect({ enabled: enable3d });
+
+  return (
+    <motion.article
+      ref={(node) => {
+        cardRef.current = node;
+      }}
+      style={tiltStyle}
+      onPointerEnter={onPointerEnter}
+      onPointerMove={onPointerMove}
+      onPointerLeave={onPointerLeave}
+      initial={{ opacity: 0, y: 28 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.2 }}
+      transition={{ duration: 0.55, delay: index * 0.06 }}
+      className={`group rounded-[28px] border border-[rgba(255,255,255,0.06)] bg-surface-1 overflow-hidden ${featured ? 'lg:col-span-7' : 'lg:col-span-5'}`}
+    >
+      <div className={`grid ${featured ? 'md:grid-cols-[280px_1fr]' : 'md:grid-cols-[220px_1fr]'}`}>
+        <div className="relative min-h-[280px] md:min-h-full">
+          {member.image ? (
+            <img
+              src={member.image}
+              alt={member.name}
+              loading="lazy"
+              decoding="async"
+              className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
+            />
+          ) : (
+            <div
+              className="absolute inset-0 flex items-center justify-center [container-type:inline-size]"
+              style={{ background: member.gradient }}
+            >
+              <span
+                className="text-white text-center leading-none tracking-[-0.08em] [font-size:clamp(56px,38cqw,92px)]"
+                style={{ fontFamily: 'Syne', fontWeight: 800 }}
+              >
+                {member.initials}
+              </span>
+            </div>
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-[rgba(5,5,9,0.82)] via-[rgba(5,5,9,0.12)] to-transparent" />
+          <span className="absolute left-5 bottom-5 text-[11px] uppercase tracking-[0.18em] text-white/80" style={{ fontFamily: 'DM Sans', fontWeight: 500 }}>
+            {featured ? 'Lead owner' : 'Delivery team'}
+          </span>
+        </div>
+
+        <div className="p-6 md:p-8 flex flex-col gap-4 justify-between">
+          <div>
+            <p className="text-[11px] uppercase tracking-[0.14em] text-accent-light mb-3" style={{ fontFamily: 'DM Sans', fontWeight: 500 }}>
+              {member.role}
+            </p>
+            <h3
+              className="text-text-primary mb-4 [text-wrap:balance] break-words [font-size:clamp(26px,2.6vw,36px)]"
+              style={{ fontFamily: 'Syne', fontWeight: 800, lineHeight: 0.95, letterSpacing: '-0.03em' }}
+            >
+              {member.name}
+            </h3>
+            <p className="text-[15px] text-text-secondary leading-[1.8]" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>
+              {member.description}
+            </p>
+          </div>
+          <div className="flex items-center justify-between gap-3 pt-4 border-t border-[rgba(255,255,255,0.06)]">
+            <span className="text-[12px] text-text-tertiary uppercase tracking-[0.12em]">{featured ? 'Scope to launch' : 'Execution detail'}</span>
+            <span className="text-[12px] text-text-primary" style={{ fontFamily: 'JetBrains Mono' }}>
+              0{index + 1}
+            </span>
+          </div>
+        </div>
+      </div>
+    </motion.article>
+  );
+}
+
 export default function Team() {
   const { content, getContentValue, teamCount } = useContent();
   const labelParts = getContentValue('team', 'label', '05 / Team').split(' / ');
   const hasStoredCount = content.some((item) => item.section === 'team' && item.key === 'member_count');
   const totalMembers = hasStoredCount ? teamCount : Math.max(teamCount, teamDefaults.length);
+  const enable3d = getContentValue('ui', 'enable_3d_card_effect', 'false') === 'true';
 
   const members = Array.from({ length: totalMembers }, (_, index) => {
     const memberNumber = index + 1;
@@ -58,75 +143,15 @@ export default function Team() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-          {members.map((member, index) => {
-            const featured = index === 0;
-
-            return (
-              <motion.article
-                key={`${member.name}-${index}`}
-                initial={{ opacity: 0, y: 28 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.2 }}
-                transition={{ duration: 0.55, delay: index * 0.06 }}
-                className={`group rounded-[28px] border border-[rgba(255,255,255,0.06)] bg-surface-1 overflow-hidden ${featured ? 'lg:col-span-7' : 'lg:col-span-5'}`}
-              >
-                <div className={`grid ${featured ? 'md:grid-cols-[280px_1fr]' : 'md:grid-cols-[220px_1fr]'}`}>
-                  <div className="relative min-h-[280px] md:min-h-full">
-                    {member.image ? (
-                      <img
-                        src={member.image}
-                        alt={member.name}
-                        loading="lazy"
-                        decoding="async"
-                        className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
-                      />
-                    ) : (
-                      <div
-                        className="absolute inset-0 flex items-center justify-center [container-type:inline-size]"
-                        style={{ background: member.gradient }}
-                      >
-                        <span
-                          className="text-white text-center leading-none tracking-[-0.08em] [font-size:clamp(56px,38cqw,92px)]"
-                          style={{ fontFamily: 'Syne', fontWeight: 800 }}
-                        >
-                          {member.initials}
-                        </span>
-                      </div>
-                    )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-[rgba(5,5,9,0.82)] via-[rgba(5,5,9,0.12)] to-transparent" />
-                    <span className="absolute left-5 bottom-5 text-[11px] uppercase tracking-[0.18em] text-white/80" style={{ fontFamily: 'DM Sans', fontWeight: 500 }}>
-                      {featured ? 'Lead owner' : 'Delivery team'}
-                    </span>
-                  </div>
-
-                  <div className="p-6 md:p-8 flex flex-col gap-4 justify-between">
-                    <div>
-                      <p className="text-[11px] uppercase tracking-[0.14em] text-accent-light mb-3" style={{ fontFamily: 'DM Sans', fontWeight: 500 }}>
-                        {member.role}
-                      </p>
-                      <h3
-                        className="text-text-primary mb-4 [text-wrap:balance] break-words [font-size:clamp(26px,2.6vw,36px)]"
-                        style={{ fontFamily: 'Syne', fontWeight: 800, lineHeight: 0.95, letterSpacing: '-0.03em' }}
-                      >
-                        {member.name}
-                      </h3>
-                      <p className="text-[15px] text-text-secondary leading-[1.8]" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>
-                        {member.description}
-                      </p>
-                    </div>
-                    <div className="flex items-center justify-between gap-3 pt-4 border-t border-[rgba(255,255,255,0.06)]">
-                      <span className="text-[12px] text-text-tertiary uppercase tracking-[0.12em]">
-                        {featured ? 'Scope to launch' : 'Execution detail'}
-                      </span>
-                      <span className="text-[12px] text-text-primary" style={{ fontFamily: 'JetBrains Mono' }}>
-                        0{index + 1}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </motion.article>
-            );
-          })}
+          {members.map((member, index) => (
+            <TeamMemberCard
+              key={`${member.name}-${index}`}
+              member={member}
+              index={index}
+              featured={index === 0}
+              enable3d={enable3d}
+            />
+          ))}
         </div>
       </div>
     </section>
