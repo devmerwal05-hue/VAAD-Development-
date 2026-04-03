@@ -140,6 +140,15 @@ export function getErrorMessage(error) {
   return 'An unexpected error occurred.';
 }
 
+export function getRequestBody(req, res) {
+  try {
+    return req.body || {};
+  } catch {
+    res.status(400).json({ error: 'Invalid JSON' });
+    return null;
+  }
+}
+
 export function parseCookies(req) {
   const cookieHeader = req.headers.cookie || '';
   return cookieHeader.split(';').reduce((cookies, part) => {

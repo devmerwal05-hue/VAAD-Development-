@@ -1,6 +1,6 @@
 import { hasSupabaseConfig } from './_config.js';
 import { getSupabaseAdmin, getSupabasePublic } from './_supabase.js';
-import { applySecurity, getErrorMessage, hasAdminSession, sanitize, verifyAdminSession } from './_security.js';
+import { applySecurity, getErrorMessage, getRequestBody, hasAdminSession, sanitize, verifyAdminSession } from './_security.js';
 
 const defaultContent = [
   { section: 'nav', key: 'logo_text', value: 'VAAD' },
@@ -376,7 +376,9 @@ export default async function handler(req, res) {
     if (req.method === 'PUT') {
       if (!verifyAdminSession(req, res)) return;
 
-      const { id, value } = req.body || {};
+      const body = getRequestBody(req, res);
+      if (!body) return;
+      const { id, value } = body;
       if (typeof id !== 'number' || typeof value !== 'string') {
         return res.status(400).json({ error: 'id and value are required' });
       }
@@ -395,7 +397,9 @@ export default async function handler(req, res) {
     if (req.method === 'POST') {
       if (!verifyAdminSession(req, res)) return;
 
-      const { section, key, value } = req.body || {};
+      const body = getRequestBody(req, res);
+      if (!body) return;
+      const { section, key, value } = body;
       if (typeof section !== 'string' || typeof key !== 'string' || typeof value !== 'string') {
         return res.status(400).json({ error: 'section, key, and value are required' });
       }
@@ -417,7 +421,9 @@ export default async function handler(req, res) {
     if (req.method === 'DELETE') {
       if (!verifyAdminSession(req, res)) return;
 
-      const { id } = req.body || {};
+      const body = getRequestBody(req, res);
+      if (!body) return;
+      const { id } = body;
       if (typeof id !== 'number') {
         return res.status(400).json({ error: 'Valid numeric id is required' });
       }

@@ -1,6 +1,6 @@
 import { hasSupabaseConfig } from '../_config.js';
 import { getSupabaseAdmin } from '../_supabase.js';
-import { applySecurity, getErrorMessage, sanitize, verifyAdminSession } from '../_security.js';
+import { applySecurity, getErrorMessage, getRequestBody, sanitize, verifyAdminSession } from '../_security.js';
 
 const MAX_ITEMS = 500;
 const MAX_VALUE_LEN = 10000;
@@ -73,7 +73,9 @@ export default async function handler(req, res) {
     if (!verifyAdminSession(req, res)) return;
 
     if (req.method === 'POST') {
-      const { items, mode } = req.body || {};
+      const body = getRequestBody(req, res);
+      if (!body) return;
+      const { items, mode } = body;
       const normalized = normalizeUpsertItems(items);
       if (normalized.error) return res.status(400).json({ error: normalized.error });
 
@@ -92,7 +94,9 @@ export default async function handler(req, res) {
     }
 
     if (req.method === 'DELETE') {
-      const { ids } = req.body || {};
+      const body = getRequestBody(req, res);
+      if (!body) return;
+      const { ids } = body;
       const normalized = normalizeIds(ids);
       if (normalized.error) return res.status(400).json({ error: normalized.error });
 

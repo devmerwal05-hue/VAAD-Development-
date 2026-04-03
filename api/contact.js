@@ -1,7 +1,7 @@
 import { hasSupabaseConfig } from './_config.js';
 import { BUDGET_RANGE_VALUES, CONTACT_STATUS, PROJECT_TYPE_VALUES } from './_constants.js';
 import { getSupabaseAdmin } from './_supabase.js';
-import { applySecurity, getErrorMessage, sanitize, verifyAdminSession } from './_security.js';
+import { applySecurity, getErrorMessage, getRequestBody, sanitize, verifyAdminSession } from './_security.js';
 
 export default async function handler(req, res) {
   if (!applySecurity(req, res)) return;
@@ -15,6 +15,8 @@ export default async function handler(req, res) {
     }
 
     if (req.method === 'POST') {
+      const body = getRequestBody(req, res);
+      if (!body) return;
       const {
         name,
         email,
@@ -25,7 +27,7 @@ export default async function handler(req, res) {
         message,
         website,
         started_at,
-      } = req.body || {};
+      } = body;
 
       const cleanName = sanitize(name, 200);
       const cleanEmail = sanitize(email, 320);
@@ -97,7 +99,9 @@ export default async function handler(req, res) {
     if (req.method === 'PUT') {
       if (!verifyAdminSession(req, res)) return;
 
-      const { id, status } = req.body || {};
+      const body = getRequestBody(req, res);
+      if (!body) return;
+      const { id, status } = body;
       if (typeof id !== 'number' || !CONTACT_STATUS.includes(status)) {
         return res.status(400).json({ error: 'Invalid status value' });
       }
@@ -116,7 +120,9 @@ export default async function handler(req, res) {
     if (req.method === 'DELETE') {
       if (!verifyAdminSession(req, res)) return;
 
-      const { id } = req.body || {};
+      const body = getRequestBody(req, res);
+      if (!body) return;
+      const { id } = body;
       if (typeof id !== 'number') {
         return res.status(400).json({ error: 'Valid numeric id is required' });
       }

@@ -1,6 +1,6 @@
 import { getUploadsBucket, getEnv, hasSupabaseConfig } from './_config.js';
 import { getSupabaseAdmin } from './_supabase.js';
-import { applySecurity, getErrorMessage, sanitize, verifyAdminSession } from './_security.js';
+import { applySecurity, getErrorMessage, getRequestBody, sanitize, verifyAdminSession } from './_security.js';
 
 export const config = { api: { bodyParser: { sizeLimit: '10mb' } } };
 
@@ -21,7 +21,9 @@ export default async function handler(req, res) {
       return res.status(405).json({ error: 'Method not allowed' });
     }
 
-    const { filename, content_type, data } = req.body || {};
+    const body = getRequestBody(req, res);
+    if (!body) return;
+    const { filename, content_type, data } = body;
     if (typeof data !== 'string' || !data) {
       return res.status(400).json({ error: 'data is required (base64 data URL)' });
     }

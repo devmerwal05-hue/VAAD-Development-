@@ -1,4 +1,4 @@
-import { applySecurity, clearAdminSession, hasAdminSession, startAdminSession, verifyAdminPassword } from '../_security.js';
+import { applySecurity, clearAdminSession, getRequestBody, hasAdminSession, startAdminSession, verifyAdminPassword } from '../_security.js';
 
 export default async function handler(req, res) {
   if (!applySecurity(req, res, { scope: 'auth' })) return;
@@ -8,7 +8,9 @@ export default async function handler(req, res) {
   }
 
   if (req.method === 'POST') {
-    const { password } = req.body || {};
+    const body = getRequestBody(req, res);
+    if (!body) return;
+    const { password } = body;
     if (verifyAdminPassword(password)) {
       startAdminSession(req, res);
       return res.status(200).json({ authenticated: true });
