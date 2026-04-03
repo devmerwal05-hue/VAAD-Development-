@@ -81,8 +81,14 @@ export default function Team() {
                         className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
                       />
                     ) : (
-                      <div className="absolute inset-0 flex items-center justify-center" style={{ background: member.gradient }}>
-                        <span className="text-white text-[72px] md:text-[92px]" style={{ fontFamily: 'Syne', fontWeight: 800 }}>
+                      <div
+                        className="absolute inset-0 flex items-center justify-center [container-type:inline-size]"
+                        style={{ background: member.gradient }}
+                      >
+                        <span
+                          className="text-white text-center leading-none tracking-[-0.08em] [font-size:clamp(56px,38cqw,92px)]"
+                          style={{ fontFamily: 'Syne', fontWeight: 800 }}
+                        >
                           {member.initials}
                         </span>
                       </div>
@@ -98,7 +104,10 @@ export default function Team() {
                       <p className="text-[11px] uppercase tracking-[0.14em] text-accent-light mb-3" style={{ fontFamily: 'DM Sans', fontWeight: 500 }}>
                         {member.role}
                       </p>
-                      <h3 className="text-[28px] md:text-[36px] text-text-primary mb-4" style={{ fontFamily: 'Syne', fontWeight: 800, lineHeight: 0.95, letterSpacing: '-0.04em' }}>
+                      <h3
+                        className="text-text-primary mb-4 [text-wrap:balance] break-words [font-size:clamp(26px,2.6vw,36px)]"
+                        style={{ fontFamily: 'Syne', fontWeight: 800, lineHeight: 0.95, letterSpacing: '-0.03em' }}
+                      >
                         {member.name}
                       </h3>
                       <p className="text-[15px] text-text-secondary leading-[1.8]" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>

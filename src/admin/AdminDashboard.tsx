@@ -749,6 +749,15 @@ function CollectionCard({
 
   const prefix = COLLECTION_META[section].prefix;
 
+  const getRecommendedMax = (fieldKey: string) => {
+    if (section === 'team') {
+      if (fieldKey === 'initials') return 2;
+      if (fieldKey === 'name') return 24;
+      if (fieldKey === 'role') return 28;
+    }
+    return null;
+  };
+
   return (
     <div className="bg-white/[0.03] rounded-2xl border border-white/6 overflow-hidden">
       <div className="flex items-center justify-between px-4 py-3 border-b border-white/5">
@@ -780,6 +789,8 @@ function CollectionCard({
           const isSaving = saving.has(fd.key);
           const isDone = saved.has(fd.key);
           const isDirty = val !== (item.fields[fd.key]?.value ?? "");
+          const recommendedMax = getRecommendedMax(fd.key);
+          const isOverRecommended = recommendedMax ? val.length > recommendedMax : false;
           return (
             <div key={fd.key} className={`flex flex-col gap-2 ${fd.type === "textarea" || fd.type === "image" ? "xl:col-span-2" : ""}`}>
               <div className="flex items-center justify-between">
@@ -793,6 +804,16 @@ function CollectionCard({
                   )}
                 </AnimatePresence>
               </div>
+              {recommendedMax && (
+                <div className="flex items-center justify-between text-[10px]">
+                  <span className={`${isOverRecommended ? 'text-amber-300/80' : 'text-white/25'}`}>
+                    Recommended ≤ {recommendedMax} chars
+                  </span>
+                  <span className={`${isOverRecommended ? 'text-amber-300/80' : 'text-white/25'} font-mono`}>
+                    {val.length}/{recommendedMax}
+                  </span>
+                </div>
+              )}
               {fd.type === "image" ? (
                 <ImageUploader value={val} compact
                   onChange={(v) => { setLocalValues(p => ({ ...p, [fd.key]: v })); saveField(fd.key, v); }}
@@ -805,7 +826,13 @@ function CollectionCard({
                   placeholder="Type here…" />
               ) : (
                 <input type={fd.type === "url" ? "url" : "text"} value={val}
-                  onChange={(e) => setLocalValues(p => ({ ...p, [fd.key]: e.target.value }))}
+                  onChange={(e) => {
+                    const nextRaw = e.target.value;
+                    const next = section === 'team' && fd.key === 'initials'
+                      ? nextRaw.replace(/\s+/g, '').slice(0, 2).toUpperCase()
+                      : nextRaw;
+                    setLocalValues(p => ({ ...p, [fd.key]: next }));
+                  }}
                   onBlur={() => saveField(fd.key, val)}
                   className={`w-full bg-white/3 text-[13px] px-3 py-2 rounded-xl border outline-none transition-colors ${isDirty ? "border-accent/35" : "border-white/8 focus:border-accent/25"} ${fd.type === "url" ? "text-cyan-400 font-mono text-[12px]" : "text-white"}`}
                   placeholder="Type here…"
