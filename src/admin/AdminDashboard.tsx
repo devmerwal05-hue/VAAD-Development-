@@ -1535,11 +1535,6 @@ export default function AdminDashboard() {
     return apiFetchLogged<ContentItem[]>(`/api/content?ts=${Date.now()}`);
   }
 
-  async function loadContentOnly() {
-    const ct = await fetchContent();
-    setContent(ct);
-  }
-
   async function loadAll() {
     setLoading(true); setError("");
     try {
@@ -1618,11 +1613,34 @@ export default function AdminDashboard() {
   ) {
     if (items.length === 0) return;
 
-    await apiFetchLogged<ContentItem[]>("/api/content/bulk", {
+    const updatedItems = await apiFetchLogged<ContentItem[]>("/api/content/bulk", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ mode, items }),
     });
+
+    // Avoid a full refetch: merge returned items into local state.
+    if (updatedItems && updatedItems.length > 0) {
+      setContent((prev) => {
+        const next = [...prev];
+        const indexByKey = new Map<string, number>();
+        for (let i = 0; i < next.length; i += 1) {
+          const c = next[i];
+          indexByKey.set(`${c.section}::${c.key}`, i);
+        }
+        for (const item of updatedItems) {
+          const k = `${item.section}::${item.key}`;
+          const existingIndex = indexByKey.get(k);
+          if (existingIndex === undefined) {
+            indexByKey.set(k, next.length);
+            next.push(item);
+          } else {
+            next[existingIndex] = item;
+          }
+        }
+        return next;
+      });
+    }
   }
 
   async function bulkDeleteContent(ids: number[]) {
@@ -1633,6 +1651,10 @@ export default function AdminDashboard() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ids }),
     });
+
+    // Avoid a full refetch: delete from local state.
+    const idsSet = new Set(ids);
+    setContent((prev) => prev.filter((c) => !idsSet.has(c.id)));
   }
 
   async function seedSectionDefaults(section: string) {
@@ -1686,7 +1708,6 @@ export default function AdminDashboard() {
       }
 
       await bulkUpsertContent(seedItems, "insert_missing");
-      await loadContentOnly();
     } catch (e) {
       setError(getErrorMessage(e));
     } finally {
@@ -1739,7 +1760,6 @@ export default function AdminDashboard() {
 
       await bulkUpsertContent(upsertItems, "upsert");
       await bulkDeleteContent(idsToDelete);
-      await loadContentOnly();
     } catch (e) {
       setError(getErrorMessage(e));
     } finally {
