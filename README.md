@@ -11,6 +11,11 @@ Marketing site and lightweight admin CMS for VAAD Development, built with React,
 
 ## Local setup
 
+### Node version
+
+For the smoothest local `vercel dev` experience on Windows, use Node 22 LTS.
+This repo includes version hints in `.nvmrc` and `.node-version`.
+
 1. Copy `.env.example` to `.env`.
 2. Fill in the required values:
    - `SUPABASE_URL`
