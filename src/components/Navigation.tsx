@@ -16,6 +16,8 @@ export default function Navigation() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { getContentValue } = useContent();
 
+  const enableFloatingDock = getContentValue('ui', 'enable_floating_dock_nav', 'true') === 'true';
+
   const navLinks: NavLinkItem[] = useMemo(() => {
     return [
       { label: getContentValue('nav', 'link_1', 'Work'), href: getContentValue('nav', 'link_1_href', '/work') },
@@ -85,7 +87,38 @@ export default function Navigation() {
           <Logo size="md" />
 
           <div className="hidden md:flex items-center">
-            <FloatingDock items={dockItems} />
+            {enableFloatingDock ? (
+              <FloatingDock items={dockItems} />
+            ) : (
+              <div className="hidden md:flex items-center gap-0.5">
+                {navLinks.map((link) => (
+                  <NavLink
+                    key={link.href}
+                    to={link.href}
+                    className={({ isActive }) =>
+                      `relative px-4 py-2 rounded-lg text-[13px] transition-colors duration-200 ${
+                        isActive
+                          ? 'text-text-primary bg-[rgba(124,111,247,0.08)]'
+                          : 'text-text-secondary hover:text-text-primary hover:bg-[rgba(255,255,255,0.03)]'
+                      }`
+                    }
+                    style={{ fontFamily: 'DM Sans', fontWeight: 400 }}
+                  >
+                    {({ isActive }) => (
+                      <>
+                        {link.label}
+                        {isActive && (
+                          <span
+                            aria-hidden="true"
+                            className="absolute bottom-0 left-1/2 -translate-x-1/2 w-5 h-[2px] rounded-full bg-accent"
+                          />
+                        )}
+                      </>
+                    )}
+                  </NavLink>
+                ))}
+              </div>
+            )}
           </div>
 
           <button
