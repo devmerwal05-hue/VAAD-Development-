@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion';
+import { m as motion } from 'framer-motion';
 import { Cloud, Container, Database, GitBranch, Globe, HardDrive, Monitor, Network, Server, Shield, type LucideIcon } from 'lucide-react';
 import SectionLabel from './SectionLabel';
 import SectionTitle from './SectionTitle';

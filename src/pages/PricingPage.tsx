@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion';
+import { m as motion } from 'framer-motion';
 import FAQ from '../components/FAQ';
 import PageWrapper from '../components/PageWrapper';
 import Pricing from '../components/Pricing';

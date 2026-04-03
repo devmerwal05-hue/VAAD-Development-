@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { m as motion } from 'framer-motion';
 import { Clock, Globe, Mail } from 'lucide-react';
 import { useContent } from '../lib/useContent';
 import { getErrorMessage } from '../lib/getErrorMessage';

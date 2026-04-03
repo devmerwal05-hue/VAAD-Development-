@@ -33,13 +33,14 @@ import React, {
   useReducer,
   useDeferredValue,
 } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import { DragDropContext, Droppable, Draggable, type DropResult } from 'react-beautiful-dnd';
+import { AnimatePresence, m as motion } from "framer-motion";
 import {
   homeSectionDefinitions,
   portfolioDefaults,
   teamDefaults,
 } from "../lib/homeContent";
+
+const DndGallery = React.lazy(() => import("./DndGallery"));
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES
@@ -601,14 +602,15 @@ const FieldEditor = React.memo(function FieldEditor({
   const isLong = localValue.length > 80 || /desc|description|subheadline|items|gallery|bio/.test(item.key);
   const galleryItems = localValue.split(",").map(s => s.trim()).filter(Boolean);
 
-  const onDragEnd = (result: DropResult) => {
-    if (!result.destination) {
-      return;
-    }
-    const items = Array.from(galleryItems);
-    const [reorderedItem] = items.splice(result.source.index, 1);
-    items.splice(result.destination.index, 0, reorderedItem);
-    const newValue = items.join(',');
+  const handleGalleryReorder = (nextItems: string[]) => {
+    const newValue = nextItems.join(',');
+    setLocalValue(newValue);
+    save(newValue);
+  };
+
+  const handleGalleryRemove = (index: number) => {
+    const nextItems = galleryItems.filter((_, j) => j !== index);
+    const newValue = nextItems.join(",");
     setLocalValue(newValue);
     save(newValue);
   };
@@ -686,38 +688,9 @@ const FieldEditor = React.memo(function FieldEditor({
       )}
 
       {isGallery && galleryItems.length > 0 && (
-        <DragDropContext onDragEnd={onDragEnd}>
-          <Droppable droppableId="gallery" direction="horizontal">
-            {(provided) => (
-              <div
-                {...provided.droppableProps}
-                ref={provided.innerRef}
-                className="flex flex-wrap gap-2"
-              >
-                {galleryItems.map((src, i) => (
-                  <Draggable key={src} draggableId={src} index={i}>
-                    {(provided) => (
-                      <div
-                        ref={provided.innerRef}
-                        {...provided.draggableProps}
-                        {...provided.dragHandleProps}
-                        className="relative group"
-                      >
-                        <img src={src} alt="" className="h-16 w-24 rounded-lg border border-white/8 object-cover" loading="lazy" />
-                        <button type="button"
-                          onClick={() => { const next = galleryItems.filter((_, j) => j !== i).join(","); setLocalValue(next); save(next); }}
-                          className="absolute top-1 right-1 p-0.5 rounded bg-black/70 text-red-400 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
-                        </button>
-                      </div>
-                    )}
-                  </Draggable>
-                ))}
-                {provided.placeholder}
-              </div>
-            )}
-          </Droppable>
-        </DragDropContext>
+        <React.Suspense fallback={<p className="text-[11px] text-white/40">Loading gallery tools…</p>}>
+          <DndGallery items={galleryItems} onReorder={handleGalleryReorder} onRemove={handleGalleryRemove} />
+        </React.Suspense>
       )}
     </div>
   );

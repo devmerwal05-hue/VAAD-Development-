@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion';
+import { m as motion } from 'framer-motion';
 import SectionLabel from './SectionLabel';
 import SectionTitle from './SectionTitle';
 import { useContent } from '../lib/useContent';

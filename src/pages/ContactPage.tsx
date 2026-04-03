@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion';
+import { m as motion } from 'framer-motion';
 import Contact from '../components/Contact';
 import PageWrapper from '../components/PageWrapper';
 import { usePageMetadata } from '../hooks/usePageMetadata';

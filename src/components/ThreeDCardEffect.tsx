@@ -1,5 +1,5 @@
 import { useReducedMotion, useMotionValue, useSpring, type MotionStyle } from 'framer-motion';
-import { useCallback, useMemo, useRef, type PointerEvent as ReactPointerEvent } from 'react';
+import { useCallback, useEffect, useMemo, useRef, type PointerEvent as ReactPointerEvent } from 'react';
 
 export interface ThreeDCardEffectOptions {
   enabled: boolean;
@@ -32,6 +32,13 @@ export function useThreeDCardEffect(options: ThreeDCardEffectOptions) {
 
   const rotateX = useSpring(rotateXBase, { stiffness: 220, damping: 26, mass: 0.6 });
   const rotateY = useSpring(rotateYBase, { stiffness: 220, damping: 26, mass: 0.6 });
+
+  useEffect(() => {
+    return () => {
+      if (typeof window === 'undefined') return;
+      if (rafRef.current != null) window.cancelAnimationFrame(rafRef.current);
+    };
+  }, []);
 
   const commitRotation = useCallback(() => {
     rafRef.current = null;

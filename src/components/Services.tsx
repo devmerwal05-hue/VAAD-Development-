@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion';
+import { m as motion } from 'framer-motion';
 import { Globe, Code2, ShoppingBag, Wrench } from 'lucide-react';
 import SectionLabel from './SectionLabel';
 import SectionTitle from './SectionTitle';

@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import SectionLabel from './SectionLabel';
 import SectionTitle from './SectionTitle';
 import { useThreeDCardEffect } from './ThreeDCardEffect';
@@ -36,7 +36,7 @@ function TeamMemberCard({ member, index, featured, enable3d }: { member: TeamMem
   const { cardRef, tiltStyle, onPointerEnter, onPointerMove, onPointerLeave } = useThreeDCardEffect({ enabled: enable3d });
 
   return (
-    <motion.article
+    <m.article
       ref={(node) => {
         cardRef.current = node;
       }}
@@ -102,7 +102,7 @@ function TeamMemberCard({ member, index, featured, enable3d }: { member: TeamMem
           </div>
         </div>
       </div>
-    </motion.article>
+    </m.article>
   );
 }
 

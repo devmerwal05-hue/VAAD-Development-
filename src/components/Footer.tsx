@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { m as motion } from 'framer-motion';
 import { ArrowUpRight } from 'lucide-react';
 import { useContent } from '../lib/useContent';
 import Logo from './Logo';
