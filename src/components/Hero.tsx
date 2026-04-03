@@ -1,33 +1,17 @@
 import { m } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Sparkles } from 'lucide-react';
-import { buildPortfolioProjects } from '../lib/portfolio';
 import { useContent } from '../lib/useContent';
 
 const ease: [number, number, number, number] = [0.16, 0.77, 0.47, 0.97];
 
 export default function Hero() {
-  const { content, getContentValue, projectCount } = useContent();
-  const hasStoredCount = content.some((item) => item.section === 'portfolio' && item.key === 'project_count');
-  const featuredProject = buildPortfolioProjects(getContentValue, projectCount, !hasStoredCount)[0];
+  const { getContentValue, portfolioProjects, heroStats } = useContent();
+  const featuredProject = portfolioProjects[0];
   const line1 = getContentValue('hero', 'headline_line1', 'Small teams need fast systems');
   const line2 = getContentValue('hero', 'headline_line2', 'not vague agency timelines.');
   const proofImage = getContentValue('hero', 'proof_image', '').trim();
   const deliveryBoardImage = proofImage || featuredProject?.image || '';
-
-  const statDefaults = [
-    { value: '5', label: 'Senior builders' },
-    { value: '1-3', label: 'Week delivery' },
-    { value: 'Always', label: 'Post-launch iteration' },
-  ];
-  
-  const storedStatCount = Number(getContentValue('hero', 'stat_count', ''));
-  const statCount = (!isNaN(storedStatCount) && storedStatCount > 0) ? storedStatCount : statDefaults.length;
-
-  const stats = Array.from({ length: statCount }, (_, index) => ({
-    value: getContentValue('hero', `stat_${index + 1}_number`, statDefaults[index]?.value || ''),
-    label: getContentValue('hero', `stat_${index + 1}_label`, statDefaults[index]?.label || ''),
-  })).filter(s => s.value);
 
   return (
     <section className="relative min-h-[100svh] overflow-hidden px-5 pt-28 pb-16 md:pt-36 md:pb-24">
@@ -103,7 +87,7 @@ export default function Hero() {
             transition={{ duration: 0.6, ease, delay: 0.5 }}
             className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-10"
           >
-            {stats.map((stat, index) => (
+            {heroStats.slice(0, 3).map((stat, index) => (
               <div key={stat.label + index} className="rounded-2xl border border-[rgba(255,255,255,0.06)] bg-[rgba(10,10,20,0.72)] px-4 py-4 backdrop-blur-sm glass card-hover">
                 <p className="text-[24px] md:text-[30px] text-text-primary gradient-text-enhanced" style={{ fontFamily: 'Syne', fontWeight: 800 }}>{stat.value}</p>
                 <p className="text-[11px] uppercase tracking-[0.12em] text-text-tertiary mt-2">{stat.label}</p>
@@ -165,7 +149,7 @@ export default function Hero() {
               </div>
 
               <div className="p-5 md:p-6 flex flex-col gap-4">
-                {stats.map((stat, index) => (
+                {heroStats.slice(0, 3).map((stat, index) => (
                   <div key={`${stat.label}-${index}`} className="rounded-2xl border border-[rgba(255,255,255,0.06)] bg-[rgba(255,255,255,0.02)] p-4">
                     <p className="text-[12px] uppercase tracking-[0.14em] text-text-tertiary" style={{ fontFamily: 'JetBrains Mono' }}>
                       {getContentValue('hero', 'proof_panel_label', 'Panel')} {String(index + 1).padStart(2, '0')}

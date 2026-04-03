@@ -1,16 +1,4 @@
-import type { ContentGetter } from './content-context';
-
-export interface PortfolioProject {
-  tag: string;
-  name: string;
-  subtitle: string;
-  description: string;
-  url: string;
-  image: string;
-  gallery: string[];
-  accentColor: string;
-  gradientAngle: string;
-}
+import type { PortfolioProject } from './content-context';
 
 const accentColorPool = [
   'rgba(124,111,247,0.14)',
@@ -23,7 +11,7 @@ const accentColorPool = [
 
 const gradientAnglePool = ['135deg', '225deg', '315deg', '45deg', '180deg', '270deg'];
 
-const fallbackProjects = [
+export const fallbackProjects = [
   {
     tag: 'Coffee Commerce',
     name: 'Kofi Supply',
@@ -53,21 +41,32 @@ const fallbackProjects = [
   },
 ] as const;
 
-export function buildPortfolioProjects(getContentValue: ContentGetter, projectCount: number, useFallbackCount = true): PortfolioProject[] {
+/**
+ * Builds the portfolio project list.
+ * Optimization: Uses a Map for O(1) lookups instead of O(N) array searches.
+ */
+export function buildPortfolioProjects(
+  contentMap: Map<string, string>,
+  projectCount: number,
+  useFallbackCount = true
+): PortfolioProject[] {
   const totalProjects = useFallbackCount ? Math.max(projectCount, fallbackProjects.length) : projectCount;
 
   return Array.from({ length: totalProjects }, (_, index) => {
     const projectNumber = index + 1;
     const fallbackProject = fallbackProjects[index];
-    const galleryValue = getContentValue('portfolio', `project_${projectNumber}_gallery`, fallbackProject?.gallery.join(',') || '');
+
+    const getVal = (key: string, fb: string) => contentMap.get(`portfolio::${key}`) ?? fb;
+
+    const galleryValue = getVal(`project_${projectNumber}_gallery`, fallbackProject?.gallery.join(',') || '');
 
     return {
-      tag: getContentValue('portfolio', `project_${projectNumber}_tag`, fallbackProject?.tag || ''),
-      name: getContentValue('portfolio', `project_${projectNumber}_name`, fallbackProject?.name || ''),
-      subtitle: getContentValue('portfolio', `project_${projectNumber}_subtitle`, fallbackProject?.subtitle || ''),
-      description: getContentValue('portfolio', `project_${projectNumber}_desc`, fallbackProject?.description || ''),
-      url: getContentValue('portfolio', `project_${projectNumber}_url`, fallbackProject?.url || ''),
-      image: getContentValue('portfolio', `project_${projectNumber}_image`, fallbackProject?.image || ''),
+      tag: getVal(`project_${projectNumber}_tag`, fallbackProject?.tag || ''),
+      name: getVal(`project_${projectNumber}_name`, fallbackProject?.name || ''),
+      subtitle: getVal(`project_${projectNumber}_subtitle`, fallbackProject?.subtitle || ''),
+      description: getVal(`project_${projectNumber}_desc`, fallbackProject?.description || ''),
+      url: getVal(`project_${projectNumber}_url`, fallbackProject?.url || ''),
+      image: getVal(`project_${projectNumber}_image`, fallbackProject?.image || ''),
       gallery: galleryValue
         .split(',')
         .map((entry) => entry.trim())
