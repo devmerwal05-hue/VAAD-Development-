@@ -128,7 +128,7 @@ export default function Contact() {
   }
 
   return (
-    <section className="relative py-24 md:py-32">
+    <section className="relative section-pad">
       <div className="absolute inset-0 grid-pattern opacity-12 pointer-events-none" />
 
       <div className="max-w-[1360px] mx-auto px-6 relative z-10">

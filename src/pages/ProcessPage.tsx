@@ -31,7 +31,7 @@ export default function ProcessPage() {
       <Process />
       <FAQ />
 
-      <section className="px-6 py-20 md:py-24">
+      <section className="px-6 section-pad">
         <div className="corner-marks mx-auto max-w-[900px] border border-[rgba(232,19,42,0.2)] bg-[rgba(9,22,40,0.76)] px-8 py-10 text-center md:px-12 md:py-14">
           <h2
             className="mb-4 text-text-primary"

@@ -52,6 +52,27 @@ body {
   overflow-x: hidden;
 }
 
+:root {
+  --grid-unit: 8px;
+}
+
+.section-pad {
+  padding-top: calc(var(--grid-unit) * 16);
+  padding-bottom: calc(var(--grid-unit) * 16);
+}
+
+@media (min-width: 768px) {
+  .section-pad {
+    padding-top: calc(var(--grid-unit) * 20);
+    padding-bottom: calc(var(--grid-unit) * 20);
+  }
+}
+
+.stack-8 > * + * { margin-top: calc(var(--grid-unit) * 1); }
+.stack-16 > * + * { margin-top: calc(var(--grid-unit) * 2); }
+.stack-24 > * + * { margin-top: calc(var(--grid-unit) * 3); }
+.stack-32 > * + * { margin-top: calc(var(--grid-unit) * 4); }
+
 /* ============================================================
    FOCUS RING
    ============================================================ */

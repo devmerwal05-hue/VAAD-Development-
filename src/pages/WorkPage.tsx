@@ -32,7 +32,7 @@ export default function WorkPage() {
         description={getContentValue('work_page', 'description', 'These are the kinds of builds we take on: lean teams, real delivery pressure, and a clear need for design and engineering to move in the same sprint.')}
       />
 
-      <section className="py-8 md:py-14">
+      <section className="section-pad">
         <div className="mx-auto flex max-w-[1360px] flex-col gap-8 px-6 md:gap-10">
           {projects.map((project, index) => (
             <motion.article
@@ -134,7 +134,7 @@ export default function WorkPage() {
 
       <Marquee />
 
-      <section className="px-6 py-20 md:py-24">
+      <section className="px-6 section-pad">
         <div className="corner-marks mx-auto max-w-[920px] border border-[rgba(232,19,42,0.2)] bg-[rgba(9,22,40,0.76)] px-8 py-10 text-center md:px-12 md:py-14">
           <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
             {getContentValue('portfolio', 'footer_text', '') && (

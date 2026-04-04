@@ -30,7 +30,7 @@ export default function Team() {
   if (members.length === 0) return null;
 
   return (
-    <section className="py-24 md:py-32 relative overflow-hidden">
+    <section className="section-pad relative overflow-hidden">
       <div className="absolute inset-0 grid-pattern opacity-15 pointer-events-none" />
 
       <div className="max-w-[1360px] mx-auto px-6 relative z-10">

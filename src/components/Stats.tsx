@@ -60,7 +60,7 @@ export default function Stats() {
   }).filter((s) => s.label);
 
   return (
-    <section className="py-24 md:py-32 relative">
+    <section className="section-pad relative">
       {/* Subtle red radial */}
       <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 60% at 50% 50%, rgba(232,19,42,0.04), transparent 60%)' }} />
       <div className="absolute inset-0 grid-pattern opacity-15 pointer-events-none" />

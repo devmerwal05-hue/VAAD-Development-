@@ -24,7 +24,7 @@ export default function FAQ() {
   })).filter((f) => f.q);
 
   return (
-    <section className="py-24 md:py-32 relative">
+    <section className="section-pad relative">
       <div className="absolute inset-0 grid-pattern opacity-15 pointer-events-none" />
 
       <div className="max-w-[900px] mx-auto px-6 relative z-10">

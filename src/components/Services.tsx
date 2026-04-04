@@ -24,8 +24,20 @@ export default function Services() {
     };
   }).filter((s) => s.title);
 
+  const getBentoSpan = (index: number, total: number) => {
+    if (total <= 1) return 'md:col-span-6';
+    if (total === 2) return 'md:col-span-3';
+    if (total === 3) return index === 0 ? 'md:col-span-6' : 'md:col-span-3';
+
+    if (index === 0) return 'md:col-span-4 md:row-span-2';
+    if (index === 1) return 'md:col-span-2';
+    if (index === 2) return 'md:col-span-2';
+    if (index === 3) return 'md:col-span-4';
+    return 'md:col-span-3';
+  };
+
   return (
-    <section className="py-24 md:py-32 relative">
+    <section className="section-pad relative">
       <div className="absolute inset-0 grid-pattern opacity-20 pointer-events-none" />
       <div className="max-w-[1360px] mx-auto px-6 relative z-10">
 
@@ -56,7 +68,7 @@ export default function Services() {
         {/* Rule */}
         <div className="rule-line-full mb-10" />
 
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 md:gap-6">
+        <div className="grid grid-cols-1 auto-rows-[minmax(200px,auto)] gap-4 md:grid-cols-6 md:gap-6">
           {services.map((service, index) => (
             <motion.div
               key={service.title}
@@ -64,7 +76,7 @@ export default function Services() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.15 }}
               transition={{ duration: 0.55, ease, delay: index * 0.07 }}
-              className="group relative border border-[rgba(232,19,42,0.18)] bg-[rgba(9,22,40,0.62)] p-8 md:p-10"
+              className={`group relative border border-[rgba(255,255,255,0.1)] bg-[rgba(9,22,40,0.62)] p-8 md:p-10 ${getBentoSpan(index, services.length)}`}
             >
               {/* Hover fill */}
               <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" style={{ background: 'rgba(232,19,42,0.03)' }} />
