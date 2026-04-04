@@ -36,6 +36,7 @@ import React, {
 import { AnimatePresence, m as motion } from "framer-motion";
 import {
   homeSectionDefinitions,
+  type AdminFieldDefinition,
   portfolioDefaults,
   teamDefaults,
 } from "../lib/homeContent";
@@ -559,33 +560,46 @@ function ImageUploader({
 // SINGLE FIELD EDITOR
 // ─────────────────────────────────────────────────────────────────────────────
 
+type SectionFieldEntry = {
+  section: string;
+  key: string;
+  definition?: AdminFieldDefinition;
+  item?: ContentItem;
+};
+
 const FieldEditor = React.memo(function FieldEditor({
-  item, onUpdate, onDelete, onLog,
+  entry, onUpsert, onDelete, onLog,
 }: {
-  item: ContentItem;
-  onUpdate: (updated: ContentItem) => void;
+  entry: SectionFieldEntry;
+  onUpsert: (section: string, key: string, value: string) => Promise<ContentItem>;
   onDelete: (id: number, key: string) => void;
   onLog?: (e: Partial<ApiLogEntry>) => void;
 }) {
-  const [localValue, setLocalValue] = useState(item.value);
+  const [createdItem, setCreatedItem] = useState<ContentItem | null>(null);
+  const effectiveItem = entry.item ?? createdItem;
+
+  const baseValue = effectiveItem?.value ?? entry.definition?.fallback ?? "";
+  const [localValue, setLocalValue] = useState(baseValue);
   const [saving, setSaving] = useState(false);
   const [justSaved, setJustSaved] = useState(false);
 
   // FIX #6: track whether value actually changed before saving
-  const isDirty = localValue !== item.value;
+  const isDirty = localValue !== baseValue;
 
-  useEffect(() => { setLocalValue(item.value); }, [item.value]);
+  useEffect(() => {
+    setCreatedItem(null);
+  }, [entry.section, entry.key]);
+
+  useEffect(() => {
+    setLocalValue(baseValue);
+  }, [baseValue]);
 
   const save = useCallback(async (val: string) => {
-    if (val === item.value) return; // FIX #6: skip if unchanged
+    if (val === baseValue) return; // FIX #6: skip if unchanged
     setSaving(true);
     try {
-      const updated = await apiFetch<ContentItem>("/api/content", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: item.id, value: val }),
-      }, onLog);
-      onUpdate(updated);
+      const updated = await onUpsert(entry.section, entry.key, val);
+      setCreatedItem(updated);
       setJustSaved(true);
       setTimeout(() => setJustSaved(false), 2000);
     } catch (e) {
@@ -593,13 +607,15 @@ const FieldEditor = React.memo(function FieldEditor({
     } finally {
       setSaving(false);
     }
-  }, [item.id, item.value, onUpdate, onLog]);
+  }, [baseValue, entry.key, entry.section, onUpsert]);
 
-  const isImage = item.key.includes("image") && !item.key.includes("gallery");
-  const isGallery = item.key.includes("gallery");
-  const isUrl = item.key.includes("url") || item.key.includes("href");
-  const isBool = localValue === "true" || localValue === "false";
-  const isLong = localValue.length > 80 || /desc|description|subheadline|items|gallery|bio/.test(item.key);
+  const explicitType = entry.definition?.type;
+  const isImage = explicitType === 'image' || (entry.key.includes("image") && !entry.key.includes("gallery"));
+  const isGallery = entry.key.includes("gallery");
+  const isUrl = explicitType === 'url' || entry.key.includes("url") || entry.key.includes("href");
+  const isBool = explicitType === 'boolean' || (!explicitType && (localValue === "true" || localValue === "false"));
+  const isList = explicitType === 'list';
+  const isLong = explicitType === 'textarea' || isList || localValue.length > 80 || /desc|description|subheadline|items|gallery|bio/.test(entry.key);
   const galleryItems = localValue.split(",").map(s => s.trim()).filter(Boolean);
 
   const handleGalleryReorder = (nextItems: string[]) => {
@@ -619,8 +635,11 @@ const FieldEditor = React.memo(function FieldEditor({
     <div className="bg-white/[0.03] rounded-2xl border border-white/6 p-4 flex flex-col gap-3">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <p className="text-[13px] font-medium text-white truncate">{humanKey(item.key)}</p>
-          <p className="text-[10px] text-white/30 font-mono mt-0.5">{item.section}.{item.key}</p>
+          <p className="text-[13px] font-medium text-white truncate">{entry.definition?.label || humanKey(entry.key)}</p>
+          <p className="text-[10px] text-white/30 font-mono mt-0.5">{entry.section}.{entry.key}</p>
+          {entry.definition?.description && (
+            <p className="text-[11px] text-white/30 mt-1 leading-snug">{entry.definition.description}</p>
+          )}
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <AnimatePresence mode="wait">
@@ -638,13 +657,15 @@ const FieldEditor = React.memo(function FieldEditor({
               </motion.button>
             )}
           </AnimatePresence>
-          <button type="button" onClick={() => onDelete(item.id, item.key)}
-            className="text-[11px] text-red-400/70 hover:text-red-400 flex items-center gap-1">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-            </svg>
-            Delete
-          </button>
+          {effectiveItem && (
+            <button type="button" onClick={() => onDelete(effectiveItem.id, entry.key)}
+              className="text-[11px] text-red-400/70 hover:text-red-400 flex items-center gap-1">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+              </svg>
+              Delete
+            </button>
+          )}
         </div>
       </div>
 
@@ -669,7 +690,7 @@ const FieldEditor = React.memo(function FieldEditor({
           className={`w-full bg-white/3 text-white text-[13px] px-3 py-2.5 rounded-xl border outline-none resize-y transition-colors
             ${isDirty ? "border-accent/40" : "border-white/8 focus:border-accent/30"}
             ${isGallery ? "font-mono text-[12px]" : ""}`}
-          placeholder={isGallery ? "url1.jpg, url2.jpg, …" : "Type here…"}
+          placeholder={isGallery ? "url1.jpg, url2.jpg, …" : isList ? "Item 1|Item 2|Item 3" : "Type here…"}
           style={{ fontFamily: isGallery ? "JetBrains Mono, monospace" : "inherit" }}
         />
       ) : (
@@ -1449,22 +1470,58 @@ export default function AdminDashboard() {
   }, [filteredSections]);
 
   // Fields for the current section
-  const sectionFields = useMemo(() => {
+  const sectionFieldEntries = useMemo<SectionFieldEntry[]>(() => {
     if (activeSection === SUBMISSIONS_TAB) return [];
 
     let fields = content.filter(c => c.section === activeSection);
 
-    // Filter out collection sub-keys from non-collection sections (shouldn't happen, but safe)
+    // Filter out collection sub-keys from meta field lists
     if (activeSection === "portfolio") fields = fields.filter(c => !/^project_\d+_/.test(c.key) && c.key !== "project_count");
     if (activeSection === "team") fields = fields.filter(c => !/^member_\d+_/.test(c.key) && c.key !== "member_count");
+
+    const definition = homeSectionDefinitions[activeSection];
+    const defs = definition?.fields ?? [];
+    const byKey = new Map(fields.map(f => [f.key, f] as const));
+    const defKeySet = new Set(defs.map(d => d.key));
+
+    const entries: SectionFieldEntry[] = [];
+
+    // First: schema-defined fields in schema order (even if missing in DB)
+    for (const def of defs) {
+      entries.push({
+        section: activeSection,
+        key: def.key,
+        definition: def,
+        item: byKey.get(def.key),
+      });
+    }
+
+    // Then: any extra fields that exist in DB but are not in the schema
+    const extras = fields
+      .filter(f => !defKeySet.has(f.key))
+      .sort((a, b) => a.key.localeCompare(b.key, undefined, { numeric: true }));
+
+    for (const extra of extras) {
+      const fallbackDef: AdminFieldDefinition = {
+        key: extra.key,
+        label: humanKey(extra.key),
+        fallback: extra.value,
+      };
+      entries.push({ section: activeSection, key: extra.key, definition: fallbackDef, item: extra });
+    }
 
     // Only apply field search to non-collection sections.
     if (deferredFieldSearch && !COLLECTION_SECTIONS.includes(activeSection as CollectionSection)) {
       const q = deferredFieldSearch.toLowerCase();
-      fields = fields.filter(f => f.key.toLowerCase().includes(q) || f.value.toLowerCase().includes(q));
+      return entries.filter(e => {
+        const label = e.definition?.label?.toLowerCase() ?? "";
+        const key = e.key.toLowerCase();
+        const value = (e.item?.value ?? e.definition?.fallback ?? "").toLowerCase();
+        return label.includes(q) || key.includes(q) || value.includes(q);
+      });
     }
 
-    return fields.sort((a, b) => a.key.localeCompare(b.key, undefined, { numeric: true }));
+    return entries;
   }, [activeSection, content, deferredFieldSearch]);
 
   const handlePreviewNavigate = useCallback((info: { pathname: string; hash: string }) => {
@@ -1481,10 +1538,6 @@ export default function AdminDashboard() {
   const handleSelectSection = useCallback((section: string) => {
     setActiveSection(section as ActiveTab);
     setFieldSearch("");
-  }, []);
-
-  const handleUpdateContentItem = useCallback((updated: ContentItem) => {
-    setContent(prev => prev.map(c => c.id === updated.id ? updated : c));
   }, []);
 
   const handleFieldDeleteRequest = useCallback((id: number, key: string) => {
@@ -1899,7 +1952,7 @@ export default function AdminDashboard() {
   // ─────────────────────────────────────────────────────────────────────────
 
   const isCollection = COLLECTION_SECTIONS.includes(activeSection as CollectionSection);
-  const enableFieldVirtualization = activeSection !== SUBMISSIONS_TAB && sectionFields.length >= 200;
+  const enableFieldVirtualization = activeSection !== SUBMISSIONS_TAB && sectionFieldEntries.length >= 200;
   const collectionItems = isCollection ? getCollectionItems(activeSection as CollectionSection) : [];
   const missingDefaultsCount = (() => {
     if (activeSection === SUBMISSIONS_TAB) return 0;
@@ -1915,6 +1968,8 @@ export default function AdminDashboard() {
   const showSeedDefaults = activeSection !== SUBMISSIONS_TAB
     && !!homeSectionDefinitions[activeSection]
     && (missingDefaultsCount > 0 || (isCollection && collectionItems.length === 0));
+
+  const upsertField = (section: string, key: string, value: string) => ensureField(section, key, value);
 
   return (
     <div className="h-screen overflow-hidden bg-[#06060C] flex flex-col" style={{ fontFamily: "DM Sans, sans-serif" }}>
@@ -2024,7 +2079,7 @@ export default function AdminDashboard() {
               </h2>
               {activeSection !== SUBMISSIONS_TAB && (
                 <p className="text-[11px] text-white/30">
-                  {isCollection ? `${collectionItems.length} items` : `${sectionFields.length} fields`}
+                  {isCollection ? `${collectionItems.length} items` : `${sectionFieldEntries.length} fields`}
                 </p>
               )}
             </div>
@@ -2072,16 +2127,16 @@ export default function AdminDashboard() {
               />
             ) : isCollection ? (
               <div className="flex flex-col gap-3">
-                {sectionFields.length > 0 && (
+                {sectionFieldEntries.length > 0 && (
                   <div className="flex flex-col gap-3">
-                    {sectionFields.map(field => (
+                    {sectionFieldEntries.map(entry => (
                       <div
-                        key={field.id}
+                        key={`${entry.section}.${entry.key}`}
                         style={enableFieldVirtualization ? VIRTUALIZED_FIELD_WRAPPER_STYLE : undefined}
                       >
                         <FieldEditor
-                          item={field}
-                          onUpdate={handleUpdateContentItem}
+                          entry={entry}
+                          onUpsert={upsertField}
                           onDelete={handleFieldDeleteRequest}
                           onLog={addLog}
                         />
@@ -2127,7 +2182,7 @@ export default function AdminDashboard() {
             ) : (
               <div className="flex flex-col gap-3">
                 {/* Field search */}
-                {sectionFields.length > 4 && (
+                {sectionFieldEntries.length > 4 && (
                   <div className="relative">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
                       className="absolute left-2.5 top-1/2 -translate-y-1/2 text-white/25 pointer-events-none">
@@ -2157,17 +2212,17 @@ export default function AdminDashboard() {
                   </div>
                 </div>
 
-                {sectionFields.length === 0 ? (
+                {sectionFieldEntries.length === 0 ? (
                   <p className="text-center py-10 text-[13px] text-white/25">No fields in this section yet.</p>
                 ) : (
-                  sectionFields.map(field => (
+                  sectionFieldEntries.map(entry => (
                     <div
-                      key={field.id}
+                      key={`${entry.section}.${entry.key}`}
                       style={enableFieldVirtualization ? VIRTUALIZED_FIELD_WRAPPER_STYLE : undefined}
                     >
                       <FieldEditor
-                        item={field}
-                        onUpdate={handleUpdateContentItem}
+                        entry={entry}
+                        onUpsert={upsertField}
                         onDelete={handleFieldDeleteRequest}
                         onLog={addLog}
                       />
