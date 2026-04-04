@@ -1917,7 +1917,7 @@ export default function AdminDashboard() {
     && (missingDefaultsCount > 0 || (isCollection && collectionItems.length === 0));
 
   return (
-    <div className="min-h-screen bg-[#06060C] flex flex-col" style={{ fontFamily: "DM Sans, sans-serif" }}>
+    <div className="h-screen overflow-hidden bg-[#06060C] flex flex-col" style={{ fontFamily: "DM Sans, sans-serif" }}>
       <ConfirmModal
         open={!!confirm}
         title={confirm?.kind === "submission" ? "Delete submission?" : confirm?.kind === "collection_item" ? `Delete ${confirm?.label}?` : "Delete content field?"}
@@ -2001,7 +2001,7 @@ export default function AdminDashboard() {
       </header>
 
       {/* ── MAIN BODY ────────────────────────────────────────────────── */}
-      <div className="flex flex-1 overflow-hidden flex-col md:flex-row" style={{ height: showDebug ? "calc(100vh - 52px - 200px)" : "calc(100vh - 52px)" }}>
+      <div className="flex flex-1 overflow-hidden flex-col md:flex-row">
         {/* Sidebar */}
         <aside className="w-full md:w-[220px] h-[240px] md:h-auto border-b md:border-b-0 md:border-r border-white/6 bg-[#08080f] shrink-0 overflow-hidden flex flex-col">
           <SectionSidebar
