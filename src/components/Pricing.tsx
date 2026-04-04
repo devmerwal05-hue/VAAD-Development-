@@ -116,7 +116,7 @@ export default function Pricing() {
 
                 <p
                   className="text-[13px] leading-[1.8] mb-6"
-                  style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, color: 'rgba(234,230,219,0.5)' }}
+                  style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, color: 'rgba(234,230,219,0.5)', wordSpacing: '0.06em' }}
                 >
                   {plan.description}
                 </p>
@@ -125,7 +125,7 @@ export default function Pricing() {
 
                 <ul className="mb-8 flex flex-1 flex-col gap-4">
                   {plan.features.map((feature) => (
-                    <li key={feature} className="flex items-start gap-4 text-[13px]" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, color: 'rgba(234,230,219,0.65)' }}>
+                    <li key={feature} className="flex items-start gap-4 text-[13px]" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, color: 'rgba(234,230,219,0.65)', wordSpacing: '0.06em' }}>
                       <Check size={13} style={{ color: '#E8132A', flexShrink: 0, marginTop: 2 }} />
                       {feature}
                     </li>
@@ -166,11 +166,11 @@ export default function Pricing() {
         <motion.div
           initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }} transition={{ duration: 0.6, ease, delay: 0.3 }}
-          className="swiss-text-col mt-8"
+          className="swiss-text-col mt-8 overflow-hidden border border-white/10 bg-zinc-900/50 p-5 md:p-6"
         >
           <p
             className="reading-track mb-6 text-[14px] leading-[1.8]"
-            style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, color: 'rgba(234,230,219,0.45)' }}
+            style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, color: 'rgba(234,230,219,0.45)', wordSpacing: '0.06em' }}
           >
             {getContentValue('pricing', 'cta_text', 'If the scope is unusual, we price it from the workflow backward instead of forcing it into a generic package.')}
           </p>
