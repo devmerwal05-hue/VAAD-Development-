@@ -55,13 +55,13 @@ export default function Services() {
   ];
 
   return (
-    <section className="section-pad swiss-section relative">
+    <section className="section-pad swiss-section relative py-20 md:py-24">
       <div className="absolute inset-0 grid-pattern opacity-16 pointer-events-none" />
       <span className="swiss-meta swiss-meta--tl">services.node</span>
       <span className="swiss-meta swiss-meta--tr">v2.6 // 12-col</span>
 
-      <div className="site-container swiss-grid relative z-10">
-        <div className="swiss-full-col mb-4 flex items-center justify-between">
+      <div className="site-container swiss-grid relative z-10 max-w-[1320px] gap-8 px-5 md:px-8 lg:gap-12 xl:px-10">
+        <div className="swiss-full-col mb-6 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#ff2c1b', display: 'inline-block' }} />
             <span className="section-ref">{labelParts[0] || '01'} / {labelParts[1] || 'Services'}</span>
@@ -69,7 +69,7 @@ export default function Services() {
           <span className="archive-tag hidden md:block">bionic_catalog_stream</span>
         </div>
 
-        <div className="swiss-full-col mb-12 grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-end">
+        <div className="swiss-full-col mb-12 grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-end lg:gap-12">
           <motion.h2
             initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }} transition={{ duration: 0.6, ease }}
@@ -89,7 +89,7 @@ export default function Services() {
           </motion.p>
         </div>
 
-        <div className="swiss-full-col grid grid-cols-1 gap-10 lg:grid-cols-12">
+        <div className="swiss-full-col grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-12">
           {services.map((service, index) => (
             <motion.article
               key={service.title}
@@ -97,7 +97,7 @@ export default function Services() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.2 }}
               transition={{ duration: 0.52, ease, delay: index * 0.06 }}
-              className="archive-panel group overflow-hidden lg:col-span-6"
+              className="archive-panel group flex h-full flex-col overflow-hidden lg:col-span-6"
             >
               <div className="relative h-[300px] border-b border-[rgba(126,164,224,0.25)] md:h-[340px]">
                 {service.image ? (
@@ -118,7 +118,7 @@ export default function Services() {
                 </div>
               </div>
 
-              <div className="p-6 md:p-8">
+              <div className="flex flex-1 flex-col p-8 md:p-10">
                 <h3
                   className="display-section mb-4 text-[#dfe7f8]"
                   style={{ fontFamily: "'Playfair Display', serif", fontWeight: 800, fontSize: 'clamp(34px, 3.8vw, 54px)', fontStyle: 'italic' }}
@@ -127,13 +127,13 @@ export default function Services() {
                 </h3>
 
                 <p
-                  className="reading-track text-[15px] leading-[1.85] text-[rgba(168,190,226,0.9)]"
+                  className="reading-track mb-8 text-[15px] leading-[1.9] text-[rgba(168,190,226,0.9)]"
                   style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}
                 >
                   {service.description}
                 </p>
 
-                <div className="mt-8 border-t border-[rgba(126,164,224,0.2)] pt-5">
+                <div className="mt-auto border-t border-[rgba(126,164,224,0.2)] pt-6">
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
                     {service.details.slice(0, 4).map((detail) => (
                       <p key={detail} className="mono-readable flex items-start gap-2 text-[10px] uppercase text-[rgba(255,44,27,0.9)]">

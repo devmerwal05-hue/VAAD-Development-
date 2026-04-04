@@ -28,12 +28,12 @@ export default function Process() {
   const stepSpanClass = stepCount <= 2 ? 'lg:col-span-6' : stepCount === 3 ? 'lg:col-span-4' : 'lg:col-span-3';
 
   return (
-    <section className="section-pad swiss-section relative">
+    <section className="section-pad swiss-section relative py-20 md:py-24">
       <div className="absolute inset-0 grid-pattern opacity-15 pointer-events-none" />
       <span className="swiss-meta swiss-meta--tl">process.timeline</span>
       <span className="swiss-meta swiss-meta--tr">coord // 19.07N</span>
 
-      <div className="site-container swiss-grid relative z-10">
+      <div className="site-container swiss-grid relative z-10 max-w-[1320px] gap-8 px-5 md:px-8 lg:gap-12 xl:px-10">
         {/* Section header */}
         <div className="swiss-full-col mb-4 flex items-center gap-4">
           <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#E8132A', display: 'inline-block' }} />
@@ -55,7 +55,7 @@ export default function Process() {
         <div className="swiss-full-col relative">
           <div className="pointer-events-none absolute left-0 right-0 top-[38px] hidden h-px bg-[rgba(232,19,42,0.22)] lg:block" />
 
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-12">
             {steps.map((step, i) => (
               <motion.div
                 key={step.number}
@@ -63,7 +63,7 @@ export default function Process() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.2 }}
                 transition={{ duration: 0.5, ease, delay: i * 0.1 }}
-                className={`group relative border border-[rgba(232,19,42,0.18)] bg-[rgba(9,22,40,0.62)] px-7 py-7 md:px-8 md:py-8 lg:pt-12 ${stepSpanClass}`}
+                className={`group relative border border-[rgba(232,19,42,0.18)] bg-[rgba(9,22,40,0.62)] p-8 md:p-10 lg:pt-12 ${stepSpanClass}`}
               >
                 {/* Hover fill */}
                 <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" style={{ background: 'rgba(232,19,42,0.03)' }} />
@@ -103,7 +103,7 @@ export default function Process() {
                 <div className="mb-5 h-[1px] max-w-[52px]" style={{ background: 'rgba(232,19,42,0.4)' }} />
 
                 <p
-                  className="text-[14px] leading-[1.85]"
+                  className="text-[14px] leading-[1.9]"
                   style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, color: 'rgba(234,230,219,0.54)' }}
                 >
                   {step.description}

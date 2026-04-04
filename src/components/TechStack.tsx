@@ -35,19 +35,19 @@ export default function TechStack() {
   if (categories.length === 0) return null;
 
   return (
-    <section className="section-pad swiss-section relative overflow-hidden">
+    <section className="section-pad swiss-section relative overflow-hidden py-20 md:py-24">
       <div className="absolute inset-0 grid-pattern opacity-15 pointer-events-none" />
       <span className="swiss-meta swiss-meta--tl">tech.registry</span>
       <span className="swiss-meta swiss-meta--tr">hash // 0x12AF</span>
 
-      <div className="site-container swiss-grid relative z-10">
+      <div className="site-container swiss-grid relative z-10 max-w-[1320px] gap-8 px-5 md:px-8 lg:gap-12 xl:px-10">
         {/* Header */}
         <div className="swiss-full-col mb-4 flex items-center gap-4">
           <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#E8132A', display: 'inline-block' }} />
           <span className="section-ref">{labelParts[0] || '09'} / {labelParts[1] || 'Capabilities'}</span>
         </div>
 
-        <div className="swiss-full-col mb-12 grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-end">
+        <div className="swiss-full-col mb-12 grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-end lg:gap-12">
           <motion.h2
             initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }} transition={{ duration: 0.6, ease }}
@@ -68,7 +68,7 @@ export default function TechStack() {
 
         <div className="swiss-full-col rule-line-full mb-4" />
 
-        <div className="swiss-full-col grid grid-cols-1 gap-8 lg:grid-cols-12">
+        <div className="swiss-full-col grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-12">
           {categories.map((cat, i) => (
             <motion.div
               key={cat.name}
@@ -76,7 +76,7 @@ export default function TechStack() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-5%' }}
               transition={{ duration: 0.6, ease, delay: i * 0.06 }}
-              className="group relative border border-[rgba(232,19,42,0.18)] bg-[rgba(9,22,40,0.62)] px-7 py-8 md:px-8 md:py-9 lg:col-span-6 xl:col-span-4"
+              className="group relative border border-[rgba(232,19,42,0.18)] bg-[rgba(9,22,40,0.62)] p-8 md:p-10 lg:col-span-6 xl:col-span-4"
             >
               {/* Hover */}
               <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" style={{ background: 'rgba(232,19,42,0.03)' }} />
@@ -100,7 +100,7 @@ export default function TechStack() {
                   {cat.name}
                 </h3>
 
-                <p className="mb-7 text-[14px] leading-[1.85]" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, color: 'rgba(234,230,219,0.5)' }}>
+                <p className="mb-8 text-[14px] leading-[1.9]" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, color: 'rgba(234,230,219,0.5)' }}>
                   {cat.desc}
                 </p>
 

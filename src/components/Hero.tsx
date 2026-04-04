@@ -38,18 +38,18 @@ export default function Hero() {
   const metricsImage = getContentValue('hero', 'info_3_image', '');
 
   return (
-    <section className="section-pad swiss-section relative overflow-hidden">
+    <section className="section-pad swiss-section relative overflow-hidden py-20 md:py-24">
       <div className="absolute inset-0 grid-pattern opacity-20" />
       <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_50%_15%,rgba(95,160,255,0.12),transparent_58%)]" />
       <span className="swiss-meta swiss-meta--tl">hero.layout // 12-col</span>
       <span className="swiss-meta swiss-meta--tr">v3.1 // bento-grid</span>
 
-      <div className="relative z-10 site-container swiss-grid">
+      <div className="relative z-10 site-container swiss-grid max-w-[1320px] gap-8 px-5 md:px-8 lg:gap-12 xl:px-10">
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.45, ease }}
-          className="swiss-full-col flex items-center justify-between overflow-hidden border-b border-white/10 pb-6"
+          className="swiss-full-col flex items-center justify-between overflow-hidden border-b border-white/10 pb-8"
         >
           <span className="archive-tag text-[rgba(198,213,239,0.9)]">{getContentValue('hero', 'eyebrow', 'Web Design + Web App Delivery')}</span>
           <span className="archive-tag hidden md:block">{getContentValue('hero', 'proof_kicker', 'System specs')}</span>
@@ -59,7 +59,7 @@ export default function Hero() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease, delay: 0.05 }}
-          className="swiss-full-col mt-4 overflow-hidden lg:col-span-8 lg:col-start-3"
+          className="swiss-full-col mt-6 overflow-hidden lg:col-span-8 lg:col-start-3"
         >
           <div className="overflow-hidden">
             <h1
@@ -101,13 +101,13 @@ export default function Hero() {
           </div>
         </motion.div>
 
-        <div className="swiss-full-col mt-10 grid grid-cols-1 gap-5 overflow-hidden lg:grid-cols-12">
+        <div className="swiss-full-col mt-12 grid grid-cols-1 gap-8 overflow-hidden lg:grid-cols-12 lg:gap-12">
           <motion.article
             initial={{ opacity: 0, y: 18 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.45, ease }}
-            className="overflow-hidden border border-white/10 bg-zinc-900/50 p-6 md:p-8 lg:col-span-8"
+            className="overflow-hidden border border-white/10 bg-zinc-900/50 p-8 md:p-10 lg:col-span-8"
           >
             {coreServiceImage && (
               <div className="mb-6 h-36 overflow-hidden border border-white/10 md:h-44">
@@ -119,9 +119,9 @@ export default function Hero() {
               {coreServiceText}
             </p>
 
-            <div className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-3 md:gap-4">
+            <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-3 md:gap-5">
               {stats.map((stat, i) => (
-                <div key={`${stat.label}-${i}`} className="min-h-[128px] overflow-hidden border border-white/10 bg-black/45 p-4 text-center">
+                <div key={`${stat.label}-${i}`} className="min-h-[136px] overflow-hidden border border-white/10 bg-black/45 p-5 text-center">
                   <p className="text-[34px] leading-none text-[#e8f0ff]" style={{ fontFamily: "'Playfair Display', serif", fontWeight: 800, fontStyle: 'italic' }}>
                     {stat.value}
                   </p>
@@ -131,7 +131,7 @@ export default function Hero() {
             </div>
           </motion.article>
 
-          <div className="grid grid-cols-1 gap-4 overflow-hidden lg:col-span-4">
+          <div className="grid grid-cols-1 gap-6 overflow-hidden lg:col-span-4">
             <div className="overflow-hidden border border-white/20 bg-black/75">
               {technicalSpecsImage ? (
                 <div className="relative h-24 overflow-hidden md:h-28">
@@ -146,7 +146,7 @@ export default function Hero() {
               )}
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-5">
               {systemSpecs.slice(0, 4).map((spec, index) => (
                 <motion.article
                   key={spec.label}
@@ -154,7 +154,7 @@ export default function Hero() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.42, ease, delay: 0.05 * index }}
-                  className="aspect-square overflow-hidden border border-white/20 bg-black/80 p-4"
+                  className="aspect-square overflow-hidden border border-white/20 bg-black/80 p-5"
                 >
                   <p className="archive-tag text-[rgba(255,255,255,0.7)]">{spec.label}</p>
                   <p className="mono-readable mt-4 text-[12px] uppercase text-[rgba(226,236,252,0.92)]">{spec.value}</p>

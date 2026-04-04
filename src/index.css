@@ -97,7 +97,7 @@ body::after {
   --space-128: calc(var(--grid-unit) * 16);
   --space-160: calc(var(--grid-unit) * 20);
   --space-192: calc(var(--grid-unit) * 24);
-  --container-max: 1280px;
+  --container-max: 1320px;
   --reading-track-max: 660px;
   --section-space-y-mobile: clamp(72px, 12vw, 104px);
   --section-space-y: clamp(92px, 9vw, 148px);
@@ -112,8 +112,8 @@ body::after {
 }
 
 .section-pad {
-  padding-top: var(--section-space-y-mobile);
-  padding-bottom: var(--section-space-y-mobile);
+  padding-top: 5rem;
+  padding-bottom: 5rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
@@ -123,8 +123,8 @@ body::after {
   }
 
   .section-pad {
-    padding-top: var(--section-space-y);
-    padding-bottom: var(--section-space-y);
+    padding-top: 6rem;
+    padding-bottom: 6rem;
   }
 }
 
