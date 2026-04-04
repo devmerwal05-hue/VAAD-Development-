@@ -1,6 +1,14 @@
 import { hasSupabaseConfig } from '../_config.js';
 import { getSupabaseAdmin } from '../_supabase.js';
-import { applySecurity, getErrorMessage, getRequestBody, sanitize, verifyAdminSession } from '../_security.js';
+import {
+  applySecurity,
+  getErrorMessage,
+  getRequestBody,
+  logAdminAction,
+  sanitize,
+  validateEditableContentValue,
+  verifyAdminSession,
+} from '../_security.js';
 
 const MAX_ITEMS = 500;
 const MAX_VALUE_LEN = 10000;
@@ -30,10 +38,18 @@ function normalizeUpsertItems(items) {
       return { error: `Invalid item at index ${index}. Expected { section: string, key: string, value: string }.` };
     }
 
+    const cleanSection = sanitize(section, 50);
+    const cleanKey = sanitize(key, 100);
+    const cleanValue = sanitize(value, MAX_VALUE_LEN);
+    const validationError = validateEditableContentValue(cleanSection, cleanKey, cleanValue);
+    if (validationError) {
+      return { error: `Invalid item at index ${index}. ${validationError}` };
+    }
+
     normalized.push({
-      section: sanitize(section, 50),
-      key: sanitize(key, 100),
-      value: sanitize(value, MAX_VALUE_LEN),
+      section: cleanSection,
+      key: cleanKey,
+      value: cleanValue,
     });
   }
 
@@ -70,7 +86,8 @@ export default async function handler(req, res) {
       return res.status(503).json({ error: 'Supabase is not configured yet.' });
     }
 
-    if (!verifyAdminSession(req, res)) return;
+    const auth = await verifyAdminSession(req, res);
+    if (!auth) return;
 
     if (req.method === 'POST') {
       const body = getRequestBody(req, res);
@@ -90,6 +107,12 @@ export default async function handler(req, res) {
         .select('id, section, key, value, updated_at');
 
       if (error) throw error;
+
+      await logAdminAction(req, auth, 'content.bulk.upsert', {
+        mode: shouldInsertMissingOnly ? 'insert_missing' : 'upsert',
+        item_count: normalized.items.length,
+      });
+
       return res.status(200).json(data || []);
     }
 
@@ -102,6 +125,10 @@ export default async function handler(req, res) {
 
       const { error } = await getSupabaseAdmin().from('site_content').delete().in('id', normalized.ids);
       if (error) throw error;
+
+      await logAdminAction(req, auth, 'content.bulk.delete', {
+        item_count: normalized.ids.length,
+      });
 
       return res.status(200).json({ ok: true });
     }

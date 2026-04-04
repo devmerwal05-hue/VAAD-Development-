@@ -4,6 +4,60 @@ import { ContentContext, type ContentItem } from './content-context';
 import { getErrorMessage } from './getErrorMessage';
 import { getIndexedContentCount } from './repeatableContent';
 
+const CONTENT_CACHE_KEY = 'vaad.content.cache.v1';
+const REQUEST_TIMEOUT_MS = 8000;
+const MAX_RETRIES = 2;
+
+function safeReadCachedContent(): ContentItem[] {
+  try {
+    const raw = window.localStorage.getItem(CONTENT_CACHE_KEY);
+    if (!raw) return [];
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+
+    return parsed
+      .filter((item): item is ContentItem => {
+        return Boolean(
+          item
+          && typeof item === 'object'
+          && 'id' in item
+          && 'section' in item
+          && 'key' in item
+          && 'value' in item
+          && typeof (item as ContentItem).id === 'number'
+          && typeof (item as ContentItem).section === 'string'
+          && typeof (item as ContentItem).key === 'string'
+          && typeof (item as ContentItem).value === 'string'
+        );
+      });
+  } catch {
+    return [];
+  }
+}
+
+function safeWriteCachedContent(items: ContentItem[]) {
+  try {
+    window.localStorage.setItem(CONTENT_CACHE_KEY, JSON.stringify(items));
+  } catch {
+    // Ignore storage quota/unavailable errors.
+  }
+}
+
+async function fetchWithTimeout(url: string, signal: AbortSignal, timeoutMs: number) {
+  const timeoutController = new AbortController();
+  const timeoutId = window.setTimeout(() => timeoutController.abort(), timeoutMs);
+
+  const relayAbort = () => timeoutController.abort();
+  signal.addEventListener('abort', relayAbort, { once: true });
+
+  try {
+    return await fetch(url, { signal: timeoutController.signal });
+  } finally {
+    window.clearTimeout(timeoutId);
+    signal.removeEventListener('abort', relayAbort);
+  }
+}
+
 export function ContentProvider({ children }: { children: ReactNode }) {
   const [content, setContent] = useState<ContentItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -15,16 +69,40 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     async function loadContent() {
       try {
         setError(null);
-        const response = await fetch('/api/content', { signal: controller.signal });
-        if (!response.ok) throw new Error(`Content request failed with ${response.status}`);
 
-        const data: unknown = await response.json();
-        if (!Array.isArray(data)) throw new Error('Content response was not an array.');
+        let lastError: unknown = null;
 
-        setContent(data as ContentItem[]);
+        for (let attempt = 0; attempt <= MAX_RETRIES; attempt += 1) {
+          try {
+            const response = await fetchWithTimeout('/api/content', controller.signal, REQUEST_TIMEOUT_MS);
+            if (!response.ok) throw new Error(`Content request failed with ${response.status}`);
+
+            const data: unknown = await response.json();
+            if (!Array.isArray(data)) throw new Error('Content response was not an array.');
+
+            setContent(data as ContentItem[]);
+            setError(null);
+            return;
+          } catch (attemptError) {
+            if ((attemptError as { name?: string }).name === 'AbortError') throw attemptError;
+            lastError = attemptError;
+            if (attempt < MAX_RETRIES) {
+              const delayMs = 250 * (attempt + 1);
+              await new Promise((resolve) => window.setTimeout(resolve, delayMs));
+            }
+          }
+        }
+
+        throw lastError || new Error('Unable to load content.');
       } catch (fetchError) {
         if ((fetchError as { name?: string }).name !== 'AbortError') {
-          setError(getErrorMessage(fetchError));
+          const cached = safeReadCachedContent();
+          if (cached.length > 0) {
+            setContent(cached);
+            setError('Live content is temporarily unavailable. Showing last synced content.');
+          } else {
+            setError(getErrorMessage(fetchError));
+          }
         }
       } finally {
         setLoading(false);
@@ -34,6 +112,11 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     loadContent();
     return () => controller.abort();
   }, []);
+
+  useEffect(() => {
+    if (content.length === 0) return;
+    safeWriteCachedContent(content);
+  }, [content]);
 
   useEffect(() => {
     // Only listen inside an iframe (used by the admin WYSIWYG preview).

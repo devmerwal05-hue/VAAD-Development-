@@ -1,6 +1,15 @@
 import { hasSupabaseConfig } from './_config.js';
 import { getSupabaseAdmin, getSupabasePublic } from './_supabase.js';
-import { applySecurity, getErrorMessage, getRequestBody, hasAdminSession, sanitize, verifyAdminSession } from './_security.js';
+import {
+  applySecurity,
+  getErrorMessage,
+  getRequestBody,
+  hasAdminSession,
+  logAdminAction,
+  sanitize,
+  validateEditableContentValue,
+  verifyAdminSession,
+} from './_security.js';
 
 const defaultContent = [
   { section: 'nav', key: 'logo_text', value: 'VAAD' },
@@ -329,7 +338,7 @@ async function seedDefaultContent(supabase) {
 }
 
 export default async function handler(req, res) {
-  const scope = req.method === 'GET' ? 'public' : (hasAdminSession(req) ? 'admin' : 'public');
+  const scope = req.method === 'GET' ? 'public' : 'admin';
   if (!applySecurity(req, res, { scope })) return;
 
   try {
@@ -374,62 +383,163 @@ export default async function handler(req, res) {
     }
 
     if (req.method === 'PUT') {
-      if (!verifyAdminSession(req, res)) return;
+      const auth = await verifyAdminSession(req, res);
+      if (!auth) return;
 
       const body = getRequestBody(req, res);
       if (!body) return;
-      const { id, value } = body;
-      if (typeof id !== 'number' || typeof value !== 'string') {
-        return res.status(400).json({ error: 'id and value are required' });
+      const { id, value, expected_updated_at: expectedUpdatedAt } = body;
+      if (typeof id !== 'number' || typeof value !== 'string' || !Number.isFinite(id)) {
+        return res.status(400).json({ error: 'id (number) and value (string) are required.' });
       }
+
+      const { data: current, error: currentError } = await getSupabaseAdmin()
+        .from('site_content')
+        .select('id, section, key, value, updated_at')
+        .eq('id', id)
+        .maybeSingle();
+
+      if (currentError) throw currentError;
+      if (!current) {
+        return res.status(404).json({ error: 'Content item not found.' });
+      }
+
+      if (typeof expectedUpdatedAt === 'string' && expectedUpdatedAt && expectedUpdatedAt !== current.updated_at) {
+        return res.status(409).json({
+          error: 'This field was updated by someone else. Refresh and try again.',
+          current,
+        });
+      }
+
+      const cleanValue = sanitize(value, 10000);
+      const validationError = validateEditableContentValue(current.section, current.key, cleanValue);
+      if (validationError) return res.status(400).json({ error: validationError });
 
       const { data, error } = await getSupabaseAdmin()
         .from('site_content')
-        .update({ value: sanitize(value, 10000), updated_at: new Date().toISOString() })
+        .update({ value: cleanValue, updated_at: new Date().toISOString() })
         .eq('id', id)
+        .eq('updated_at', current.updated_at)
         .select()
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
+      if (!data) {
+        return res.status(409).json({ error: 'Write conflict detected. Refresh and try again.' });
+      }
+
+      await logAdminAction(req, auth, 'content.update', {
+        id,
+        section: data.section,
+        key: data.key,
+        previous_value_length: current.value?.length ?? 0,
+        next_value_length: data.value?.length ?? 0,
+      });
+
       return res.status(200).json(data);
     }
 
     if (req.method === 'POST') {
-      if (!verifyAdminSession(req, res)) return;
+      const auth = await verifyAdminSession(req, res);
+      if (!auth) return;
 
       const body = getRequestBody(req, res);
       if (!body) return;
       const { section, key, value } = body;
       if (typeof section !== 'string' || typeof key !== 'string' || typeof value !== 'string') {
-        return res.status(400).json({ error: 'section, key, and value are required' });
+        return res.status(400).json({ error: 'section, key, and value are required.' });
+      }
+
+      const cleanSection = sanitize(section, 50);
+      const cleanKey = sanitize(key, 100);
+      const cleanValue = sanitize(value, 10000);
+
+      const validationError = validateEditableContentValue(cleanSection, cleanKey, cleanValue);
+      if (validationError) return res.status(400).json({ error: validationError });
+
+      const { data: existing, error: existingError } = await getSupabaseAdmin()
+        .from('site_content')
+        .select('id, updated_at')
+        .eq('section', cleanSection)
+        .eq('key', cleanKey)
+        .maybeSingle();
+
+      if (existingError) throw existingError;
+      if (existing) {
+        return res.status(409).json({
+          error: 'Field already exists. Update the existing field instead.',
+          existing,
+        });
       }
 
       const { data, error } = await getSupabaseAdmin()
         .from('site_content')
         .insert({
-          section: sanitize(section, 50),
-          key: sanitize(key, 100),
-          value: sanitize(value, 10000),
+          section: cleanSection,
+          key: cleanKey,
+          value: cleanValue,
         })
         .select()
         .single();
 
       if (error) throw error;
+
+      await logAdminAction(req, auth, 'content.create', {
+        id: data.id,
+        section: data.section,
+        key: data.key,
+        value_length: data.value?.length ?? 0,
+      });
+
       return res.status(201).json(data);
     }
 
     if (req.method === 'DELETE') {
-      if (!verifyAdminSession(req, res)) return;
+      const auth = await verifyAdminSession(req, res);
+      if (!auth) return;
 
       const body = getRequestBody(req, res);
       if (!body) return;
-      const { id } = body;
-      if (typeof id !== 'number') {
+      const { id, expected_updated_at: expectedUpdatedAt } = body;
+      if (typeof id !== 'number' || !Number.isFinite(id)) {
         return res.status(400).json({ error: 'Valid numeric id is required' });
       }
 
-      const { error } = await getSupabaseAdmin().from('site_content').delete().eq('id', id);
+      const { data: current, error: currentError } = await getSupabaseAdmin()
+        .from('site_content')
+        .select('id, section, key, updated_at')
+        .eq('id', id)
+        .maybeSingle();
+
+      if (currentError) throw currentError;
+      if (!current) {
+        return res.status(404).json({ error: 'Content item not found.' });
+      }
+
+      if (typeof expectedUpdatedAt === 'string' && expectedUpdatedAt && expectedUpdatedAt !== current.updated_at) {
+        return res.status(409).json({
+          error: 'This field changed before deletion. Refresh and try again.',
+          current,
+        });
+      }
+
+      const { error, count } = await getSupabaseAdmin()
+        .from('site_content')
+        .delete({ count: 'exact' })
+        .eq('id', id)
+        .eq('updated_at', current.updated_at);
+
       if (error) throw error;
+      if (!count) {
+        return res.status(409).json({ error: 'Delete conflict detected. Refresh and try again.' });
+      }
+
+      await logAdminAction(req, auth, 'content.delete', {
+        id,
+        section: current.section,
+        key: current.key,
+      });
+
       return res.status(200).json({ ok: true });
     }
 

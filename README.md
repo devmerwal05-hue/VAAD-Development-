@@ -22,7 +22,9 @@ This repo includes version hints in `.nvmrc` and `.node-version`.
    - `SUPABASE_ANON_KEY`
    - `SUPABASE_SERVICE_ROLE_KEY`
    - `SUPABASE_UPLOADS_BUCKET`
-   - `ADMIN_PASSWORD`
+  - `SUPABASE_ADMIN_ROLE` (default: `admin`)
+  - `ADMIN_REQUIRE_MFA` (default: `true`)
+  - `ADMIN_SESSION_MAX_AGE_SECONDS` (default: `28800`)
    - `ADMIN_SESSION_SECRET`
    - `SITE_URL`
    - `ALLOWED_ORIGINS`
@@ -30,9 +32,10 @@ This repo includes version hints in `.nvmrc` and `.node-version`.
 4. Install dependencies with `npm install`.
 5. Start the local dev server (includes Vercel Functions under `/api`) with `vercel dev --local --yes --listen 3000`.
   - Open the site at `http://localhost:3000/` (admin at `/admin`).
-  - Admin password is `ADMIN_PASSWORD` (fallback: `2025`).
+  - Sign in to `/admin` with a Supabase email/password account that has role `admin`.
+  - If `ADMIN_REQUIRE_MFA=true`, complete TOTP MFA to reach AAL2.
 
-Optional (frontend-only): You can run `npm run dev` to start Vite on `http://127.0.0.1:5173/`, but admin/content APIs (and the admin password) require `vercel dev`.
+Optional (frontend-only): You can run `npm run dev` to start Vite on `http://127.0.0.1:5173/`, but admin/content APIs require `vercel dev`.
 
 ## Supabase setup
 
@@ -40,17 +43,20 @@ Optional (frontend-only): You can run `npm run dev` to start Vite on `http://127
 - The script creates:
   - `public.site_content`
   - `public.contact_submissions_v2`
+  - `public.admin_audit_logs`
   - a public storage bucket named `vaad-assets`
 - If you want a different bucket name, change the SQL and set `SUPABASE_UPLOADS_BUCKET` to match.
 - Public content reads use the anon key and the `site_content` select policy.
-- Admin mutations and contact submission writes use the service-role key on the server only.
+- RLS is enabled on all admin-managed tables; admin mutation/read policies require the Supabase role set by `SUPABASE_ADMIN_ROLE`.
+- Admin API writes still execute with the service-role key server-side to avoid exposing privileged keys to the client.
 
 ## Admin flow
 
-- `POST /api/admin/session` verifies `ADMIN_PASSWORD` (fallback: `2025`) and sets an `HttpOnly` admin session cookie.
-- `GET /api/admin/session` checks whether the cookie is valid.
-- `DELETE /api/admin/session` clears the cookie.
-- The browser no longer stores the admin password in `localStorage`.
+- `GET /api/admin/session` issues/checks a signed admin cookie session and returns a CSRF token.
+- `POST /api/admin/session` signs in with Supabase email/password, enforces admin role, and (optionally) enforces MFA AAL2.
+- `DELETE /api/admin/session` clears the session and rotates CSRF state.
+- Mutating admin API routes require `X-CSRF-Token` and the `HttpOnly` session cookie.
+- Admin mutations are written to `public.admin_audit_logs` with actor, action, and request metadata.
 
 ## Deploying to Vercel
 

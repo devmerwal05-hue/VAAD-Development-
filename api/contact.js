@@ -1,10 +1,18 @@
 import { hasSupabaseConfig } from './_config.js';
 import { BUDGET_RANGE_VALUES, CONTACT_STATUS, PROJECT_TYPE_VALUES } from './_constants.js';
 import { getSupabaseAdmin } from './_supabase.js';
-import { applySecurity, getErrorMessage, getRequestBody, sanitize, verifyAdminSession } from './_security.js';
+import {
+  applySecurity,
+  getErrorMessage,
+  getRequestBody,
+  logAdminAction,
+  sanitize,
+  verifyAdminSession,
+} from './_security.js';
 
 export default async function handler(req, res) {
-  if (!applySecurity(req, res)) return;
+  const scope = req.method === 'POST' ? 'contact' : 'admin';
+  if (!applySecurity(req, res, { scope })) return;
 
   try {
     if (!hasSupabaseConfig()) {
@@ -80,7 +88,8 @@ export default async function handler(req, res) {
     }
 
     if (req.method === 'GET') {
-      if (!verifyAdminSession(req, res)) return;
+      const auth = await verifyAdminSession(req, res);
+      if (!auth) return;
 
       try {
         const { data, error } = await getSupabaseAdmin()
@@ -89,6 +98,11 @@ export default async function handler(req, res) {
           .order('created_at', { ascending: false });
 
         if (error) throw error;
+
+        await logAdminAction(req, auth, 'contact.list', {
+          result_count: Array.isArray(data) ? data.length : 0,
+        });
+
         return res.status(200).json(data || []);
       } catch (fetchError) {
         console.error('Contact fetch error:', fetchError);
@@ -97,7 +111,8 @@ export default async function handler(req, res) {
     }
 
     if (req.method === 'PUT') {
-      if (!verifyAdminSession(req, res)) return;
+      const auth = await verifyAdminSession(req, res);
+      if (!auth) return;
 
       const body = getRequestBody(req, res);
       if (!body) return;
@@ -114,11 +129,18 @@ export default async function handler(req, res) {
         .single();
 
       if (error) throw error;
+
+      await logAdminAction(req, auth, 'contact.status.update', {
+        id,
+        status,
+      });
+
       return res.status(200).json(data);
     }
 
     if (req.method === 'DELETE') {
-      if (!verifyAdminSession(req, res)) return;
+      const auth = await verifyAdminSession(req, res);
+      if (!auth) return;
 
       const body = getRequestBody(req, res);
       if (!body) return;
@@ -133,6 +155,9 @@ export default async function handler(req, res) {
         .eq('id', id);
 
       if (error) throw error;
+
+      await logAdminAction(req, auth, 'contact.delete', { id });
+
       return res.status(200).json({ ok: true });
     }
 
