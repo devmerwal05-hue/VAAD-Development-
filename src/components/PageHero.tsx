@@ -45,13 +45,11 @@ export default function PageHero({
             </div>
 
             <h1
-              className="max-w-[18ch] text-text-primary"
+              className="display-hero max-w-[18ch] text-text-primary"
               style={{
                 fontFamily: "'Playfair Display', serif",
                 fontWeight: 900,
                 fontSize: 'clamp(44px, 6.8vw, 94px)',
-                lineHeight: 0.84,
-                letterSpacing: '-0.045em',
               }}
             >
               <span className="block break-words">{titleBefore}</span>

@@ -30,7 +30,7 @@ export default function Hero() {
   return (
     <section className="relative min-h-[100svh] overflow-hidden px-6 pb-24 pt-24 md:px-8 md:pb-32 md:pt-32">
       {/* Grid overlay */}
-      <div className="absolute inset-0 grid-pattern opacity-30" />
+      <div className="absolute inset-0 grid-pattern opacity-20" />
 
       {/* Atmospheric gradients */}
       <div className="absolute inset-0 pointer-events-none">
@@ -68,17 +68,15 @@ export default function Hero() {
             initial={{ opacity: 0, y: 36 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, ease, delay: 0.12 }}
-            className="text-[#EAE6DB]"
+            className="display-hero text-[#EAE6DB]"
             style={{
               fontFamily: "'Playfair Display', serif",
               fontWeight: 900,
-              lineHeight: 0.88,
-              letterSpacing: '-0.03em',
               fontSize: 'clamp(44px, 7vw, 108px)',
             }}
           >
             <span className="block">{line1}</span>
-            <span className="block italic" style={{ color: '#E8132A', marginTop: '0.08em' }}>{line2}</span>
+            <span className="block italic" style={{ color: '#E8132A', marginTop: '0.12em' }}>{line2}</span>
           </motion.h1>
 
           {/* Rule */}
@@ -195,7 +193,7 @@ export default function Hero() {
                   <div key={spec.label} className="grid grid-cols-[130px_1fr] items-start gap-4 border-b border-[rgba(232,19,42,0.08)] pb-4">
                     <p className="annotation-label" style={{ color: 'rgba(232,19,42,0.7)' }}>{spec.label}</p>
                     <p
-                      className="text-[11px] uppercase tracking-[0.12em]"
+                      className="mono-readable text-[12px]"
                       style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 300, color: 'rgba(234,230,219,0.65)' }}
                     >
                       {spec.value}

@@ -64,7 +64,8 @@ export default function Services() {
             <motion.h2
               initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }} transition={{ duration: 0.6, ease }}
-              style={{ fontFamily: "'Playfair Display', serif", fontWeight: 900, fontSize: 'clamp(36px, 5vw, 68px)', letterSpacing: '-0.03em', lineHeight: 0.9, color: '#EAE6DB' }}
+              className="display-section"
+              style={{ fontFamily: "'Playfair Display', serif", fontWeight: 900, fontSize: 'clamp(36px, 5vw, 68px)', color: '#EAE6DB' }}
             >
               {getContentValue('services', 'title', 'What we build')}
             </motion.h2>
@@ -97,8 +98,8 @@ export default function Services() {
                     </p>
 
                     <h3
-                      className="mb-4"
-                      style={{ fontFamily: "'Playfair Display', serif", fontWeight: 900, fontSize: 'clamp(24px, 2.8vw, 36px)', letterSpacing: '-0.03em', color: '#EAE6DB', lineHeight: 0.95 }}
+                      className="display-section mb-4"
+                      style={{ fontFamily: "'Playfair Display', serif", fontWeight: 900, fontSize: 'clamp(24px, 2.8vw, 36px)', color: '#EAE6DB' }}
                     >
                       {service.title}
                     </h3>
@@ -116,7 +117,7 @@ export default function Services() {
                       <li key={detail} className="flex items-start gap-4">
                         <span className="mt-[7px] h-[1px] w-4 bg-[rgba(232,19,42,0.55)]" />
                         <p
-                          className="text-[11px] uppercase tracking-[0.12em]"
+                          className="mono-readable text-[12px]"
                           style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 300, color: 'rgba(234,230,219,0.62)' }}
                         >
                           {detail}
