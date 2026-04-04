@@ -1,54 +1,107 @@
 import { m as motion } from 'framer-motion';
-import SectionLabel from './SectionLabel';
-import SectionTitle from './SectionTitle';
 import { useContent } from '../lib/useContent';
+
+const ease: [number, number, number, number] = [0.16, 0.77, 0.47, 0.97];
+
+const stepDefaults = [
+  { title: 'Scope',  description: 'We lock the goals, pages, flows, and timeline before visuals start drifting.' },
+  { title: 'Design', description: 'Core screens and layout direction are approved early so implementation moves with fewer surprises.' },
+  { title: 'Build',  description: 'The app or site is built in production-minded slices with content, analytics, and QA included.' },
+  { title: 'Launch', description: 'Deployment, walkthroughs, and next-step recommendations are delivered as part of the release.' },
+];
 
 export default function Process() {
   const { getContentValue } = useContent();
   const labelParts = getContentValue('process', 'label', '03 / Process').split(' / ');
-  
-  const stepDefaults = [
-    { title: 'Scope', description: 'We lock the goals, pages, flows, and timeline before visuals start drifting.' },
-    { title: 'Design', description: 'Core screens and layout direction are approved early so implementation moves with fewer surprises.' },
-    { title: 'Build', description: 'The app or site is built in production-minded slices with content, analytics, and QA included.' },
-    { title: 'Launch', description: 'Deployment, walkthroughs, and next-step recommendations are delivered as part of the release.' },
-  ];
-  
-  const storedStepCount = Number(getContentValue('process', 'step_count', ''));
-  const stepCount = (!isNaN(storedStepCount) && storedStepCount > 0) ? storedStepCount : stepDefaults.length;
-  
-  const steps = Array.from({ length: stepCount }, (_, index) => {
-    const fallback = stepDefaults[index];
+  const storedCount = Number(getContentValue('process', 'step_count', ''));
+  const stepCount = !Number.isNaN(storedCount) && storedCount > 0 ? storedCount : stepDefaults.length;
+
+  const steps = Array.from({ length: stepCount }, (_, i) => {
+    const fb = stepDefaults[i];
     return {
-      number: String(index + 1).padStart(2, '0'),
-      title: getContentValue('process', `step_${index + 1}_title`, fallback?.title || ''),
-      description: getContentValue('process', `step_${index + 1}_desc`, fallback?.description || ''),
+      number: String(i + 1).padStart(2, '0'),
+      title: getContentValue('process', `step_${i + 1}_title`, fb?.title || ''),
+      description: getContentValue('process', `step_${i + 1}_desc`, fb?.description || ''),
     };
-  }).filter(s => s.title);
+  }).filter((s) => s.title);
 
   return (
     <section className="py-24 md:py-32 relative">
-      {/* Background pattern */}
-      <div className="absolute inset-0 dot-pattern opacity-30" />
-      
-      <div className="max-w-[1280px] mx-auto px-6 relative z-10">
-        <SectionLabel number={labelParts[0] || '03'} label={labelParts[1] || 'Process'} />
-        <SectionTitle>{getContentValue('process', 'title', 'How a project works')}</SectionTitle>
-        <div className={`grid grid-cols-1 ${stepCount === 2 ? 'sm:grid-cols-2' : stepCount === 3 ? 'sm:grid-cols-3 lg:grid-cols-3' : 'lg:grid-cols-4'} gap-0`}>
-          {steps.map((step, index) => (
+      <div className="absolute inset-0 grid-pattern opacity-15 pointer-events-none" />
+
+      <div className="max-w-[1360px] mx-auto px-6 relative z-10">
+        {/* Section header */}
+        <div className="flex items-center gap-4 mb-4">
+          <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#E8132A', display: 'inline-block' }} />
+          <span className="section-ref">{labelParts[0] || '03'} / {labelParts[1] || 'Process'}</span>
+        </div>
+
+        <motion.h2
+          initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }} transition={{ duration: 0.6, ease }}
+          className="mb-14"
+          style={{ fontFamily: "'Playfair Display', serif", fontWeight: 900, fontSize: 'clamp(36px, 5vw, 68px)', letterSpacing: '-0.03em', lineHeight: 0.9, color: '#EAE6DB' }}
+        >
+          {getContentValue('process', 'title', 'How a project works')}
+        </motion.h2>
+
+        <div className="rule-line-full mb-10" />
+
+        {/* Steps — horizontal timeline */}
+        <div className={`grid grid-cols-1 ${stepCount <= 2 ? 'md:grid-cols-2' : stepCount === 3 ? 'md:grid-cols-3' : 'md:grid-cols-4'} gap-0`}>
+          {steps.map((step, i) => (
             <motion.div
               key={step.number}
               initial={{ opacity: 0, y: 24 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.2 }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-              className="group relative p-6 lg:p-8 glass card-hover rounded-2xl"
-              style={{ borderLeft: index > 0 ? '1px solid rgba(124,111,247,0.1)' : 'none' }}
+              transition={{ duration: 0.5, ease, delay: i * 0.1 }}
+              className="group relative px-8 py-10"
+              style={{
+                borderRight: i < steps.length - 1 ? '1px solid rgba(232,19,42,0.1)' : undefined,
+              }}
             >
-              <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(124,111,247,0.08), transparent 70%)' }} />
-              <span className="text-[64px] leading-none font-[800] block mb-4 gradient-text-enhanced" style={{ fontFamily: 'Syne' }}>{step.number}</span>
-              <h3 className="text-[20px] text-text-primary mb-3 group-hover:text-accent-light transition-colors duration-300 break-words [text-wrap:balance]" style={{ fontFamily: 'Syne', fontWeight: 700 }}>{step.title}</h3>
-              <p className="text-[14px] text-text-secondary leading-[1.7] break-words" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>{step.description}</p>
+              {/* Hover fill */}
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" style={{ background: 'rgba(232,19,42,0.03)' }} />
+
+              {/* Animated top rule on hover */}
+              <div className="absolute top-0 left-0 h-[2px] w-0 group-hover:w-full transition-all duration-500" style={{ background: '#E8132A' }} />
+
+              {/* Step number — giant editorial */}
+              <p
+                className="mb-8 leading-none"
+                style={{
+                  fontFamily: "'Playfair Display', serif",
+                  fontWeight: 900,
+                  fontSize: 72,
+                  color: '#E8132A',
+                  opacity: 0.18,
+                  letterSpacing: '-0.04em',
+                  lineHeight: 0.85,
+                  transition: 'opacity 0.3s',
+                }}
+              >
+                {step.number}
+              </p>
+
+              {/* Step step label */}
+              <p className="annotation-label mb-4">Phase / {step.number}</p>
+
+              <h3
+                className="mb-4 group-hover:text-[#E8132A] transition-colors duration-300"
+                style={{ fontFamily: "'Playfair Display', serif", fontWeight: 700, fontSize: 'clamp(20px, 2vw, 26px)', letterSpacing: '-0.02em', color: '#EAE6DB', lineHeight: 1.1 }}
+              >
+                {step.title}
+              </h3>
+
+              <div className="h-[1px] mb-4 max-w-[36px]" style={{ background: 'rgba(232,19,42,0.4)' }} />
+
+              <p
+                className="text-[13px] leading-[1.8]"
+                style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, color: 'rgba(234,230,219,0.5)' }}
+              >
+                {step.description}
+              </p>
             </motion.div>
           ))}
         </div>

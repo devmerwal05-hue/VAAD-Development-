@@ -9,9 +9,8 @@ export default function SectionLabel({ number, label }: { number: string; label:
       transition={{ duration: 0.4 }}
       className="inline-flex items-center gap-3 mb-5"
     >
-      <span className="text-accent text-[13px] font-[800]" style={{ fontFamily: 'Syne' }}>{number}</span>
-      <span className="w-8 h-[1px] bg-accent/30" />
-      <span className="text-[12px] font-medium tracking-[0.1em] uppercase text-text-tertiary" style={{ fontFamily: 'DM Sans', fontWeight: 500 }}>{label}</span>
+      <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#E8132A', display: 'inline-block' }} />
+      <span className="section-ref">{number} / {label}</span>
     </m.div>
   );
 }

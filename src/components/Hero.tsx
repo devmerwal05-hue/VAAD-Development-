@@ -1,6 +1,6 @@
-import { m } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Sparkles } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { buildPortfolioProjects } from '../lib/portfolio';
 import { useContent } from '../lib/useContent';
 
@@ -8,185 +8,272 @@ const ease: [number, number, number, number] = [0.16, 0.77, 0.47, 0.97];
 
 export default function Hero() {
   const { content, getContentValue, projectCount } = useContent();
-  const hasStoredCount = content.some((item) => item.section === 'portfolio' && item.key === 'project_count');
+  const hasStoredCount = content.some((i) => i.section === 'portfolio' && i.key === 'project_count');
   const featuredProject = buildPortfolioProjects(getContentValue, projectCount, !hasStoredCount)[0];
+
   const line1 = getContentValue('hero', 'headline_line1', 'Small teams need fast systems');
   const line2 = getContentValue('hero', 'headline_line2', 'not vague agency timelines.');
-  const proofImage = getContentValue('hero', 'proof_image', '').trim();
-  const deliveryBoardImage = proofImage || featuredProject?.image || '';
 
-  const statDefaults = [
-    { value: '5', label: 'Senior builders' },
-    { value: '1-3', label: 'Week delivery' },
-    { value: 'Always', label: 'Post-launch iteration' },
+  const stats = [
+    { value: getContentValue('hero', 'stat_1_number', '5'),      label: getContentValue('hero', 'stat_1_label', 'Senior builders') },
+    { value: getContentValue('hero', 'stat_2_number', '1-3'),    label: getContentValue('hero', 'stat_2_label', 'Week delivery') },
+    { value: getContentValue('hero', 'stat_3_number', 'Always'), label: getContentValue('hero', 'stat_3_label', 'Post-launch iteration') },
   ];
-  
-  const storedStatCount = Number(getContentValue('hero', 'stat_count', ''));
-  const statCount = (!isNaN(storedStatCount) && storedStatCount > 0) ? storedStatCount : statDefaults.length;
-
-  const stats = Array.from({ length: statCount }, (_, index) => ({
-    value: getContentValue('hero', `stat_${index + 1}_number`, statDefaults[index]?.value || ''),
-    label: getContentValue('hero', `stat_${index + 1}_label`, statDefaults[index]?.label || ''),
-  })).filter(s => s.value);
 
   return (
-    <section className="relative min-h-[100svh] overflow-hidden px-5 pt-28 pb-16 md:pt-36 md:pb-24">
-      <div className="absolute inset-0 grid-pattern opacity-20" />
+    <section className="relative min-h-[100svh] overflow-hidden px-5 pt-28 pb-20 md:pt-36 md:pb-28">
+      {/* Grid overlay */}
+      <div className="absolute inset-0 grid-pattern opacity-30" />
+
+      {/* Atmospheric gradients */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="hero-gradient-1 absolute inset-0" />
         <div className="hero-gradient-2 absolute inset-0" />
       </div>
-      
-      {/* Floating orbs */}
-      <div className="absolute top-20 left-[10%] w-[300px] h-[300px] rounded-full pointer-events-none opacity-30">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#7C6FF7] to-[#A855F7] rounded-full blur-[80px] float-orb" />
-      </div>
-      <div className="absolute bottom-20 right-[5%] w-[250px] h-[250px] rounded-full pointer-events-none opacity-20">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#22D3EE] to-[#7C6FF7] rounded-full blur-[60px] float-orb-slow" />
-      </div>
-      
-      <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 50% 20%, rgba(255,255,255,0.04), transparent 35%), radial-gradient(ellipse at center, transparent 18%, #06060C 78%)' }} />
 
-      <div className="relative z-10 max-w-[1360px] mx-auto grid grid-cols-1 xl:grid-cols-[1.08fr_0.92fr] gap-8 xl:gap-10 items-center">
+      {/* Deep vignette */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{ background: 'radial-gradient(ellipse at center, transparent 30%, #060C20 90%)' }}
+      />
+
+      {/* Horizontal rules */}
+      <div className="absolute top-[50%] left-0 right-0 h-[1px] opacity-10 pointer-events-none" style={{ background: 'rgba(232,19,42,0.6)' }} />
+
+      <div className="relative z-10 max-w-[1360px] mx-auto grid grid-cols-1 xl:grid-cols-[1.1fr_0.9fr] gap-10 xl:gap-12 items-center">
+
+        {/* ── LEFT — Editorial copy ── */}
         <div>
-          <m.div
-            initial={{ opacity: 0, y: 20 }}
+          {/* Specimen label */}
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.55, ease, delay: 0.05 }}
-            className="inline-flex items-center gap-2.5 mb-8 px-4 py-2 rounded-full glass border-shimmer"
-            style={{ background: 'rgba(124,111,247,0.08)' }}
+            transition={{ duration: 0.5, ease, delay: 0.05 }}
+            className="flex items-center gap-3 mb-10"
           >
-            <Sparkles size={13} className="text-accent-light animate-pulse" />
-            <span className="text-[10px] md:text-[11px] font-medium tracking-[0.14em] uppercase text-accent-light" style={{ fontFamily: 'DM Sans', fontWeight: 500 }}>
-              {getContentValue('hero', 'eyebrow', 'Web Design + Web App Delivery')}
-            </span>
-          </m.div>
+            <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#E8132A', display: 'inline-block' }} />
+            <span className="section-ref">{getContentValue('hero', 'eyebrow', 'Web Design + Web App Delivery')}</span>
+            <div className="flex-1 h-[1px] max-w-[120px]" style={{ background: 'rgba(232,19,42,0.3)' }} />
+          </motion.div>
 
-          <m.h1
-            initial={{ opacity: 0, y: 28 }}
+          {/* Main headline — Playfair Display editorial */}
+          <motion.h1
+            initial={{ opacity: 0, y: 36 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.72, ease, delay: 0.12 }}
-            className="text-text-primary break-words [text-wrap:balance]"
-            style={{ fontFamily: 'Syne', fontWeight: 800, lineHeight: 0.88, letterSpacing: '-0.06em', fontSize: 'clamp(46px, 8vw, 118px)' }}
+            transition={{ duration: 0.7, ease, delay: 0.12 }}
+            className="text-[#EAE6DB]"
+            style={{
+              fontFamily: "'Playfair Display', serif",
+              fontWeight: 900,
+              lineHeight: 0.88,
+              letterSpacing: '-0.03em',
+              fontSize: 'clamp(44px, 7vw, 108px)',
+            }}
           >
             <span className="block">{line1}</span>
-            <span className="block gradient-text-enhanced">{line2}</span>
-          </m.h1>
+            <span className="block italic" style={{ color: '#E8132A', marginTop: '0.08em' }}>{line2}</span>
+          </motion.h1>
 
-          <m.p
-            initial={{ opacity: 0, y: 22 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.62, ease, delay: 0.28 }}
-            className="text-[15px] md:text-[18px] text-text-secondary max-w-[620px] mt-7 leading-[1.8]"
-            style={{ fontFamily: 'DM Sans', fontWeight: 300 }}
-          >
-            {getContentValue('hero', 'subheadline', 'Conversion-focused websites and operational web apps for teams that need a tight scope, a fast build window, and a handoff they can actually maintain.')}
-          </m.p>
+          {/* Rule */}
+          <motion.div
+            initial={{ scaleX: 0, opacity: 0 }}
+            animate={{ scaleX: 1, opacity: 1 }}
+            transition={{ duration: 0.6, ease, delay: 0.3 }}
+            className="my-7 h-[1px] max-w-[280px]"
+            style={{ background: 'linear-gradient(90deg, #E8132A, rgba(232,19,42,0.1))', transformOrigin: 'left' }}
+          />
 
-          <m.div
+          {/* Subheadline */}
+          <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.55, ease, delay: 0.4 }}
-            className="flex flex-col sm:flex-row gap-3 mt-8"
+            transition={{ duration: 0.6, ease, delay: 0.3 }}
+            className="text-[15px] md:text-[17px] max-w-[580px] leading-[1.85]"
+            style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, color: 'rgba(234,230,219,0.65)' }}
           >
-            <Link to="/contact" className="shimmer-btn gradient-bg text-white px-7 md:px-8 py-4 rounded-2xl text-[14px] md:text-[15px] font-medium shadow-[0_8px_50px_rgba(124,111,247,0.28)] flex items-center gap-2.5 w-full sm:w-auto justify-center btn-glow" style={{ fontFamily: 'DM Sans', fontWeight: 500 }}>
-              {getContentValue('hero', 'cta_primary', 'Start a project')} <ArrowRight size={16} className="btn-arrow-icon" />
+            {getContentValue('hero', 'subheadline', 'Conversion-focused websites and operational web apps for teams that need a tight scope, a fast build window, and a handoff they can actually maintain.')}
+          </motion.p>
+
+          {/* CTA row */}
+          <motion.div
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.55, ease, delay: 0.42 }}
+            className="flex flex-col sm:flex-row gap-3 mt-9"
+          >
+            <Link
+              to="/contact"
+              className="shimmer-btn flex items-center gap-2.5 justify-center sm:justify-start px-7 py-[14px] text-[#EAE6DB] text-[11px] tracking-[0.18em] uppercase transition-all duration-300 hover:shadow-[0_0_40px_rgba(232,19,42,0.3)]"
+              style={{
+                fontFamily: "'Barlow Condensed', sans-serif",
+                fontWeight: 600,
+                background: '#E8132A',
+                border: '1px solid #E8132A',
+              }}
+            >
+              {getContentValue('hero', 'cta_primary', 'Start a project')} <ArrowRight size={14} />
             </Link>
-            <Link to="/work" className="text-text-primary px-7 md:px-8 py-4 rounded-2xl text-[14px] md:text-[15px] font-medium border border-[rgba(255,255,255,0.08)] hover:bg-[rgba(255,255,255,0.04)] transition-all duration-300 w-full sm:w-auto text-center btn-arrow" style={{ fontFamily: 'DM Sans', fontWeight: 500 }}>
+            <Link
+              to="/work"
+              className="flex items-center gap-2.5 justify-center sm:justify-start px-7 py-[14px] text-[rgba(234,230,219,0.7)] text-[11px] tracking-[0.18em] uppercase border border-[rgba(234,230,219,0.18)] hover:border-[rgba(232,19,42,0.5)] hover:text-[#EAE6DB] transition-all duration-300"
+              style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 600 }}
+            >
               {getContentValue('hero', 'cta_secondary', 'See shipped work')}
             </Link>
-          </m.div>
+          </motion.div>
 
-          <m.div
-            initial={{ opacity: 0, y: 22 }}
+          {/* Stats row */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease, delay: 0.5 }}
-            className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-10"
+            transition={{ duration: 0.6, ease, delay: 0.55 }}
+            className="grid grid-cols-3 gap-0 mt-12 border border-[rgba(232,19,42,0.14)]"
           >
-            {stats.map((stat, index) => (
-              <div key={stat.label + index} className="rounded-2xl border border-[rgba(255,255,255,0.06)] bg-[rgba(10,10,20,0.72)] px-4 py-4 backdrop-blur-sm glass card-hover">
-                <p className="text-[24px] md:text-[30px] text-text-primary gradient-text-enhanced" style={{ fontFamily: 'Syne', fontWeight: 800 }}>{stat.value}</p>
-                <p className="text-[11px] uppercase tracking-[0.12em] text-text-tertiary mt-2">{stat.label}</p>
+            {stats.map((stat, i) => (
+              <div
+                key={i}
+                className="px-4 py-4 flex flex-col gap-2"
+                style={{ borderRight: i < 2 ? '1px solid rgba(232,19,42,0.14)' : undefined }}
+              >
+                <p
+                  className="text-[#EAE6DB]"
+                  style={{ fontFamily: "'Playfair Display', serif", fontWeight: 900, fontSize: 'clamp(22px, 3vw, 34px)', lineHeight: 1 }}
+                >
+                  {stat.value}
+                </p>
+                <p className="annotation-label leading-[1.4]">{stat.label}</p>
               </div>
             ))}
-          </m.div>
+          </motion.div>
         </div>
 
-        <m.div
-          initial={{ opacity: 0, y: 26 }}
+        {/* ── RIGHT — Data panel ── */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.72, ease, delay: 0.2 }}
+          transition={{ duration: 0.75, ease, delay: 0.2 }}
           className="relative"
         >
-          <div className="absolute -top-10 -right-6 w-36 h-36 rounded-full bg-[rgba(236,72,153,0.12)] blur-3xl" />
-          <div className="absolute -bottom-8 -left-4 w-44 h-44 rounded-full bg-[rgba(34,211,238,0.1)] blur-3xl" />
+          {/* Atmospheric blobs */}
+          <div className="absolute -top-12 -right-8 w-40 h-40 rounded-full blur-3xl pointer-events-none" style={{ background: 'rgba(232,19,42,0.08)' }} />
+          <div className="absolute -bottom-10 -left-6 w-48 h-48 rounded-full blur-3xl pointer-events-none" style={{ background: 'rgba(6,30,80,0.8)' }} />
 
-          <div className="relative rounded-[32px] border border-[rgba(255,255,255,0.08)] bg-[rgba(8,8,14,0.86)] backdrop-blur-md overflow-hidden">
-            <div className="px-5 py-4 border-b border-[rgba(255,255,255,0.06)] flex items-center justify-between gap-4">
+          {/* Panel wrapper */}
+          <div
+            className="relative corner-marks"
+            style={{
+              border: '1px solid rgba(232,19,42,0.16)',
+              background: 'rgba(9, 22, 40, 0.88)',
+              backdropFilter: 'blur(12px)',
+            }}
+          >
+            {/* Panel header */}
+            <div className="px-5 py-3 border-b border-[rgba(232,19,42,0.1)] flex items-center justify-between">
               <div>
-                <p className="text-[11px] uppercase tracking-[0.16em] text-accent-light" style={{ fontFamily: 'JetBrains Mono' }}>
-                  {getContentValue('hero', 'proof_kicker', 'Live delivery board')}
-                </p>
-                <p className="text-[13px] text-text-secondary mt-1">
+                <p className="section-ref">{getContentValue('hero', 'proof_kicker', 'Live delivery board')}</p>
+                <p
+                  className="text-[12px] mt-1"
+                  style={{ fontFamily: "'DM Sans', sans-serif", color: 'rgba(234,230,219,0.5)' }}
+                >
                   {getContentValue('hero', 'proof_title', 'Creative builds that still respect real deadlines.')}
                 </p>
               </div>
-              <span className="text-[12px] text-text-tertiary">
-                {getContentValue('hero', 'proof_location', 'Home')}
-              </span>
+              {/* Status dot */}
+              <div className="flex items-center gap-1.5">
+                <motion.span
+                  animate={{ opacity: [0.5, 1, 0.5] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                  style={{ width: 5, height: 5, borderRadius: '50%', background: '#E8132A', display: 'inline-block' }}
+                />
+                <span className="annotation-label">LIVE</span>
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-[1.1fr_0.9fr]">
-              <div className="relative min-h-[320px]">
-                {deliveryBoardImage ? (
+            {/* Featured project */}
+            <div className="grid grid-cols-1 md:grid-cols-[1.15fr_0.85fr]">
+              <div className="relative min-h-[300px]">
+                {featuredProject?.image ? (
                   <img
-                    src={deliveryBoardImage}
-                    alt={featuredProject?.name || getContentValue('hero', 'featured_fallback_alt', 'Featured release')}
-                    loading="eager"
-                    fetchPriority="high"
+                    src={featuredProject.image}
+                    alt={featuredProject.name}
+                    loading="lazy"
                     decoding="async"
-                    className="absolute inset-0 h-full w-full object-cover opacity-80"
+                    className="absolute inset-0 h-full w-full object-cover opacity-70"
                   />
                 ) : (
-                  <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(124,111,247,0.32), rgba(34,211,238,0.12), rgba(236,72,153,0.18))' }} />
+                  <div
+                    className="absolute inset-0"
+                    style={{ background: 'linear-gradient(135deg, rgba(232,19,42,0.18), rgba(6,30,80,0.8), rgba(9,40,100,0.6))' }}
+                  />
                 )}
-                <div className="absolute inset-0 bg-gradient-to-t from-[rgba(5,5,9,0.95)] via-[rgba(5,5,9,0.24)] to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-[rgba(9,22,40,0.95)] via-[rgba(9,22,40,0.2)] to-transparent" />
                 <div className="absolute left-5 right-5 bottom-5">
-                  <p className="text-[11px] uppercase tracking-[0.14em] text-accent-light mb-2">
-                    {featuredProject?.tag || getContentValue('hero', 'featured_fallback_tag', 'Featured release')}
-                  </p>
-                  <h2 className="text-[28px] md:text-[36px] text-text-primary break-words [text-wrap:balance]" style={{ fontFamily: 'Syne', fontWeight: 800, lineHeight: 0.95, letterSpacing: '-0.04em' }}>
-                    {featuredProject?.name || getContentValue('hero', 'featured_fallback_name', 'Launch-ready systems')}
+                  <p className="section-ref mb-2">{featuredProject?.tag || 'Featured release'}</p>
+                  <h2
+                    className="text-[#EAE6DB]"
+                    style={{
+                      fontFamily: "'Playfair Display', serif",
+                      fontWeight: 900,
+                      fontSize: 'clamp(24px, 3vw, 38px)',
+                      lineHeight: 0.9,
+                      letterSpacing: '-0.03em',
+                    }}
+                  >
+                    {featuredProject?.name || 'Launch-ready systems'}
                   </h2>
-                  <p className="text-[14px] text-text-secondary mt-3 max-w-[40ch]" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>
+                  <p
+                    className="text-[13px] mt-3 max-w-[38ch] leading-[1.7]"
+                    style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, color: 'rgba(234,230,219,0.55)' }}
+                  >
                     {getContentValue('hero', 'proof_description', 'Each release is scoped against launch pressure, content reality, and what your team can maintain after handoff.')}
                   </p>
                 </div>
               </div>
 
-              <div className="p-5 md:p-6 flex flex-col gap-4">
-                {stats.map((stat, index) => (
-                  <div key={`${stat.label}-${index}`} className="rounded-2xl border border-[rgba(255,255,255,0.06)] bg-[rgba(255,255,255,0.02)] p-4">
-                    <p className="text-[12px] uppercase tracking-[0.14em] text-text-tertiary" style={{ fontFamily: 'JetBrains Mono' }}>
-                      {getContentValue('hero', 'proof_panel_label', 'Panel')} {String(index + 1).padStart(2, '0')}
-                    </p>
-                    <p className="text-[26px] text-text-primary mt-3" style={{ fontFamily: 'Syne', fontWeight: 800 }}>
+              {/* Stats sidebar */}
+              <div className="flex flex-col border-l border-[rgba(232,19,42,0.1)]">
+                {stats.map((stat, i) => (
+                  <div
+                    key={i}
+                    className="flex flex-col gap-2 px-5 py-5"
+                    style={{ borderBottom: '1px solid rgba(232,19,42,0.08)' }}
+                  >
+                    <span className="annotation-label">Metric&nbsp;{String(i + 1).padStart(2, '0')}</span>
+                    <p
+                      className="text-[#EAE6DB]"
+                      style={{ fontFamily: "'Playfair Display', serif", fontWeight: 900, fontSize: 26, lineHeight: 1 }}
+                    >
                       {stat.value}
                     </p>
-                    <p className="text-[13px] text-text-secondary mt-2">{stat.label}</p>
+                    <p className="text-[12px]" style={{ fontFamily: "'DM Sans', sans-serif", color: 'rgba(234,230,219,0.45)' }}>
+                      {stat.label}
+                    </p>
                   </div>
                 ))}
+                <div className="px-5 py-4 mt-auto">
+                  <p
+                    className="text-[11px] leading-[1.7]"
+                    style={{ fontFamily: "'JetBrains Mono', monospace", color: 'rgba(232,19,42,0.6)' }}
+                  >
+                    {getContentValue('hero', 'proof_note', 'The homepage pulls from the same editable content system used by the admin panel.')}
+                  </p>
+                </div>
               </div>
             </div>
           </div>
-        </m.div>
+
+          {/* Annotation coordinates */}
+          <div className="flex justify-between mt-2 px-1">
+            <span className="annotation-label">X:0 Y:0</span>
+            <span className="annotation-label">FRAME / 001</span>
+          </div>
+        </motion.div>
       </div>
 
-      <div className="absolute bottom-6 md:bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2">
-        <span className="text-[9px] uppercase tracking-[0.2em] text-text-secondary" style={{ fontFamily: 'DM Sans', fontWeight: 500 }}>
-          {getContentValue('hero', 'scroll_hint', 'scroll')}
-        </span>
-        <div className="w-[1px] h-[24px] bg-accent/30 scroll-indicator-line" />
+      {/* Scroll indicator */}
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2">
+        <span className="annotation-label">scroll</span>
+        <div className="w-[1px] h-6 scroll-indicator-line" />
       </div>
     </section>
   );

@@ -1,109 +1,11 @@
 import { m } from 'framer-motion';
-import SectionLabel from './SectionLabel';
-import SectionTitle from './SectionTitle';
-import { useThreeDCardEffect } from './ThreeDCardEffect';
 import { teamDefaults } from '../lib/homeContent';
 import { useContent } from '../lib/useContent';
 
-const gradients = [
-  'linear-gradient(135deg, #7C6FF7, #5548D9)',
-  'linear-gradient(135deg, #A855F7, #7C6FF7)',
-  'linear-gradient(135deg, #EC4899, #A855F7)',
-  'linear-gradient(135deg, #22D3EE, #7C6FF7)',
-  'linear-gradient(135deg, #FB923C, #EC4899)',
-  'linear-gradient(135deg, #34D399, #22D3EE)',
-];
+const ease: [number, number, number, number] = [0.16, 0.77, 0.47, 0.97];
 
 function fallbackInitials(name: string) {
-  return name
-    .split(' ')
-    .map((part) => part[0] || '')
-    .join('')
-    .slice(0, 2)
-    .toUpperCase();
-}
-
-type TeamMember = {
-  name: string;
-  initials: string;
-  role: string;
-  description: string;
-  image: string;
-  gradient: string;
-};
-
-function TeamMemberCard({ member, index, featured, enable3d }: { member: TeamMember; index: number; featured: boolean; enable3d: boolean }) {
-  const { cardRef, tiltStyle, onPointerEnter, onPointerMove, onPointerLeave } = useThreeDCardEffect({ enabled: enable3d });
-
-  return (
-    <m.article
-      ref={(node) => {
-        cardRef.current = node;
-      }}
-      style={tiltStyle}
-      onPointerEnter={onPointerEnter}
-      onPointerMove={onPointerMove}
-      onPointerLeave={onPointerLeave}
-      initial={{ opacity: 0, y: 28 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.2 }}
-      transition={{ duration: 0.55, delay: index * 0.06 }}
-      className={`group rounded-[28px] border border-[rgba(255,255,255,0.06)] bg-surface-1 overflow-hidden ${featured ? 'lg:col-span-7' : 'lg:col-span-5'}`}
-    >
-      <div className={`grid ${featured ? 'md:grid-cols-[280px_1fr]' : 'md:grid-cols-[220px_1fr]'}`}>
-        <div className="relative min-h-[280px] md:min-h-full">
-          {member.image ? (
-            <img
-              src={member.image}
-              alt={member.name}
-              loading="lazy"
-              decoding="async"
-              className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
-            />
-          ) : (
-            <div
-              className="absolute inset-0 flex items-center justify-center [container-type:inline-size]"
-              style={{ background: member.gradient }}
-            >
-              <span
-                className="text-white text-center leading-none tracking-[-0.08em] [font-size:clamp(56px,38cqw,92px)]"
-                style={{ fontFamily: 'Syne', fontWeight: 800 }}
-              >
-                {member.initials}
-              </span>
-            </div>
-          )}
-          <div className="absolute inset-0 bg-gradient-to-t from-[rgba(5,5,9,0.82)] via-[rgba(5,5,9,0.12)] to-transparent" />
-          <span className="absolute left-5 bottom-5 text-[11px] uppercase tracking-[0.18em] text-white/80" style={{ fontFamily: 'DM Sans', fontWeight: 500 }}>
-            {featured ? 'Lead owner' : 'Delivery team'}
-          </span>
-        </div>
-
-        <div className="p-6 md:p-8 flex flex-col gap-4 justify-between">
-          <div>
-            <p className="text-[11px] uppercase tracking-[0.14em] text-accent-light mb-3" style={{ fontFamily: 'DM Sans', fontWeight: 500 }}>
-              {member.role}
-            </p>
-            <h3
-              className="text-text-primary mb-4 [text-wrap:balance] break-words [font-size:clamp(26px,2.6vw,36px)]"
-              style={{ fontFamily: 'Syne', fontWeight: 800, lineHeight: 0.95, letterSpacing: '-0.03em' }}
-            >
-              {member.name}
-            </h3>
-            <p className="text-[15px] text-text-secondary leading-[1.8]" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>
-              {member.description}
-            </p>
-          </div>
-          <div className="flex items-center justify-between gap-3 pt-4 border-t border-[rgba(255,255,255,0.06)]">
-            <span className="text-[12px] text-text-tertiary uppercase tracking-[0.12em]">{featured ? 'Scope to launch' : 'Execution detail'}</span>
-            <span className="text-[12px] text-text-primary" style={{ fontFamily: 'JetBrains Mono' }}>
-              0{index + 1}
-            </span>
-          </div>
-        </div>
-      </div>
-    </m.article>
-  );
+  return name.split(' ').map((p) => p[0] || '').join('').slice(0, 2).toUpperCase();
 }
 
 export default function Team() {
@@ -111,46 +13,124 @@ export default function Team() {
   const labelParts = getContentValue('team', 'label', '05 / Team').split(' / ');
   const hasStoredCount = content.some((item) => item.section === 'team' && item.key === 'member_count');
   const totalMembers = hasStoredCount ? teamCount : Math.max(teamCount, teamDefaults.length);
-  const enable3d = getContentValue('ui', 'enable_3d_card_effect', 'false') === 'true';
 
-  const members = Array.from({ length: totalMembers }, (_, index) => {
-    const memberNumber = index + 1;
-    const fallback = teamDefaults[index];
-    const name = getContentValue('team', `member_${memberNumber}_name`, fallback?.name || '');
-
+  const members = Array.from({ length: totalMembers }, (_, i) => {
+    const n = i + 1;
+    const fb = teamDefaults[i];
+    const name = getContentValue('team', `member_${n}_name`, fb?.name || '');
     return {
       name,
-      initials: getContentValue('team', `member_${memberNumber}_initials`, fallback?.initials || fallbackInitials(name)),
-      role: getContentValue('team', `member_${memberNumber}_role`, fallback?.role || ''),
-      description: getContentValue('team', `member_${memberNumber}_desc`, fallback?.description || ''),
-      image: getContentValue('team', `member_${memberNumber}_image`, fallback?.image || ''),
-      gradient: gradients[index % gradients.length],
+      initials: getContentValue('team', `member_${n}_initials`, fb?.initials || fallbackInitials(name)),
+      role:        getContentValue('team', `member_${n}_role`,    fb?.role || ''),
+      description: getContentValue('team', `member_${n}_desc`,   fb?.description || ''),
+      image:       getContentValue('team', `member_${n}_image`,  fb?.image || ''),
     };
-  }).filter((member) => member.name);
+  }).filter((m) => m.name);
 
   if (members.length === 0) return null;
 
   return (
     <section className="py-24 md:py-32 relative overflow-hidden">
-      <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 20% 20%, rgba(124,111,247,0.06), transparent 55%), radial-gradient(ellipse at 80% 10%, rgba(34,211,238,0.05), transparent 45%)' }} />
-      <div className="max-w-[1320px] mx-auto px-6 relative z-10">
-        <div className="max-w-[720px] mb-12">
-          <SectionLabel number={labelParts[0] || '05'} label={labelParts[1] || 'Team'} />
-          <SectionTitle>{getContentValue('team', 'title', 'The people behind the work')}</SectionTitle>
-          <p className="text-[15px] md:text-[17px] text-text-secondary -mt-6 max-w-[620px] leading-[1.75]" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>
-            {getContentValue('team', 'subtitle', 'A compact team that scopes, designs, builds, and launches without handoff fog.')}
-          </p>
+      <div className="absolute inset-0 grid-pattern opacity-15 pointer-events-none" />
+
+      <div className="max-w-[1360px] mx-auto px-6 relative z-10">
+        {/* Section header */}
+        <div className="flex items-center gap-4 mb-4">
+          <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#E8132A', display: 'inline-block' }} />
+          <span className="section-ref">{labelParts[0] || '05'} / {labelParts[1] || 'Team'}</span>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-          {members.map((member, index) => (
-            <TeamMemberCard
-              key={`${member.name}-${index}`}
-              member={member}
-              index={index}
-              featured={index === 0}
-              enable3d={enable3d}
-            />
+        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-14">
+          <m.h2
+            initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }} transition={{ duration: 0.6, ease }}
+            style={{ fontFamily: "'Playfair Display', serif", fontWeight: 900, fontSize: 'clamp(36px, 5vw, 68px)', letterSpacing: '-0.03em', lineHeight: 0.9, color: '#EAE6DB' }}
+          >
+            {getContentValue('team', 'title', 'The people behind the work')}
+          </m.h2>
+          <m.p
+            initial={{ opacity: 0 }} whileInView={{ opacity: 1 }}
+            viewport={{ once: true }} transition={{ duration: 0.55, delay: 0.1 }}
+            className="text-[13px] max-w-[320px] leading-[1.8]"
+            style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, color: 'rgba(234,230,219,0.45)' }}
+          >
+            {getContentValue('team', 'subtitle', 'A compact team that scopes, designs, builds, and launches without handoff fog.')}
+          </m.p>
+        </div>
+
+        <div className="rule-line-full mb-10" />
+
+        {/* Member grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-0">
+          {members.map((member, i) => (
+            <m.article
+              key={`${member.name}-${i}`}
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.2 }}
+              transition={{ duration: 0.55, ease, delay: i * 0.07 }}
+              className="group relative"
+              style={{
+                borderRight: i < members.length - 1 ? '1px solid rgba(232,19,42,0.1)' : undefined,
+              }}
+            >
+              {/* Hover fill */}
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" style={{ background: 'rgba(232,19,42,0.03)' }} />
+              <div className="absolute top-0 left-0 right-0 h-[2px] w-0 group-hover:w-full transition-all duration-500" style={{ background: '#E8132A' }} />
+
+              {/* Avatar */}
+              <div className="relative overflow-hidden" style={{ aspectRatio: '1/1' }}>
+                {member.image ? (
+                  <img
+                    src={member.image}
+                    alt={member.name}
+                    loading="lazy"
+                    decoding="async"
+                    className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.05]"
+                  />
+                ) : (
+                  <div
+                    className="absolute inset-0 flex items-center justify-center"
+                    style={{ background: 'rgba(9,22,40,0.9)', border: '1px solid rgba(232,19,42,0.1)' }}
+                  >
+                    <span
+                      className="text-[#EAE6DB] opacity-20 group-hover:opacity-30 transition-opacity duration-300"
+                      style={{ fontFamily: "'Playfair Display', serif", fontWeight: 900, fontSize: 64, letterSpacing: '-0.04em', lineHeight: 1 }}
+                    >
+                      {member.initials}
+                    </span>
+                  </div>
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-[rgba(6,12,32,0.95)] via-[rgba(6,12,32,0.1)] to-transparent" />
+
+                {/* Annotation */}
+                <div className="absolute left-4 bottom-4">
+                  <span className="annotation-label">Member / {String(i + 1).padStart(2, '0')}</span>
+                </div>
+              </div>
+
+              {/* Info */}
+              <div className="px-6 py-6" style={{ borderTop: '1px solid rgba(232,19,42,0.1)' }}>
+                <p
+                  className="text-[10px] tracking-[0.22em] uppercase mb-2 group-hover:text-[#E8132A] transition-colors duration-300"
+                  style={{ fontFamily: "'JetBrains Mono', monospace", color: 'rgba(232,19,42,0.6)' }}
+                >
+                  {member.role}
+                </p>
+                <h3
+                  className="mb-3"
+                  style={{ fontFamily: "'Playfair Display', serif", fontWeight: 700, fontSize: 22, letterSpacing: '-0.02em', color: '#EAE6DB', lineHeight: 1.1 }}
+                >
+                  {member.name}
+                </h3>
+                <p
+                  className="text-[13px] leading-[1.75]"
+                  style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, color: 'rgba(234,230,219,0.45)' }}
+                >
+                  {member.description}
+                </p>
+              </div>
+            </m.article>
           ))}
         </div>
       </div>

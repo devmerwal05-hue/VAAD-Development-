@@ -32,7 +32,9 @@ interface FormErrors {
 }
 
 const baseInputClass =
-  'w-full bg-surface-1 text-text-primary text-[15px] px-4 py-[14px] rounded-xl border outline-none transition-all duration-200 placeholder:text-text-tertiary';
+  'w-full text-[#EAE6DB] text-[15px] px-4 py-[14px] border outline-none transition-all duration-200 placeholder:text-[rgba(234,230,219,0.25)]';
+
+const inputStyle = { fontFamily: "'DM Sans', sans-serif", fontWeight: 400, background: 'rgba(9,22,40,0.8)' };
 
 export default function Contact() {
   const { getContentValue } = useContent();
@@ -66,8 +68,8 @@ export default function Contact() {
   function inputClass(field: keyof FormErrors) {
     return `${baseInputClass} ${
       errors[field]
-        ? 'border-[rgba(239,68,68,0.5)] focus:border-[rgba(239,68,68,0.7)] focus:shadow-[0_0_0_3px_rgba(239,68,68,0.08)]'
-        : 'border-[rgba(255,255,255,0.06)] focus:border-[rgba(124,111,247,0.4)] focus:shadow-[0_0_0_3px_rgba(124,111,247,0.08)]'
+        ? 'border-[rgba(232,19,42,0.5)] focus:border-[rgba(232,19,42,0.7)]'
+        : 'border-[rgba(232,19,42,0.15)] focus:border-[rgba(232,19,42,0.5)]'
     }`;
   }
 
@@ -185,16 +187,16 @@ export default function Contact() {
             transition={{ duration: 0.7, ease, delay: 0.1 }}
           >
             {submitted ? (
-              <div className="bg-surface-1 rounded-2xl p-12 text-center border border-[rgba(124,111,247,0.2)]">
-                <div className="w-16 h-16 rounded-full gradient-bg mx-auto mb-6 flex items-center justify-center">
-                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <div className="p-12 text-center" style={{ border: '1px solid rgba(232,19,42,0.25)', background: 'rgba(9,22,40,0.8)' }}>
+                <div className="w-12 h-12 mx-auto mb-6 flex items-center justify-center" style={{ border: '1px solid rgba(232,19,42,0.4)', background: 'rgba(232,19,42,0.12)' }}>
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#E8132A" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
                 </div>
-                <h3 className="text-[24px] text-text-primary mb-3" style={{ fontFamily: 'Syne', fontWeight: 700 }}>
+                <h3 className="text-[24px] mb-3" style={{ fontFamily: "'Playfair Display', serif", fontWeight: 700, color: '#EAE6DB' }}>
                   {getContentValue('contact', 'success_title', 'Message sent')}
                 </h3>
-                <p className="text-[15px] text-text-secondary" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>
+                <p className="text-[14px] leading-[1.7]" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, color: 'rgba(234,230,219,0.5)' }}>
                   {getContentValue('contact', 'success_desc', 'Thanks. We will review the scope and reply with next steps.')}
                 </p>
               </div>
@@ -214,7 +216,7 @@ export default function Contact() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label htmlFor="contact-name" className="block text-[13px] text-text-secondary mb-2" style={{ fontFamily: 'DM Sans', fontWeight: 500 }}>
+                    <label htmlFor="contact-name" className="block text-[12px] mb-2" style={{ fontFamily: "'JetBrains Mono', monospace", letterSpacing: '0.15em', textTransform: 'uppercase', color: 'rgba(234,230,219,0.35)' }}>
                       {getContentValue('contact_form', 'name_label', 'Name')}
                     </label>
                     <input
@@ -231,13 +233,13 @@ export default function Contact() {
                       aria-invalid={Boolean(errors.name)}
                       aria-describedby={errors.name ? 'contact-name-error' : undefined}
                       className={inputClass('name')}
-                      style={{ fontFamily: 'DM Sans', fontWeight: 400 }}
+                      style={inputStyle}
                     />
-                    {errors.name && <p id="contact-name-error" className="text-[12px] text-red-400 mt-1">{errors.name}</p>}
+                    {errors.name && <p id="contact-name-error" className="text-[12px] mt-1" style={{ color: '#E8132A' }}>{errors.name}</p>}
                   </div>
 
                   <div>
-                    <label htmlFor="contact-email" className="block text-[13px] text-text-secondary mb-2" style={{ fontFamily: 'DM Sans', fontWeight: 500 }}>
+                    <label htmlFor="contact-email" className="block text-[12px] mb-2" style={{ fontFamily: "'JetBrains Mono', monospace", letterSpacing: '0.15em', textTransform: 'uppercase', color: 'rgba(234,230,219,0.35)' }}>
                       {getContentValue('contact_form', 'email_label', 'Email')}
                     </label>
                     <input
@@ -254,9 +256,9 @@ export default function Contact() {
                       aria-invalid={Boolean(errors.email)}
                       aria-describedby={errors.email ? 'contact-email-error' : undefined}
                       className={inputClass('email')}
-                      style={{ fontFamily: 'DM Sans', fontWeight: 400 }}
+                      style={inputStyle}
                     />
-                    {errors.email && <p id="contact-email-error" className="text-[12px] text-red-400 mt-1">{errors.email}</p>}
+                    {errors.email && <p id="contact-email-error" className="text-[12px] mt-1" style={{ color: '#E8132A' }}>{errors.email}</p>}
                   </div>
                 </div>
 
@@ -271,7 +273,7 @@ export default function Contact() {
                 />
 
                 <div>
-                  <label htmlFor="contact-company" className="block text-[13px] text-text-secondary mb-2" style={{ fontFamily: 'DM Sans', fontWeight: 500 }}>
+                  <label htmlFor="contact-company" className="block text-[12px] mb-2" style={{ fontFamily: "'JetBrains Mono', monospace", letterSpacing: '0.15em', textTransform: 'uppercase', color: 'rgba(234,230,219,0.35)' }}>
                     {getContentValue('contact_form', 'company_label', 'Company or brand')}
                   </label>
                   <input
@@ -282,14 +284,14 @@ export default function Contact() {
                     placeholder={getContentValue('contact_form', 'company_placeholder', 'Optional')}
                     value={form.company}
                     onChange={(event) => setField('company', event.target.value)}
-                    className={`${baseInputClass} border-[rgba(255,255,255,0.06)] focus:border-[rgba(124,111,247,0.4)] focus:shadow-[0_0_0_3px_rgba(124,111,247,0.08)]`}
-                    style={{ fontFamily: 'DM Sans', fontWeight: 400 }}
+                    className={`${baseInputClass} border-[rgba(232,19,42,0.15)] focus:border-[rgba(232,19,42,0.5)]`}
+                    style={inputStyle}
                   />
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label htmlFor="contact-project-type" className="block text-[13px] text-text-secondary mb-2" style={{ fontFamily: 'DM Sans', fontWeight: 500 }}>
+                    <label htmlFor="contact-project-type" className="block text-[12px] mb-2" style={{ fontFamily: "'JetBrains Mono', monospace", letterSpacing: '0.15em', textTransform: 'uppercase', color: 'rgba(234,230,219,0.35)' }}>
                       {getContentValue('contact_form', 'project_type_label', 'Project type')}
                     </label>
                     <select
@@ -303,7 +305,7 @@ export default function Contact() {
                       aria-invalid={Boolean(errors.project_type)}
                       aria-describedby={errors.project_type ? 'contact-project-type-error' : undefined}
                       className={inputClass('project_type')}
-                      style={{ fontFamily: 'DM Sans', fontWeight: 400, color: form.project_type ? '#F0EDE6' : '#706C86' }}
+                      style={{ ...inputStyle, color: form.project_type ? '#EAE6DB' : 'rgba(234,230,219,0.25)' }}
                     >
                       <option value="" disabled>
                         {getContentValue('contact_form', 'select_placeholder', 'Select one')}
@@ -314,11 +316,11 @@ export default function Contact() {
                         </option>
                       ))}
                     </select>
-                    {errors.project_type && <p id="contact-project-type-error" className="text-[12px] text-red-400 mt-1">{errors.project_type}</p>}
+                    {errors.project_type && <p id="contact-project-type-error" className="text-[12px] mt-1" style={{ color: '#E8132A' }}>{errors.project_type}</p>}
                   </div>
 
                   <div>
-                    <label htmlFor="contact-budget-range" className="block text-[13px] text-text-secondary mb-2" style={{ fontFamily: 'DM Sans', fontWeight: 500 }}>
+                    <label htmlFor="contact-budget-range" className="block text-[12px] mb-2" style={{ fontFamily: "'JetBrains Mono', monospace", letterSpacing: '0.15em', textTransform: 'uppercase', color: 'rgba(234,230,219,0.35)' }}>
                       {getContentValue('contact_form', 'budget_range_label', 'Budget range')}
                     </label>
                     <select
@@ -332,7 +334,7 @@ export default function Contact() {
                       aria-invalid={Boolean(errors.budget_range)}
                       aria-describedby={errors.budget_range ? 'contact-budget-range-error' : undefined}
                       className={inputClass('budget_range')}
-                      style={{ fontFamily: 'DM Sans', fontWeight: 400, color: form.budget_range ? '#F0EDE6' : '#706C86' }}
+                      style={{ ...inputStyle, color: form.budget_range ? '#EAE6DB' : 'rgba(234,230,219,0.25)' }}
                     >
                       <option value="" disabled>
                         {getContentValue('contact_form', 'select_placeholder', 'Select one')}
@@ -343,12 +345,12 @@ export default function Contact() {
                         </option>
                       ))}
                     </select>
-                    {errors.budget_range && <p id="contact-budget-range-error" className="text-[12px] text-red-400 mt-1">{errors.budget_range}</p>}
+                    {errors.budget_range && <p id="contact-budget-range-error" className="text-[12px] mt-1" style={{ color: '#E8132A' }}>{errors.budget_range}</p>}
                   </div>
                 </div>
 
                 <div>
-                  <label htmlFor="contact-message" className="block text-[13px] text-text-secondary mb-2" style={{ fontFamily: 'DM Sans', fontWeight: 500 }}>
+                  <label htmlFor="contact-message" className="block text-[12px] mb-2" style={{ fontFamily: "'JetBrains Mono', monospace", letterSpacing: '0.15em', textTransform: 'uppercase', color: 'rgba(234,230,219,0.35)' }}>
                     {getContentValue('contact_form', 'message_label', 'Project details')}
                   </label>
                   <textarea
@@ -364,16 +366,16 @@ export default function Contact() {
                     aria-invalid={Boolean(errors.message)}
                     aria-describedby={errors.message ? 'contact-message-error' : 'contact-message-help'}
                     className={`${inputClass('message')} resize-none`}
-                    style={{ fontFamily: 'DM Sans', fontWeight: 400 }}
+                    style={inputStyle}
                   />
-                  <p id="contact-message-help" className="text-[12px] text-text-tertiary mt-2" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>
+                  <p id="contact-message-help" className="text-[12px] mt-2" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, color: 'rgba(234,230,219,0.25)' }}>
                     {getContentValue(
                       'contact_form',
                       'message_help',
                       'Include launch pressure, approvals, integrations, or anything else that affects delivery.'
                     )}
                   </p>
-                  {errors.message && <p id="contact-message-error" className="text-[12px] text-red-400 mt-1">{errors.message}</p>}
+                  {errors.message && <p id="contact-message-error" className="text-[12px] mt-1" style={{ color: '#E8132A' }}>{errors.message}</p>}
                 </div>
 
                 {serverError && (
@@ -385,8 +387,8 @@ export default function Contact() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="shimmer-btn w-full gradient-bg text-white py-4 rounded-xl text-[15px] font-medium shadow-[0_4px_30px_rgba(124,111,247,0.25)] hover:shadow-[0_4px_40px_rgba(124,111,247,0.35)] transition-all duration-300 disabled:opacity-60"
-                  style={{ fontFamily: 'DM Sans', fontWeight: 500 }}
+                  className="shimmer-btn w-full py-4 text-[11px] tracking-[0.18em] uppercase transition-all duration-300 disabled:opacity-60 hover:shadow-[0_0_40px_rgba(232,19,42,0.3)]"
+                  style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 600, background: '#E8132A', color: '#EAE6DB', border: '1px solid #E8132A' }}
                 >
                   {submitting ? (
                     <span className="flex items-center justify-center gap-2">

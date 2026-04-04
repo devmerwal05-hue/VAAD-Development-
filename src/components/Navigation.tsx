@@ -1,61 +1,31 @@
-import { useEffect, useMemo, useState } from 'react';
-import { AnimatePresence, m as motion } from 'framer-motion';
-import { BadgeDollarSign, Briefcase, Mail, Menu, RefreshCw, Sparkles, Users, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { NavLink } from 'react-router-dom';
 import { useContent } from '../lib/useContent';
-import FloatingDock from './FloatingDock';
-import Logo from './Logo';
 
-interface NavLinkItem {
-  href: string;
-  label: string;
-}
+interface NavLinkItem { href: string; label: string; }
 
 export default function Navigation() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const { getContentValue } = useContent();
 
-  const enableFloatingDock = getContentValue('ui', 'enable_floating_dock_nav', 'true') === 'true';
-
-  const navLinks: NavLinkItem[] = useMemo(() => {
-    return [
-      { label: getContentValue('nav', 'link_1', 'Work'), href: getContentValue('nav', 'link_1_href', '/work') },
-      { label: getContentValue('nav', 'link_2', 'Services'), href: getContentValue('nav', 'link_2_href', '/services') },
-      { label: getContentValue('nav', 'link_3', 'Process'), href: getContentValue('nav', 'link_3_href', '/process') },
-      { label: getContentValue('nav', 'link_4', 'Team'), href: getContentValue('nav', 'link_4_href', '/team') },
-      { label: getContentValue('nav', 'link_5', 'Pricing'), href: getContentValue('nav', 'link_5_href', '/pricing') },
-      { label: getContentValue('nav', 'link_6', 'Contact'), href: getContentValue('nav', 'link_6_href', '/contact') },
-    ];
-  }, [getContentValue]);
-
-  const dockItems = useMemo(() => {
-    const icons = [Briefcase, Sparkles, RefreshCw, Users, BadgeDollarSign, Mail];
-
-    return navLinks.map((link, index) => {
-      const Icon = icons[index] || Briefcase;
-
-      return {
-        title: link.label,
-        href: link.href,
-        icon: <Icon size={18} className="text-current" aria-hidden="true" />,
-      };
-    });
-  }, [navLinks]);
+  const navLinks: NavLinkItem[] = [
+    { label: getContentValue('nav', 'link_1', 'Work'),     href: getContentValue('nav', 'link_1_href', '/work') },
+    { label: getContentValue('nav', 'link_2', 'Services'), href: getContentValue('nav', 'link_2_href', '/services') },
+    { label: getContentValue('nav', 'link_3', 'Process'),  href: getContentValue('nav', 'link_3_href', '/process') },
+    { label: getContentValue('nav', 'link_4', 'Team'),     href: getContentValue('nav', 'link_4_href', '/team') },
+    { label: getContentValue('nav', 'link_5', 'Pricing'),  href: getContentValue('nav', 'link_5_href', '/pricing') },
+    { label: getContentValue('nav', 'link_6', 'Contact'),  href: getContentValue('nav', 'link_6_href', '/contact') },
+  ];
 
   useEffect(() => {
     let ticking = false;
-
     const handleScroll = () => {
       if (ticking) return;
       ticking = true;
-
-      requestAnimationFrame(() => {
-        setScrolled(window.scrollY > 60);
-        ticking = false;
-      });
+      requestAnimationFrame(() => { setScrolled(window.scrollY > 48); ticking = false; });
     };
-
     handleScroll();
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
@@ -63,113 +33,169 @@ export default function Navigation() {
 
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? 'hidden' : '';
-    return () => {
-      document.body.style.overflow = '';
-    };
+    return () => { document.body.style.overflow = ''; };
   }, [mobileOpen]);
-
-  const closeMobileMenu = () => setMobileOpen(false);
 
   return (
     <>
       <nav
         aria-label="Primary"
-        className="fixed top-0 left-0 right-0 z-50 h-[68px] md:h-[72px] flex items-center"
+        className="fixed top-0 left-0 right-0 z-50 h-[64px] flex items-center"
         style={{
-          background: scrolled ? 'rgba(6, 6, 12, 0.88)' : 'transparent',
-          backdropFilter: scrolled ? 'blur(20px)' : 'none',
-          WebkitBackdropFilter: scrolled ? 'blur(20px)' : 'none',
-          borderBottom: scrolled ? '1px solid rgba(124,111,247,0.08)' : '1px solid transparent',
-          transition: 'background 0.3s, border-color 0.3s, backdrop-filter 0.3s',
+          background: scrolled ? 'rgba(6, 12, 32, 0.95)' : 'transparent',
+          backdropFilter: scrolled ? 'blur(24px)' : 'none',
+          WebkitBackdropFilter: scrolled ? 'blur(24px)' : 'none',
+          borderBottom: scrolled ? '1px solid rgba(232, 19, 42, 0.12)' : '1px solid transparent',
+          transition: 'background 0.4s, border-color 0.4s',
         }}
       >
-        <div className="w-full max-w-[1320px] mx-auto px-5 md:px-6 flex items-center justify-between gap-4">
-          <Logo size="md" />
+        <div className="w-full max-w-[1360px] mx-auto px-5 md:px-8 flex items-center justify-between gap-4">
 
-          <div className="hidden md:flex items-center">
-            {enableFloatingDock ? (
-              <FloatingDock items={dockItems} />
-            ) : (
-              <div className="hidden md:flex items-center gap-0.5">
-                {navLinks.map((link) => (
-                  <NavLink
-                    key={link.href}
-                    to={link.href}
-                    className={({ isActive }) =>
-                      `relative px-4 py-2 rounded-lg text-[13px] transition-colors duration-200 ${
-                        isActive
-                          ? 'text-text-primary bg-[rgba(124,111,247,0.08)]'
-                          : 'text-text-secondary hover:text-text-primary hover:bg-[rgba(255,255,255,0.03)]'
-                      }`
-                    }
-                    style={{ fontFamily: 'DM Sans', fontWeight: 400 }}
-                  >
-                    {({ isActive }) => (
-                      <>
-                        {link.label}
-                        {isActive && (
-                          <span
-                            aria-hidden="true"
-                            className="absolute bottom-0 left-1/2 -translate-x-1/2 w-5 h-[2px] rounded-full bg-accent"
-                          />
-                        )}
-                      </>
+          {/* Logo */}
+          <NavLink to="/" className="flex items-center gap-2.5 group" aria-label="VAAD Development home">
+            <div className="flex items-center gap-[3px]">
+              <span
+                className="text-[20px] text-[#EAE6DB] tracking-[0.12em]"
+                style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, letterSpacing: '0.14em' }}
+              >
+                VAAD
+              </span>
+              <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#E8132A', display: 'inline-block', marginBottom: 1 }} />
+            </div>
+            <span
+              className="hidden sm:block text-[9px] tracking-[0.28em] uppercase border-l border-[rgba(232,19,42,0.3)] pl-2.5"
+              style={{ fontFamily: "'JetBrains Mono', monospace", color: 'rgba(234,230,219,0.35)', marginTop: 1 }}
+            >
+              Dev
+            </span>
+          </NavLink>
+
+          {/* Desktop nav */}
+          <div className="hidden md:flex items-center gap-0">
+            {navLinks.map((link) => (
+              <NavLink
+                key={link.href}
+                to={link.href}
+                className={({ isActive }) =>
+                  `relative px-4 py-2 text-[11px] tracking-[0.18em] uppercase transition-colors duration-200 ${
+                    isActive ? 'text-[#EAE6DB]' : 'text-[rgba(234,230,219,0.45)] hover:text-[#EAE6DB]'
+                  }`
+                }
+                style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 500 }}
+              >
+                {({ isActive }) => (
+                  <>
+                    {link.label}
+                    {isActive && (
+                      <span
+                        aria-hidden="true"
+                        className="absolute bottom-0 left-1/2 -translate-x-1/2 w-4 h-[1px] bg-[#E8132A]"
+                      />
                     )}
-                  </NavLink>
-                ))}
-              </div>
-            )}
+                  </>
+                )}
+              </NavLink>
+            ))}
           </div>
 
+          {/* Contact CTA */}
+          <NavLink
+            to="/contact"
+            className="hidden md:flex items-center gap-2 px-4 py-2 border border-[rgba(232,19,42,0.35)] text-[11px] tracking-[0.18em] uppercase text-[rgba(234,230,219,0.7)] hover:text-[#EAE6DB] hover:border-[rgba(232,19,42,0.7)] transition-all duration-300"
+            style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 500 }}
+          >
+            <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#E8132A', display: 'inline-block' }} />
+            Start Project
+          </NavLink>
+
+          {/* Hamburger */}
           <button
             type="button"
-            className="md:hidden text-text-primary p-2 rounded-xl hover:bg-[rgba(255,255,255,0.03)] transition-colors"
-            onClick={() => setMobileOpen((current) => !current)}
-            aria-controls="mobile-navigation"
+            className="md:hidden flex flex-col gap-[5px] p-2"
+            onClick={() => setMobileOpen((s) => !s)}
             aria-expanded={mobileOpen}
-            aria-label={mobileOpen
-              ? getContentValue('nav', 'mobile_close_aria', 'Close navigation menu')
-              : getContentValue('nav', 'mobile_open_aria', 'Open navigation menu')}
+            aria-controls="mobile-navigation"
+            aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
           >
-            {mobileOpen ? <X size={22} /> : <Menu size={22} />}
+            <span
+              className="block h-[1px] bg-[#EAE6DB] transition-all duration-300"
+              style={{ width: 22, transformOrigin: 'left', transform: mobileOpen ? 'rotate(45deg) translateY(-1px)' : 'none' }}
+            />
+            <span
+              className="block h-[1px] bg-[#EAE6DB] transition-all duration-300"
+              style={{ width: 16, opacity: mobileOpen ? 0 : 1 }}
+            />
+            <span
+              className="block h-[1px] bg-[#EAE6DB] transition-all duration-300"
+              style={{ width: 22, transformOrigin: 'left', transform: mobileOpen ? 'rotate(-45deg) translateY(1px)' : 'none' }}
+            />
           </button>
         </div>
       </nav>
 
+      {/* Mobile overlay */}
       <AnimatePresence>
         {mobileOpen && (
           <motion.div
             id="mobile-navigation"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            initial={{ opacity: 0, clipPath: 'inset(0 0 100% 0)' }}
+            animate={{ opacity: 1, clipPath: 'inset(0 0 0% 0)' }}
+            exit={{ opacity: 0, clipPath: 'inset(0 0 100% 0)' }}
+            transition={{ duration: 0.4, ease: [0.16, 0.77, 0.47, 0.97] }}
             className="fixed inset-0 z-40 flex flex-col"
-            style={{ background: 'rgba(6, 6, 12, 0.97)' }}
+            style={{ background: '#060C20' }}
+            role="dialog"
+            aria-modal="true"
           >
-            <div className="h-[68px] shrink-0" />
-            <div className="flex-1 flex flex-col items-start justify-center px-8 gap-3" role="dialog" aria-modal="true">
+            {/* Grid overlay */}
+            <div className="absolute inset-0 grid-pattern opacity-30 pointer-events-none" />
+
+            <div className="h-[64px] shrink-0 border-b border-[rgba(232,19,42,0.12)]" />
+
+            <div className="flex-1 flex flex-col justify-center px-8 gap-1">
+              {/* Annotation */}
+              <p className="annotation-label mb-8">Navigation / Menu</p>
+
               {navLinks.map((link, index) => (
                 <motion.div
                   key={link.href}
-                  initial={{ opacity: 0, x: -30 }}
+                  initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.03 * index, duration: 0.3 }}
+                  transition={{ delay: 0.08 * index, duration: 0.35 }}
                 >
                   <NavLink
                     to={link.href}
-                    onClick={closeMobileMenu}
+                    onClick={() => setMobileOpen(false)}
                     className={({ isActive }) =>
-                      `text-[40px] font-[800] leading-[1.1] transition-colors block py-1 ${
-                        isActive ? 'gradient-text' : 'text-text-primary'
+                      `flex items-center gap-4 py-3 border-b border-[rgba(232,19,42,0.08)] group ${
+                        isActive ? 'text-[#EAE6DB]' : 'text-[rgba(234,230,219,0.5)]'
                       }`
                     }
-                    style={{ fontFamily: 'Syne' }}
                   >
-                    {link.label}
+                    {({ isActive }) => (
+                      <>
+                        <span
+                          className="text-[9px] tracking-[0.2em] w-6 shrink-0"
+                          style={{ fontFamily: "'JetBrains Mono', monospace", color: isActive ? '#E8132A' : 'rgba(234,230,219,0.25)' }}
+                        >
+                          {String(index + 1).padStart(2, '0')}
+                        </span>
+                        <span
+                          className="text-[40px] leading-none group-hover:text-[#EAE6DB] transition-colors"
+                          style={{ fontFamily: "'Playfair Display', serif", fontWeight: 900, letterSpacing: '-0.03em' }}
+                        >
+                          {link.label}
+                        </span>
+                        {isActive && <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#E8132A', display: 'inline-block', marginLeft: 'auto' }} />}
+                      </>
+                    )}
                   </NavLink>
                 </motion.div>
               ))}
+            </div>
+
+            <div className="px-8 py-6 border-t border-[rgba(232,19,42,0.1)]">
+              <p className="annotation-label">vaad-development.vercel.app</p>
             </div>
           </motion.div>
         )}

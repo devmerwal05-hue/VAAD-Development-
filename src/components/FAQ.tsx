@@ -1,82 +1,113 @@
 import { useState } from 'react';
 import { AnimatePresence, m as motion } from 'framer-motion';
-import { Minus, Plus } from 'lucide-react';
-import SectionLabel from './SectionLabel';
-import SectionTitle from './SectionTitle';
 import { useContent } from '../lib/useContent';
 
 const ease: [number, number, number, number] = [0.16, 0.77, 0.47, 0.97];
+
+const faqDefaults = [
+  { q: 'How fast can a project start?',      a: 'Once scope is agreed, work can usually start within a few days instead of waiting through a long intake cycle.' },
+  { q: 'Do you also handle content updates?', a: 'Yes. We can structure the CMS, migrate content, or hand your team a workflow for ongoing edits.' },
+  { q: 'Will the site be editable after launch?', a: 'That is a default expectation. Content models and admin editing should not depend on a developer for routine changes.' },
+  { q: 'Can you work with an existing brand?', a: 'Yes. The design direction can extend an existing system or sharpen a rough one without forcing a full rebrand.' },
+];
 
 export default function FAQ() {
   const [open, setOpen] = useState<number | null>(null);
   const { getContentValue } = useContent();
   const labelParts = getContentValue('faq', 'label', '07 / FAQ').split(' / ');
-  
-  const faqDefaults = [
-    { q: 'How fast can a project start?', a: 'Once scope is agreed, work can usually start within a few days instead of waiting through a long intake cycle.' },
-    { q: 'Do you also handle content updates?', a: 'Yes. We can structure the CMS, migrate content, or hand your team a workflow for ongoing edits.' },
-    { q: 'Will the site be editable after launch?', a: 'That is a default expectation. Content models and admin editing should not depend on a developer for routine changes.' },
-    { q: 'Can you work with an existing brand?', a: 'Yes. The design direction can extend an existing system or sharpen a rough one without forcing a full rebrand.' },
-  ];
-  
-  const storedFaqCount = Number(getContentValue('faq', 'faq_count', ''));
-  const faqCount = (!isNaN(storedFaqCount) && storedFaqCount > 0) ? storedFaqCount : faqDefaults.length;
-  
-  const faqs = Array.from({ length: faqCount }, (_, index) => ({
-    q: getContentValue('faq', `q_${index + 1}`, faqDefaults[index]?.q || ''),
-    a: getContentValue('faq', `a_${index + 1}`, faqDefaults[index]?.a || ''),
-  })).filter(faq => faq.q);
+  const storedCount = Number(getContentValue('faq', 'faq_count', ''));
+  const faqCount = !Number.isNaN(storedCount) && storedCount > 0 ? storedCount : faqDefaults.length;
+
+  const faqs = Array.from({ length: faqCount }, (_, i) => ({
+    q: getContentValue('faq', `q_${i + 1}`, faqDefaults[i]?.q || ''),
+    a: getContentValue('faq', `a_${i + 1}`, faqDefaults[i]?.a || ''),
+  })).filter((f) => f.q);
 
   return (
     <section className="py-24 md:py-32 relative">
-      {/* Background glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full pointer-events-none opacity-10">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#7C6FF7] to-[#EC4899] rounded-full blur-[100px]" />
-      </div>
-      
-      <div className="max-w-[820px] mx-auto px-6 relative z-10">
-        <SectionLabel number={labelParts[0] || '07'} label={labelParts[1] || 'FAQ'} />
-        <SectionTitle>{getContentValue('faq', 'title', 'Common questions')}</SectionTitle>
-        <div className="flex flex-col gap-3">
-          {faqs.map((faq, index) => (
-            <motion.div 
-              key={faq.q} 
-              initial={{ opacity: 0, y: 16 }} 
-              whileInView={{ opacity: 1, y: 0 }} 
-              viewport={{ once: true, amount: 0.3 }} 
-              transition={{ duration: 0.4, delay: index * 0.08 }}
-              className={`rounded-xl border transition-all duration-300 glass ${open === index ? 'bg-surface-1 border-[rgba(124,111,247,0.3)] shadow-[0_0_40px_rgba(124,111,247,0.08)]' : 'border-[rgba(255,255,255,0.04)] hover:border-[rgba(255,255,255,0.1)] hover:bg-[rgba(255,255,255,0.02)]'}`}
+      <div className="absolute inset-0 grid-pattern opacity-15 pointer-events-none" />
+
+      <div className="max-w-[900px] mx-auto px-6 relative z-10">
+        {/* Header */}
+        <div className="flex items-center gap-4 mb-4">
+          <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#E8132A', display: 'inline-block' }} />
+          <span className="section-ref">{labelParts[0] || '07'} / {labelParts[1] || 'FAQ'}</span>
+        </div>
+
+        <motion.h2
+          initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }} transition={{ duration: 0.6, ease }}
+          className="mb-14"
+          style={{ fontFamily: "'Playfair Display', serif", fontWeight: 900, fontSize: 'clamp(36px, 5vw, 68px)', letterSpacing: '-0.03em', lineHeight: 0.9, color: '#EAE6DB' }}
+        >
+          {getContentValue('faq', 'title', 'Common questions')}
+        </motion.h2>
+
+        <div className="rule-line-full mb-2" />
+
+        <div className="flex flex-col">
+          {faqs.map((faq, i) => (
+            <motion.div
+              key={faq.q}
+              initial={{ opacity: 0, y: 14 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.3 }}
+              transition={{ duration: 0.4, ease, delay: i * 0.07 }}
+              style={{ borderBottom: '1px solid rgba(232,19,42,0.1)' }}
             >
               <button
                 type="button"
-                onClick={() => setOpen(open === index ? null : index)}
-                aria-expanded={open === index}
-                aria-controls={`faq-panel-${index}`}
-                id={`faq-trigger-${index}`}
-                className="w-full flex items-center justify-between text-left px-6 py-5 group min-w-0"
+                onClick={() => setOpen(open === i ? null : i)}
+                aria-expanded={open === i}
+                aria-controls={`faq-panel-${i}`}
+                id={`faq-trigger-${i}`}
+                className="w-full flex items-center justify-between text-left py-6 group"
               >
-                <span className="text-[16px] text-text-primary pr-4 group-hover:text-accent-light transition-colors min-w-0 break-words [text-wrap:balance]" style={{ fontFamily: 'DM Sans', fontWeight: 500 }}>{faq.q}</span>
-                <motion.span 
-                  animate={{ rotate: open === index ? 180 : 0, scale: open === index ? 1.1 : 1 }} 
-                  transition={{ duration: 0.2 }}
-                  className="shrink-0 w-8 h-8 rounded-lg bg-[rgba(124,111,247,0.08)] flex items-center justify-center group-hover:bg-[rgba(124,111,247,0.15)] transition-colors"
+                <div className="flex items-start gap-5 min-w-0 flex-1">
+                  <span
+                    className="shrink-0 mt-1"
+                    style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, letterSpacing: '0.22em', color: open === i ? '#E8132A' : 'rgba(234,230,219,0.2)', textTransform: 'uppercase' }}
+                  >
+                    {String(i + 1).padStart(2, '0')}
+                  </span>
+                  <span
+                    className="text-[15px] md:text-[17px] pr-4 transition-colors duration-200"
+                    style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 400, color: open === i ? '#EAE6DB' : 'rgba(234,230,219,0.65)' }}
+                  >
+                    {faq.q}
+                  </span>
+                </div>
+                {/* Plus / minus indicator */}
+                <span
+                  className="shrink-0 w-6 h-6 flex items-center justify-center transition-all duration-300"
+                  style={{ color: '#E8132A' }}
                 >
-                  {open === index ? <Minus size={15} className="text-accent" /> : <Plus size={15} className="text-accent" />}
-                </motion.span>
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                    <line x1="6" y1="0" x2="6" y2="12" stroke="currentColor" strokeWidth="1.5"
+                      style={{ transform: open === i ? 'scaleY(0)' : 'scaleY(1)', transformOrigin: 'center', transition: 'transform 0.25s ease' }} />
+                    <line x1="0" y1="6" x2="12" y2="6" stroke="currentColor" strokeWidth="1.5" />
+                  </svg>
+                </span>
               </button>
+
               <AnimatePresence>
-                {open === index && (
-                  <motion.div 
-                    id={`faq-panel-${index}`} 
-                    role="region" 
-                    aria-labelledby={`faq-trigger-${index}`} 
+                {open === i && (
+                  <motion.div
+                    id={`faq-panel-${i}`}
+                    role="region"
+                    aria-labelledby={`faq-trigger-${i}`}
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: 'auto', opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
                     transition={{ duration: 0.35, ease }}
                     className="overflow-hidden"
                   >
-                    <p className="text-[15px] text-text-secondary leading-[1.75] px-6 pb-6 break-words" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>{faq.a}</p>
+                    <p
+                      className="text-[15px] leading-[1.8] pl-11 pb-6"
+                      style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, color: 'rgba(234,230,219,0.5)' }}
+                    >
+                      {faq.a}
+                    </p>
                   </motion.div>
                 )}
               </AnimatePresence>
