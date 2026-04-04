@@ -1,12 +1,15 @@
+import { useState } from 'react';
 import { m as motion } from 'framer-motion';
 import { ExternalLink } from 'lucide-react';
 import { buildPortfolioProjects } from '../lib/portfolio';
 import { useContent } from '../lib/useContent';
+import SectionLabel from './SectionLabel';
 
 const ease: [number, number, number, number] = [0.16, 0.77, 0.47, 0.97];
 
 export default function Portfolio() {
   const { content, getContentValue, projectCount } = useContent();
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const labelParts = getContentValue('portfolio', 'label', '04 / Work').split(' / ');
   const hasStoredCount = content.some((item) => item.section === 'portfolio' && item.key === 'project_count');
   const projects = buildPortfolioProjects(getContentValue, projectCount, !hasStoredCount);
@@ -21,10 +24,7 @@ export default function Portfolio() {
 
       <div className="site-container swiss-grid relative z-10 max-w-[1320px] gap-8 px-5 md:px-8 lg:gap-12 xl:px-10">
         <div className="swiss-full-col mb-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#ff2c1b', display: 'inline-block' }} />
-            <span className="section-ref">{labelParts[0] || '04'} / {labelParts[1] || 'Work'}</span>
-          </div>
+          <SectionLabel number={labelParts[0] || '04'} label={labelParts[1] || 'Work'} />
           <span className="archive-tag hidden md:block">{getContentValue('portfolio', 'archive_tag', 'specimen_gallery')}</span>
         </div>
 
@@ -37,10 +37,12 @@ export default function Portfolio() {
           {getContentValue('portfolio', 'title', 'Selected work')}
         </motion.h2>
 
-        <div className="swiss-full-col grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-12">
+        <div className="portfolio-focus-grid swiss-full-col grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-12">
           {projects.map((project, i) => {
+            const dimmed = hoveredIndex !== null && hoveredIndex !== i;
+
             const inner = (
-              <div className="archive-panel group flex h-full flex-col overflow-hidden">
+              <div className="archive-panel portfolio-focus-card bento-card scanline-hover group flex h-full flex-col overflow-hidden transition-all duration-300" style={{ opacity: dimmed ? 0.44 : 1 }}>
                 <div className="relative overflow-hidden" style={{ aspectRatio: '4/3', minHeight: 320 }}>
                   {project.image ? (
                     <img
@@ -48,7 +50,7 @@ export default function Portfolio() {
                       alt={project.name}
                       loading="lazy"
                       decoding="async"
-                      className="absolute inset-0 h-full w-full object-cover opacity-85 transition-all duration-700 group-hover:scale-[1.04]"
+                      className="absolute inset-0 h-full w-full object-cover opacity-85 transition-all duration-700 group-hover:scale-[1.05]"
                     />
                   ) : (
                     <div
@@ -63,11 +65,23 @@ export default function Portfolio() {
                       </span>
                     </div>
                   )}
-                  <div className="absolute inset-0 bg-[linear-gradient(to_top,rgba(1,14,42,0.95)_8%,rgba(1,14,42,0.22)_58%)]" />
+                  <div className="absolute inset-0 bg-[linear-gradient(to_top,rgba(1,14,42,0.95)_8%,rgba(1,14,42,0.22)_58%)] transition-opacity duration-300 group-hover:opacity-90" />
+                  <div className="absolute inset-0 bg-[rgba(3,10,26,0.24)] opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
 
                   <div className="absolute left-4 top-4 border border-[rgba(255,44,27,0.62)] bg-[rgba(2,18,52,0.9)] px-3 py-1">
                     <span className="archive-tag">
                       {project.tag}
+                    </span>
+                  </div>
+
+                  <div className="absolute bottom-4 left-4 right-4 flex items-end justify-between gap-4">
+                    <div className="translate-y-3 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
+                      <span className="archive-tag block text-[rgba(214,229,255,0.95)]">{project.tag}</span>
+                      <span className="mono-readable mt-2 block text-[10px] uppercase text-[rgba(214,229,255,0.76)]">{project.subtitle}</span>
+                    </div>
+
+                    <span className="portfolio-view-chip rounded-full border border-[rgba(95,178,255,0.42)] bg-[rgba(7,20,48,0.82)] px-4 py-2 text-[10px] uppercase tracking-[0.16em] text-[rgba(214,229,255,0.95)]" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+                      {project.url ? getContentValue('portfolio', 'view_project_label', 'View project') : getContentValue('portfolio', 'view_details_label', 'View details')}
                     </span>
                   </div>
                 </div>
@@ -105,22 +119,26 @@ export default function Portfolio() {
                 href={project.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="lg:col-span-6"
+                className={`lg:col-span-6 transition-all duration-300 ${dimmed ? 'opacity-45' : 'opacity-100'}`}
                 initial={{ opacity: 0, y: 24 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.1 }}
                 transition={{ duration: 0.6, ease, delay: i * 0.05 }}
+                onMouseEnter={() => setHoveredIndex(i)}
+                onMouseLeave={() => setHoveredIndex(null)}
               >
                 {inner}
               </motion.a>
             ) : (
               <motion.div
                 key={`${project.name}-${i}`}
-                className="lg:col-span-6"
+                className={`lg:col-span-6 transition-all duration-300 ${dimmed ? 'opacity-45' : 'opacity-100'}`}
                 initial={{ opacity: 0, y: 24 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.1 }}
                 transition={{ duration: 0.6, ease, delay: i * 0.05 }}
+                onMouseEnter={() => setHoveredIndex(i)}
+                onMouseLeave={() => setHoveredIndex(null)}
               >
                 {inner}
               </motion.div>

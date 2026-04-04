@@ -2,6 +2,7 @@ import { m as motion } from 'framer-motion';
 import { Check } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useContent } from '../lib/useContent';
+import SectionLabel from './SectionLabel';
 
 const ease: [number, number, number, number] = [0.16, 0.77, 0.47, 0.97];
 
@@ -39,8 +40,7 @@ export default function Pricing() {
       <div className="site-container swiss-grid relative z-10 max-w-[1320px] gap-8 px-5 md:px-8 lg:gap-12 xl:px-10">
         {/* Header */}
         <div className="swiss-full-col mb-6 flex items-center gap-4">
-          <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#E8132A', display: 'inline-block' }} />
-          <span className="section-ref">{labelParts[0] || '06'} / {labelParts[1] || 'Pricing'}</span>
+          <SectionLabel number={labelParts[0] || '06'} label={labelParts[1] || 'Pricing'} />
         </div>
 
         <div className="swiss-full-col mb-12 grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-end lg:gap-12">
@@ -136,7 +136,7 @@ export default function Pricing() {
 
                 <Link
                   to="/contact"
-                  className="flex items-center justify-center gap-2 px-6 py-4 text-[11px] uppercase tracking-[0.18em] transition-all duration-300"
+                  className="cta-btn flex items-center justify-center gap-2 px-6 py-4 text-[11px] uppercase tracking-[0.18em] transition-all duration-300"
                   style={{
                     fontFamily: "'Barlow Condensed', sans-serif",
                     fontWeight: 600,

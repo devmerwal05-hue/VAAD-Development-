@@ -1,5 +1,7 @@
-import { m as motion } from 'framer-motion';
+import { useRef } from 'react';
+import { m as motion, useInView } from 'framer-motion';
 import { useContent } from '../lib/useContent';
+import SectionLabel from './SectionLabel';
 
 const ease: [number, number, number, number] = [0.16, 0.77, 0.47, 0.97];
 
@@ -9,6 +11,80 @@ const stepDefaults = [
   { title: 'Build',  description: 'The app or site is built in production-minded slices with content, analytics, and QA included.' },
   { title: 'Launch', description: 'Deployment, walkthroughs, and next-step recommendations are delivered as part of the release.' },
 ];
+
+type ProcessStep = {
+  number: string;
+  title: string;
+  description: string;
+};
+
+function ProcessStepCard({
+  step,
+  index,
+  stepSpanClass,
+  phasePrefix,
+}: {
+  step: ProcessStep;
+  index: number;
+  stepSpanClass: string;
+  phasePrefix: string;
+}) {
+  const ref = useRef<HTMLDivElement | null>(null);
+  const isActive = useInView(ref, { amount: 0.55, margin: '-12% 0px -18% 0px' });
+
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 24 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.2 }}
+      transition={{ duration: 0.5, ease, delay: index * 0.1 }}
+      className={`process-step-card group relative border border-[rgba(232,19,42,0.18)] bg-[rgba(9,22,40,0.62)] p-8 pl-12 md:p-10 md:pl-14 lg:pt-12 ${stepSpanClass} ${isActive ? 'is-active' : ''}`}
+    >
+      <span className="process-step-marker" />
+
+      <div className="absolute top-0 left-0 h-[2px] w-0 group-hover:w-full transition-all duration-500" style={{ background: '#E8132A' }} />
+
+      <p
+        className="process-step-number mb-7 leading-none"
+        style={{
+          fontFamily: "'Playfair Display', serif",
+          fontWeight: 900,
+          fontSize: 64,
+          color: '#E8132A',
+          opacity: 0.16,
+          letterSpacing: '-0.04em',
+          lineHeight: 0.85,
+          transition: 'opacity 0.3s',
+        }}
+      >
+        {step.number}
+      </p>
+
+      <p className="annotation-label mb-5">
+        {phasePrefix} / {step.number}
+      </p>
+
+      <h3
+        className="mb-5 group-hover:text-[#E8132A] transition-colors duration-300"
+        style={{ fontFamily: "'Playfair Display', serif", fontWeight: 700, fontSize: 'clamp(20px, 2vw, 26px)', letterSpacing: '-0.02em', color: '#EAE6DB', lineHeight: 1.12 }}
+      >
+        {step.title}
+      </h3>
+
+      <div className="mb-5 h-[1px] max-w-[52px]" style={{ background: 'rgba(232,19,42,0.4)' }} />
+
+      <motion.p
+        animate={{ opacity: isActive ? 1 : 0.72, x: isActive ? 0 : 4 }}
+        transition={{ duration: 0.28, ease: [0.16, 0.77, 0.47, 0.97] }}
+        className="text-[14px] leading-[1.9]"
+        style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, color: 'rgba(234,230,219,0.54)' }}
+      >
+        {step.description}
+      </motion.p>
+    </motion.div>
+  );
+}
 
 export default function Process() {
   const { getContentValue } = useContent();
@@ -36,8 +112,7 @@ export default function Process() {
       <div className="site-container swiss-grid relative z-10 max-w-[1320px] gap-8 px-5 md:px-8 lg:gap-12 xl:px-10">
         {/* Section header */}
         <div className="swiss-full-col mb-4 flex items-center gap-4">
-          <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#E8132A', display: 'inline-block' }} />
-          <span className="section-ref">{labelParts[0] || '03'} / {labelParts[1] || 'Process'}</span>
+          <SectionLabel number={labelParts[0] || '03'} label={labelParts[1] || 'Process'} />
         </div>
 
         <motion.h2
@@ -53,64 +128,27 @@ export default function Process() {
 
         {/* Steps — horizontal timeline */}
         <div className="swiss-full-col relative">
-          <div className="pointer-events-none absolute left-0 right-0 top-[38px] hidden h-px bg-[rgba(232,19,42,0.22)] lg:block" />
+          <div className="pointer-events-none absolute left-0 right-0 top-[38px] hidden h-px bg-[rgba(232,19,42,0.22)] lg:block">
+            <motion.div
+              initial={{ scaleX: 0 }}
+              whileInView={{ scaleX: 1 }}
+              viewport={{ once: true, amount: 0.3 }}
+              transition={{ duration: 0.9, ease }}
+              className="absolute left-0 top-0 h-px w-full origin-left bg-[rgba(255,44,27,0.7)]"
+            />
+          </div>
+
+          <div className="pointer-events-none absolute bottom-0 left-[26px] top-[24px] w-px bg-[rgba(232,19,42,0.22)] lg:hidden" />
 
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-12">
             {steps.map((step, i) => (
-              <motion.div
+              <ProcessStepCard
                 key={step.number}
-                initial={{ opacity: 0, y: 24 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.2 }}
-                transition={{ duration: 0.5, ease, delay: i * 0.1 }}
-                className={`group relative border border-[rgba(232,19,42,0.18)] bg-[rgba(9,22,40,0.62)] p-8 md:p-10 lg:pt-12 ${stepSpanClass}`}
-              >
-                {/* Hover fill */}
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" style={{ background: 'rgba(232,19,42,0.03)' }} />
-
-                {/* Timeline marker */}
-                <span className="absolute left-7 top-0 hidden h-3.5 w-3.5 -translate-y-1/2 rounded-full border border-[rgba(232,19,42,0.7)] bg-[rgba(9,22,40,0.95)] lg:block" />
-
-                {/* Animated top rule on hover */}
-                <div className="absolute top-0 left-0 h-[2px] w-0 group-hover:w-full transition-all duration-500" style={{ background: '#E8132A' }} />
-
-                {/* Step number — giant editorial */}
-                <p
-                  className="mb-7 leading-none"
-                  style={{
-                    fontFamily: "'Playfair Display', serif",
-                    fontWeight: 900,
-                    fontSize: 64,
-                    color: '#E8132A',
-                    opacity: 0.16,
-                    letterSpacing: '-0.04em',
-                    lineHeight: 0.85,
-                    transition: 'opacity 0.3s',
-                  }}
-                >
-                  {step.number}
-                </p>
-
-                <p className="annotation-label mb-5">
-                  {getContentValue('process', 'phase_prefix', 'Phase')} / {step.number}
-                </p>
-
-                <h3
-                  className="mb-5 group-hover:text-[#E8132A] transition-colors duration-300"
-                  style={{ fontFamily: "'Playfair Display', serif", fontWeight: 700, fontSize: 'clamp(20px, 2vw, 26px)', letterSpacing: '-0.02em', color: '#EAE6DB', lineHeight: 1.12 }}
-                >
-                  {step.title}
-                </h3>
-
-                <div className="mb-5 h-[1px] max-w-[52px]" style={{ background: 'rgba(232,19,42,0.4)' }} />
-
-                <p
-                  className="text-[14px] leading-[1.9]"
-                  style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, color: 'rgba(234,230,219,0.54)' }}
-                >
-                  {step.description}
-                </p>
-              </motion.div>
+                step={step}
+                index={i}
+                stepSpanClass={stepSpanClass}
+                phasePrefix={getContentValue('process', 'phase_prefix', 'Phase')}
+              />
             ))}
           </div>
         </div>

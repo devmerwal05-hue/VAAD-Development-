@@ -1,10 +1,17 @@
 import type { ReactNode } from 'react';
+import { motion, useScroll, useSpring } from 'framer-motion';
 import Navigation from './Navigation';
 import Footer from './Footer';
 import { useContent } from '../lib/useContent';
 
 export default function PageWrapper({ children }: { children: ReactNode }) {
   const { getContentValue } = useContent();
+  const { scrollYProgress } = useScroll();
+  const progress = useSpring(scrollYProgress, {
+    stiffness: 180,
+    damping: 30,
+    mass: 0.25,
+  });
 
   return (
     <>
@@ -14,6 +21,12 @@ export default function PageWrapper({ children }: { children: ReactNode }) {
       >
         {getContentValue('ui', 'skip_to_content', 'Skip to content')}
       </a>
+
+      <div aria-hidden className="scroll-progress-rail">
+        <span className="scroll-progress-track" />
+        <motion.span className="scroll-progress-fill" style={{ scaleY: progress }} />
+      </div>
+
       <Navigation />
       <div id="page-content" className="relative pb-24 pt-[92px] md:pb-0 md:pt-[98px]">
         <div aria-hidden className="pointer-events-none fixed inset-0 z-[1] hidden lg:block">

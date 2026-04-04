@@ -1,6 +1,7 @@
 import { m } from 'framer-motion';
 import { teamDefaults } from '../lib/homeContent';
 import { useContent } from '../lib/useContent';
+import SectionLabel from './SectionLabel';
 
 const ease: [number, number, number, number] = [0.16, 0.77, 0.47, 0.97];
 
@@ -40,8 +41,7 @@ export default function Team() {
       <div className="site-container swiss-grid relative z-10 max-w-[1320px] gap-8 px-5 md:px-8 lg:gap-12 xl:px-10">
         {/* Section header */}
         <div className="swiss-full-col mb-4 flex items-center gap-4">
-          <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#E8132A', display: 'inline-block' }} />
-          <span className="section-ref">{labelParts[0] || '05'} / {labelParts[1] || 'Team'}</span>
+          <SectionLabel number={labelParts[0] || '05'} label={labelParts[1] || 'Team'} />
         </div>
 
         <div className="swiss-full-col mb-12 grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-end lg:gap-12">
@@ -74,61 +74,69 @@ export default function Team() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.2 }}
               transition={{ duration: 0.55, ease, delay: i * 0.07 }}
-              className={`group relative flex h-full flex-col border border-[rgba(232,19,42,0.18)] bg-[rgba(9,22,40,0.62)] ${memberSpanClass}`}
+              className={`group bento-card scanline-hover relative flex h-full flex-col border border-[rgba(232,19,42,0.18)] bg-[rgba(9,22,40,0.62)] ${memberSpanClass}`}
             >
+              {i < members.length - 1 && (
+                <span
+                  aria-hidden="true"
+                  className="pointer-events-none absolute right-[-18px] top-[64px] hidden h-px w-9 bg-[rgba(95,178,255,0.2)] transition-colors duration-300 lg:block group-hover:bg-[rgba(95,178,255,0.65)]"
+                />
+              )}
+
               {/* Hover fill */}
               <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" style={{ background: 'rgba(232,19,42,0.03)' }} />
               <div className="absolute top-0 left-0 right-0 h-[2px] w-0 group-hover:w-full transition-all duration-500" style={{ background: '#E8132A' }} />
 
-              {/* Avatar */}
-              <div className="relative overflow-hidden" style={{ aspectRatio: '1/1' }}>
-                {member.image ? (
-                  <img
-                    src={member.image}
-                    alt={member.name}
-                    loading="lazy"
-                    decoding="async"
-                    className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.05]"
-                  />
-                ) : (
-                  <div
-                    className="absolute inset-0 flex items-center justify-center"
-                    style={{ background: 'rgba(9,22,40,0.9)', border: '1px solid rgba(232,19,42,0.1)' }}
-                  >
-                    <span
-                      className="text-[#EAE6DB] opacity-20 group-hover:opacity-30 transition-opacity duration-300"
-                      style={{ fontFamily: "'Playfair Display', serif", fontWeight: 900, fontSize: 64, letterSpacing: '-0.04em', lineHeight: 1 }}
-                    >
-                      {member.initials}
-                    </span>
-                  </div>
-                )}
-                <div className="absolute inset-0 bg-gradient-to-t from-[rgba(6,12,32,0.95)] via-[rgba(6,12,32,0.1)] to-transparent" />
-
-                {/* Annotation */}
-                <div className="absolute left-4 bottom-4">
+              <div className="px-8 pb-2 pt-9 md:px-10 md:pt-10">
+                <div className="flex items-center justify-between">
                   <span className="annotation-label">
                     {getContentValue('team', 'member_prefix', 'Member')} / {String(i + 1).padStart(2, '0')}
                   </span>
+                </div>
+
+                <div className="mt-6 flex justify-center">
+                  <div className="team-avatar-shell">
+                    {member.image ? (
+                      <img
+                        src={member.image}
+                        alt={member.name}
+                        loading="lazy"
+                        decoding="async"
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div
+                        className="flex h-full w-full items-center justify-center"
+                        style={{ background: 'rgba(9,22,40,0.9)' }}
+                      >
+                        <span
+                          className="text-[#EAE6DB] opacity-35 transition-opacity duration-300"
+                          style={{ fontFamily: "'Playfair Display', serif", fontWeight: 900, fontSize: 42, letterSpacing: '-0.04em', lineHeight: 1 }}
+                        >
+                          {member.initials}
+                        </span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
               {/* Info */}
               <div className="flex flex-1 flex-col p-8 md:p-10" style={{ borderTop: '1px solid rgba(232,19,42,0.1)' }}>
                 <p
-                  className="mb-3 text-[10px] uppercase tracking-[0.22em] transition-colors duration-300 group-hover:text-[#E8132A]"
+                  className="mb-3 translate-y-0 text-[10px] uppercase tracking-[0.22em] transition-all duration-300 group-hover:-translate-y-1 group-hover:text-[#E8132A]"
                   style={{ fontFamily: "'JetBrains Mono', monospace", color: 'rgba(232,19,42,0.6)' }}
                 >
                   {member.role}
                 </p>
                 <h3
-                  className="mb-4"
+                  className="mb-2 translate-y-0 transition-transform duration-300 group-hover:-translate-y-1"
                   style={{ fontFamily: "'Playfair Display', serif", fontWeight: 700, fontSize: 22, letterSpacing: '-0.02em', color: '#EAE6DB', lineHeight: 1.1 }}
                 >
                   {member.name}
                 </h3>
                 <p
-                  className="mt-1 text-[14px] leading-[1.9]"
+                  className="team-bio-reveal mt-2 text-[14px] leading-[1.9]"
                   style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, color: 'rgba(234,230,219,0.5)' }}
                 >
                   {member.description}

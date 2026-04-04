@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { lazy, Suspense, useState, useCallback } from 'react';
+import { lazy, Suspense, useState, useCallback, useEffect } from 'react';
+import Lenis from 'lenis';
 import { ContentProvider } from './lib/ContentContext';
 import { useContent } from './lib/useContent';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -40,6 +41,33 @@ export default function App() {
   const handleIntroComplete = useCallback(() => {
     sessionStorage.setItem('vaad_intro_seen', '1');
     setIntroComplete(true);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+
+    const reduceMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    if (reduceMotionQuery.matches) return undefined;
+
+    const lenis = new Lenis({
+      duration: 1.05,
+      smoothWheel: true,
+      touchMultiplier: 1.05,
+      wheelMultiplier: 0.95,
+    });
+
+    let rafId = 0;
+    const raf = (time: number) => {
+      lenis.raf(time);
+      rafId = window.requestAnimationFrame(raf);
+    };
+
+    rafId = window.requestAnimationFrame(raf);
+
+    return () => {
+      window.cancelAnimationFrame(rafId);
+      lenis.destroy();
+    };
   }, []);
 
   return (

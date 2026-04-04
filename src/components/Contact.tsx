@@ -32,7 +32,7 @@ interface FormErrors {
 }
 
 const baseInputClass =
-  'w-full text-[#EAE6DB] text-[15px] px-4 py-[14px] border outline-none transition-all duration-200 placeholder:text-[rgba(234,230,219,0.25)]';
+  'form-input w-full text-[#EAE6DB] text-[15px] px-4 py-[14px] border outline-none transition-all duration-200 placeholder:text-[rgba(234,230,219,0.25)]';
 
 const inputStyle = { fontFamily: "'DM Sans', sans-serif", fontWeight: 400, background: 'rgba(9,22,40,0.8)' };
 
@@ -199,7 +199,7 @@ export default function Contact() {
             {submitted ? (
               <div className="p-12 text-center" style={{ border: '1px solid rgba(232,19,42,0.25)', background: 'rgba(9,22,40,0.8)' }}>
                 <div className="w-12 h-12 mx-auto mb-6 flex items-center justify-center" style={{ border: '1px solid rgba(232,19,42,0.4)', background: 'rgba(232,19,42,0.12)' }}>
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#E8132A" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <svg className="checkmark-draw" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#E8132A" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
                 </div>
@@ -397,7 +397,7 @@ export default function Contact() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="shimmer-btn w-full py-[18px] text-[11px] tracking-[0.18em] uppercase transition-all duration-300 disabled:opacity-60 hover:shadow-[0_0_40px_rgba(232,19,42,0.3)]"
+                  className="shimmer-btn cta-btn w-full py-[18px] text-[11px] tracking-[0.18em] uppercase transition-all duration-300 disabled:opacity-60 hover:shadow-[0_0_40px_rgba(232,19,42,0.3)]"
                   style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 600, background: '#E8132A', color: '#EAE6DB', border: '1px solid #E8132A' }}
                 >
                   {submitting ? (

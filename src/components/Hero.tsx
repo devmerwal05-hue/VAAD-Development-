@@ -1,9 +1,40 @@
-import { motion } from 'framer-motion';
+import { useEffect, useRef, useState } from 'react';
+import { animate, motion, useInView } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { useContent } from '../lib/useContent';
 
 const ease: [number, number, number, number] = [0.16, 0.77, 0.47, 0.97];
+
+function CountUpMetric({ value }: { value: string }) {
+  const nodeRef = useRef<HTMLSpanElement | null>(null);
+  const inView = useInView(nodeRef, { once: true, amount: 0.8 });
+  const [displayValue, setDisplayValue] = useState('0');
+  const isNumeric = /^\d+(\.\d+)?$/.test(value.trim());
+
+  useEffect(() => {
+    if (!isNumeric || !inView) return undefined;
+
+    const decimals = value.includes('.') ? value.split('.')[1].length : 0;
+    const target = Number(value);
+
+    const controls = animate(0, target, {
+      duration: 0.95,
+      ease: [0.16, 0.77, 0.47, 0.97],
+      onUpdate(latest) {
+        setDisplayValue(latest.toFixed(decimals).replace(/\.0+$/, ''));
+      },
+    });
+
+    return () => controls.stop();
+  }, [inView, isNumeric, value]);
+
+  if (!isNumeric) {
+    return <span ref={nodeRef}>{value}</span>;
+  }
+
+  return <span ref={nodeRef}>{displayValue}</span>;
+}
 
 export default function Hero() {
   const { getContentValue } = useContent();
@@ -37,9 +68,15 @@ export default function Hero() {
   const metricsTitle = getContentValue('hero', 'info_3_title', 'Delivery Metrics');
   const metricsImage = getContentValue('hero', 'info_3_image', '');
 
+  const splitWords = (line: string) => line.split(/\s+/).filter(Boolean);
+  const lineOneWords = splitWords(line1);
+  const lineTwoWords = splitWords(line2);
+
   return (
     <section className="section-pad swiss-section relative overflow-hidden py-20 md:py-24">
       <div className="absolute inset-0 grid-pattern opacity-20" />
+      <div className="hero-mesh" />
+      <div className="hero-particle-lines" />
       <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_50%_15%,rgba(95,160,255,0.12),transparent_58%)]" />
       <span className="swiss-meta swiss-meta--tl">{getContentValue('hero', 'meta_left', 'hero.layout // 12-col')}</span>
       <span className="swiss-meta swiss-meta--tr">{getContentValue('hero', 'meta_right', 'v3.1 // bento-grid')}</span>
@@ -71,8 +108,32 @@ export default function Hero() {
                 fontStyle: 'italic',
               }}
             >
-              <span className="block">{line1}</span>
-              <span className="block text-[rgba(239,244,255,0.95)]">{line2}</span>
+              <span className="block">
+                {lineOneWords.map((word, index) => (
+                  <motion.span
+                    key={`hero-line1-${word}-${index}`}
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.08 + index * 0.045, ease }}
+                    className="mr-[0.28em] inline-block"
+                  >
+                    {word}
+                  </motion.span>
+                ))}
+              </span>
+              <span className="block text-[rgba(239,244,255,0.95)]">
+                {lineTwoWords.map((word, index) => (
+                  <motion.span
+                    key={`hero-line2-${word}-${index}`}
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.24 + index * 0.045, ease }}
+                    className="mr-[0.28em] inline-block"
+                  >
+                    {word}
+                  </motion.span>
+                ))}
+              </span>
             </h1>
 
             <p
@@ -85,14 +146,14 @@ export default function Hero() {
             <div className="mt-11 flex flex-col items-center gap-4 sm:flex-row sm:justify-center sm:gap-5">
               <Link
                 to="/contact"
-                className="shimmer-btn inline-flex items-center justify-center gap-2.5 bg-accent px-9 py-4 text-[12px] uppercase tracking-[0.28em] text-[#050d22] transition-all duration-300 hover:brightness-110"
+                className="shimmer-btn cta-btn inline-flex items-center justify-center gap-2.5 bg-accent px-9 py-4 text-[12px] uppercase tracking-[0.28em] text-[#050d22] transition-all duration-300 hover:brightness-110"
                 style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700 }}
               >
                 {getContentValue('hero', 'cta_primary', 'Start a project')} <ArrowRight size={14} />
               </Link>
               <Link
                 to="/work"
-                className="inline-flex items-center justify-center gap-2.5 border border-white/20 bg-black/30 px-9 py-4 text-[12px] uppercase tracking-[0.28em] text-[rgba(214,227,248,0.92)] transition-all duration-300 hover:border-white/35 hover:text-white"
+                className="cta-btn inline-flex items-center justify-center gap-2.5 border border-white/20 bg-black/30 px-9 py-4 text-[12px] uppercase tracking-[0.28em] text-[rgba(214,227,248,0.92)] transition-all duration-300 hover:border-white/35 hover:text-white"
                 style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700 }}
               >
                 {getContentValue('hero', 'cta_secondary', 'See shipped work')}
@@ -107,7 +168,7 @@ export default function Hero() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.45, ease }}
-            className="overflow-hidden border border-white/10 bg-zinc-900/50 p-8 md:p-10 lg:col-span-8"
+            className="bento-card scanline-hover overflow-hidden border border-white/10 bg-zinc-900/50 p-8 md:p-10 lg:col-span-8"
           >
             {coreServiceImage && (
               <div className="mb-6 h-36 overflow-hidden border border-white/10 md:h-44">
@@ -121,9 +182,9 @@ export default function Hero() {
 
             <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-3 md:gap-5">
               {stats.map((stat, i) => (
-                <div key={`${stat.label}-${i}`} className="min-h-[136px] overflow-hidden border border-white/10 bg-black/45 p-5 text-center">
+                <div key={`${stat.label}-${i}`} className="bento-card min-h-[136px] overflow-hidden border border-white/10 bg-black/45 p-5 text-center">
                   <p className="text-[34px] leading-none text-[#e8f0ff]" style={{ fontFamily: "'Playfair Display', serif", fontWeight: 800, fontStyle: 'italic' }}>
-                    {stat.value}
+                    <CountUpMetric value={stat.value} />
                   </p>
                   <p className="mono-readable mt-3 text-[11px] uppercase text-[rgba(164,188,225,0.86)]">{stat.label}</p>
                 </div>
@@ -154,7 +215,7 @@ export default function Hero() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.42, ease, delay: 0.05 * index }}
-                  className="aspect-square overflow-hidden border border-white/20 bg-black/80 p-5"
+                  className="bento-card aspect-square overflow-hidden border border-white/20 bg-black/80 p-5"
                 >
                   <p className="archive-tag text-[rgba(255,255,255,0.7)]">{spec.label}</p>
                   <p className="mono-readable mt-4 text-[12px] uppercase text-[rgba(226,236,252,0.92)]">{spec.value}</p>

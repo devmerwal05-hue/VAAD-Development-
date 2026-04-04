@@ -1,5 +1,8 @@
-import { m as motion } from 'framer-motion';
+import { useMemo, useState } from 'react';
+import { AnimatePresence, m as motion } from 'framer-motion';
+import { ChevronDown } from 'lucide-react';
 import { useContent } from '../lib/useContent';
+import SectionLabel from './SectionLabel';
 
 const ease: [number, number, number, number] = [0.16, 0.77, 0.47, 0.97];
 
@@ -32,6 +35,22 @@ export default function TechStack() {
     };
   }).filter(Boolean) as { name: string; desc: string; tags: string[]; index: number }[];
 
+  const [openCards, setOpenCards] = useState<Set<number>>(() => new Set([0]));
+
+  const defaultExpandedLabel = useMemo(
+    () => getContentValue('techstack', 'expanded_label', 'Expanded module'),
+    [getContentValue]
+  );
+
+  function toggleCard(index: number) {
+    setOpenCards((previous) => {
+      const next = new Set(previous);
+      if (next.has(index)) next.delete(index);
+      else next.add(index);
+      return next;
+    });
+  }
+
   if (categories.length === 0) return null;
 
   return (
@@ -43,8 +62,7 @@ export default function TechStack() {
       <div className="site-container swiss-grid relative z-10 max-w-[1320px] gap-8 px-5 md:px-8 lg:gap-12 xl:px-10">
         {/* Header */}
         <div className="swiss-full-col mb-4 flex items-center gap-4">
-          <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#E8132A', display: 'inline-block' }} />
-          <span className="section-ref">{labelParts[0] || '09'} / {labelParts[1] || 'Capabilities'}</span>
+          <SectionLabel number={labelParts[0] || '09'} label={labelParts[1] || 'Capabilities'} />
         </div>
 
         <div className="swiss-full-col mb-12 grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-end lg:gap-12">
@@ -69,14 +87,17 @@ export default function TechStack() {
         <div className="swiss-full-col rule-line-full mb-4" />
 
         <div className="swiss-full-col grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-12">
-          {categories.map((cat, i) => (
+          {categories.map((cat, i) => {
+            const isOpen = openCards.has(cat.index);
+
+            return (
             <motion.div
               key={cat.name}
               initial={{ opacity: 0, y: 24 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-5%' }}
               transition={{ duration: 0.6, ease, delay: i * 0.06 }}
-              className="group relative border border-[rgba(232,19,42,0.18)] bg-[rgba(9,22,40,0.62)] p-8 md:p-10 lg:col-span-6 xl:col-span-4"
+              className="group bento-card scanline-hover relative border border-[rgba(232,19,42,0.18)] bg-[rgba(9,22,40,0.62)] p-8 md:p-10 lg:col-span-6 xl:col-span-4"
             >
               {/* Hover */}
               <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" style={{ background: 'rgba(232,19,42,0.03)' }} />
@@ -91,40 +112,67 @@ export default function TechStack() {
               </span>
 
               <div className="relative z-10">
-                <p className="annotation-label mb-5">
-                  {getContentValue('techstack', 'module_prefix', 'Module')} / {String(i + 1).padStart(2, '0')}
-                </p>
-
-                <h3
-                  className="mb-4 group-hover:text-[#E8132A] transition-colors duration-300"
-                  style={{ fontFamily: "'Playfair Display', serif", fontWeight: 700, fontSize: 'clamp(19px, 2vw, 24px)', letterSpacing: '-0.02em', color: '#EAE6DB', lineHeight: 1.12 }}
+                <button
+                  type="button"
+                  onClick={() => toggleCard(cat.index)}
+                  className="w-full text-left"
+                  aria-expanded={isOpen}
+                  aria-label={`${isOpen ? defaultExpandedLabel : getContentValue('techstack', 'collapsed_label', 'Collapsed module')}: ${cat.name}`}
                 >
-                  {cat.name}
-                </h3>
+                  <p className="annotation-label mb-4">
+                    {getContentValue('techstack', 'module_prefix', 'Module')} / {String(i + 1).padStart(2, '0')}
+                  </p>
 
-                <p className="mb-8 text-[14px] leading-[1.9]" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, color: 'rgba(234,230,219,0.5)' }}>
-                  {cat.desc}
-                </p>
-
-                {/* Tags */}
-                <div className="flex flex-wrap gap-2.5">
-                  {cat.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="px-2.5 py-1.5 text-[9px] uppercase tracking-[0.18em] transition-all duration-200 group-hover:border-[rgba(232,19,42,0.3)]"
-                      style={{
-                        fontFamily: "'JetBrains Mono', monospace",
-                        color: 'rgba(234,230,219,0.42)',
-                        border: '1px solid rgba(234,230,219,0.1)',
-                      }}
+                  <div className="flex items-start justify-between gap-6">
+                    <h3
+                      className="mb-1 group-hover:text-[#E8132A] transition-colors duration-300"
+                      style={{ fontFamily: "'Playfair Display', serif", fontWeight: 700, fontSize: 'clamp(19px, 2vw, 24px)', letterSpacing: '-0.02em', color: '#EAE6DB', lineHeight: 1.12 }}
                     >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
+                      {cat.name}
+                    </h3>
+                    <ChevronDown
+                      size={18}
+                      className={`mt-1 shrink-0 text-[rgba(234,230,219,0.6)] transition-transform duration-300 ${isOpen ? 'rotate-180 text-[#E8132A]' : ''}`}
+                    />
+                  </div>
+                </button>
+
+                <AnimatePresence initial={false}>
+                  {isOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0, y: -6 }}
+                      animate={{ opacity: 1, height: 'auto', y: 0 }}
+                      exit={{ opacity: 0, height: 0, y: -4 }}
+                      transition={{ duration: 0.28, ease: [0.16, 0.77, 0.47, 0.97] }}
+                      className="overflow-hidden"
+                    >
+                      <p className="mb-8 mt-4 text-[14px] leading-[1.9]" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, color: 'rgba(234,230,219,0.5)' }}>
+                        {cat.desc}
+                      </p>
+
+                      {/* Tags */}
+                      <div className="flex flex-wrap gap-2.5">
+                        {cat.tags.map((tag) => (
+                          <span
+                            key={tag}
+                            className="px-2.5 py-1.5 text-[9px] uppercase tracking-[0.18em] transition-all duration-200 group-hover:border-[rgba(232,19,42,0.3)]"
+                            style={{
+                              fontFamily: "'JetBrains Mono', monospace",
+                              color: 'rgba(234,230,219,0.42)',
+                              border: '1px solid rgba(234,230,219,0.1)',
+                            }}
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             </motion.div>
-          ))}
+          );
+          })}
         </div>
       </div>
     </section>

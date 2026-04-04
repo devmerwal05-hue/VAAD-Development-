@@ -1,5 +1,6 @@
 import { m as motion } from 'framer-motion';
 import { useContent } from '../lib/useContent';
+import SectionLabel from './SectionLabel';
 
 const ease: [number, number, number, number] = [0.16, 0.77, 0.47, 0.97];
 
@@ -62,10 +63,7 @@ export default function Services() {
 
       <div className="site-container swiss-grid relative z-10 max-w-[1320px] gap-8 px-5 md:px-8 lg:gap-12 xl:px-10">
         <div className="swiss-full-col mb-6 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#ff2c1b', display: 'inline-block' }} />
-            <span className="section-ref">{labelParts[0] || '01'} / {labelParts[1] || 'Services'}</span>
-          </div>
+          <SectionLabel number={labelParts[0] || '01'} label={labelParts[1] || 'Services'} />
           <span className="archive-tag hidden md:block">{getContentValue('services', 'archive_tag', 'bionic_catalog_stream')}</span>
         </div>
 
@@ -97,7 +95,7 @@ export default function Services() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.2 }}
               transition={{ duration: 0.52, ease, delay: index * 0.06 }}
-              className="archive-panel group flex h-full flex-col overflow-hidden lg:col-span-6"
+              className="archive-panel bento-card scanline-hover service-reveal-card group flex h-full flex-col overflow-hidden lg:col-span-6"
             >
               <div className="relative h-[300px] border-b border-[rgba(126,164,224,0.25)] md:h-[340px]">
                 {service.image ? (
@@ -135,8 +133,12 @@ export default function Services() {
 
                 <div className="mt-auto border-t border-[rgba(126,164,224,0.2)] pt-6">
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
-                    {service.details.slice(0, 4).map((detail) => (
-                      <p key={detail} className="mono-readable flex items-start gap-2 text-[10px] uppercase text-[rgba(255,44,27,0.9)]">
+                    {service.details.slice(0, 4).map((detail, detailIndex) => (
+                      <p
+                        key={detail}
+                        className="service-detail-item mono-readable flex items-start gap-2 text-[10px] uppercase text-[rgba(255,44,27,0.9)]"
+                        style={{ transitionDelay: `${detailIndex * 70}ms` }}
+                      >
                         <span className="mt-[6px] inline-block h-[3px] w-[3px] shrink-0 rounded-full bg-[rgba(255,44,27,0.9)]" />
                         <span>{detail}</span>
                       </p>

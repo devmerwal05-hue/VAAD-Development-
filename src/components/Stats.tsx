@@ -1,6 +1,7 @@
 import { m as motion, useMotionValue, useTransform, animate } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
 import { useContent } from '../lib/useContent';
+import SectionLabel from './SectionLabel';
 
 const ease: [number, number, number, number] = [0.16, 0.77, 0.47, 0.97];
 
@@ -68,10 +69,7 @@ export default function Stats() {
 
       <div className="site-container swiss-grid relative z-10">
         <div className="swiss-full-col mb-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#ff2c1b', display: 'inline-block' }} />
-            <span className="section-ref">{labelParts[0] || '02'} / {labelParts[1] || 'Why Us'}</span>
-          </div>
+          <SectionLabel number={labelParts[0] || '02'} label={labelParts[1] || 'Why Us'} />
           <span className="archive-tag hidden md:block">{getContentValue('stats', 'archive_tag', 'sync_stability_matrix')}</span>
         </div>
 

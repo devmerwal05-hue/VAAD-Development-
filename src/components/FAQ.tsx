@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { AnimatePresence, m as motion } from 'framer-motion';
 import { useContent } from '../lib/useContent';
+import SectionLabel from './SectionLabel';
 
 const ease: [number, number, number, number] = [0.16, 0.77, 0.47, 0.97];
 
@@ -32,8 +33,7 @@ export default function FAQ() {
       <div className="site-container swiss-grid relative z-10 max-w-[1320px] gap-8 px-5 md:px-8 lg:gap-12 xl:px-10">
         {/* Header */}
         <div className="swiss-full-col mb-4 flex items-center gap-4">
-          <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#E8132A', display: 'inline-block' }} />
-          <span className="section-ref">{labelParts[0] || '07'} / {labelParts[1] || 'FAQ'}</span>
+          <SectionLabel number={labelParts[0] || '07'} label={labelParts[1] || 'FAQ'} />
         </div>
 
         <motion.h2
