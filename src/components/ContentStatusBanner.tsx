@@ -12,7 +12,7 @@ export default function ContentStatusBanner() {
         className={`mx-auto flex max-w-[1320px] items-center gap-2 rounded-xl border px-4 py-3 text-[13px] ${
           error
             ? 'border-[rgba(239,68,68,0.18)] bg-[rgba(239,68,68,0.08)] text-red-200'
-            : 'border-[rgba(124,111,247,0.16)] bg-[rgba(124,111,247,0.08)] text-text-secondary'
+            : 'border-[rgba(232,19,42,0.22)] bg-[rgba(232,19,42,0.12)] text-text-secondary'
         }`}
         style={{ fontFamily: 'DM Sans', fontWeight: 400 }}
       >

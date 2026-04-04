@@ -1,12 +1,10 @@
-import { m as motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import FAQ from '../components/FAQ';
+import PageHero from '../components/PageHero';
 import PageWrapper from '../components/PageWrapper';
 import Process from '../components/Process';
 import { usePageMetadata } from '../hooks/usePageMetadata';
 import { useContent } from '../lib/useContent';
-
-const ease: [number, number, number, number] = [0.25, 0.1, 0.25, 1];
 
 export default function ProcessPage() {
   const { getContentValue } = useContent();
@@ -23,35 +21,33 @@ export default function ProcessPage() {
 
   return (
     <PageWrapper>
-      <section className="pt-20 pb-8">
-        <div className="max-w-[1280px] mx-auto px-6">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, ease }} className="max-w-[680px]">
-            <div className="flex items-center gap-2 mb-6">
-              <span className="w-[6px] h-[6px] rounded-full bg-accent" />
-              <span className="text-[11px] font-medium tracking-[0.1em] uppercase text-text-tertiary" style={{ fontFamily: 'DM Sans', fontWeight: 500 }}>
-                {getContentValue('process_page', 'eyebrow', 'How Delivery Works')}
-              </span>
-            </div>
-            <h1 className="text-text-primary mb-5" style={{ fontFamily: 'Syne', fontWeight: 800, fontSize: 'clamp(40px, 6vw, 72px)', lineHeight: 1.0, letterSpacing: '-0.03em' }}>
-              {getContentValue('process_page', 'title_before', 'Clear checkpoints from brief to')} <span className="gradient-text">{getContentValue('process_page', 'title_highlight', 'launch day')}</span>
-            </h1>
-            <p className="text-[18px] text-text-secondary leading-[1.65]" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>
-              {getContentValue('process_page', 'description', 'The process is designed for speed without hidden surprises: scope first, build against decisions, then launch with a handoff that is actually usable.')}
-            </p>
-          </motion.div>
-        </div>
-      </section>
+      <PageHero
+        eyebrow={getContentValue('process_page', 'eyebrow', 'How Delivery Works')}
+        titleBefore={getContentValue('process_page', 'title_before', 'Clear checkpoints from brief to')}
+        titleHighlight={getContentValue('process_page', 'title_highlight', 'launch day')}
+        description={getContentValue('process_page', 'description', 'The process is designed for speed without hidden surprises: scope first, build against decisions, then launch with a handoff that is actually usable.')}
+      />
+
       <Process />
       <FAQ />
-      <section className="py-20">
-        <div className="max-w-[640px] mx-auto px-6 text-center">
-          <h2 className="text-[32px] text-text-primary mb-4" style={{ fontFamily: 'Syne', fontWeight: 700 }}>
+
+      <section className="px-6 py-20 md:py-24">
+        <div className="corner-marks mx-auto max-w-[900px] border border-[rgba(232,19,42,0.2)] bg-[rgba(9,22,40,0.76)] px-8 py-10 text-center md:px-12 md:py-14">
+          <h2
+            className="mb-4 text-text-primary"
+            style={{ fontFamily: "'Playfair Display', serif", fontWeight: 800, fontSize: 'clamp(30px, 4vw, 56px)', lineHeight: 0.9, letterSpacing: '-0.03em' }}
+          >
             {getContentValue('process_page', 'cta_title', 'Want this process on your project?')}
           </h2>
-          <p className="text-[16px] text-text-secondary mb-8" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>
+          <p className="mx-auto mb-8 max-w-[58ch] text-[15px] leading-[1.8] text-[rgba(234,230,219,0.56)]" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}>
             {getContentValue('process_page', 'cta_description', 'We can start with scope, risks, and a release plan before touching design or code.')}
           </p>
-          <Link to="/contact" className="shimmer-btn gradient-bg text-white px-8 py-[14px] rounded-lg text-[15px] font-medium inline-block" style={{ fontFamily: 'DM Sans', fontWeight: 500 }}>
+
+          <Link
+            to="/contact"
+            className="shimmer-btn inline-flex items-center gap-2 border border-accent bg-accent px-8 py-3.5 text-[11px] uppercase tracking-[0.18em] text-text-primary transition-all duration-300 hover:shadow-[0_0_40px_rgba(232,19,42,0.28)]"
+            style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 600 }}
+          >
             {getContentValue('process_page', 'cta_button', 'Request a project plan')}
           </Link>
         </div>

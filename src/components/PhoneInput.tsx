@@ -48,7 +48,7 @@ export default function PhoneInput({
         className={`w-full bg-surface-1 text-text-primary text-[15px] px-4 py-[14px] rounded-xl border outline-none transition-all duration-200 placeholder:text-text-tertiary ${
           error
             ? 'border-[rgba(239,68,68,0.5)] focus:border-[rgba(239,68,68,0.7)] focus:shadow-[0_0_0_3px_rgba(239,68,68,0.08)]'
-            : 'border-[rgba(255,255,255,0.06)] focus:border-[rgba(124,111,247,0.4)] focus:shadow-[0_0_0_3px_rgba(124,111,247,0.08)]'
+            : 'border-[rgba(232,19,42,0.18)] focus:border-[rgba(232,19,42,0.5)] focus:shadow-[0_0_0_3px_rgba(232,19,42,0.12)]'
         }`}
         style={{ fontFamily: 'DM Sans', fontWeight: 400 }}
       />

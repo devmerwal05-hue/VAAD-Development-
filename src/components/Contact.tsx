@@ -128,8 +128,10 @@ export default function Contact() {
   }
 
   return (
-    <section className="py-24 md:py-32">
-      <div className="max-w-[1280px] mx-auto px-6">
+    <section className="relative py-24 md:py-32">
+      <div className="absolute inset-0 grid-pattern opacity-12 pointer-events-none" />
+
+      <div className="max-w-[1360px] mx-auto px-6 relative z-10">
         <SectionLabel number={labelParts[0] || '08'} label={labelParts[1] || 'Contact'} />
         <SectionTitle>{getContentValue('contact', 'title', 'Tell us what needs to ship')}</SectionTitle>
 
@@ -142,7 +144,7 @@ export default function Contact() {
           >
             <h3
               className="text-[28px] md:text-[32px] text-text-primary mb-5 break-words [text-wrap:balance]"
-              style={{ fontFamily: 'Syne', fontWeight: 700, lineHeight: 1.1 }}
+              style={{ fontFamily: "'Playfair Display', serif", fontWeight: 800, lineHeight: 0.95, letterSpacing: '-0.02em' }}
             >
               {getContentValue('contact', 'heading', 'Share the scope, timeline, and blockers.')}
             </h3>
