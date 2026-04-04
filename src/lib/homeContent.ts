@@ -86,6 +86,13 @@ export const serviceDefaults = [
   },
 ] as const;
 
+const serviceDetailDefaults = [
+  ['Narrative-first page architecture', 'CMS-driven content blocks', 'Performance budget and launch QA', 'Responsive behavior mapped before build'],
+  ['Role-aware dashboard views', 'Form and approval flows', 'Audit-friendly data logging', 'Actionable status states for teams'],
+  ['Catalog and merch structure', 'Conversion-focused PDP templates', 'Mobile checkout optimization', 'Analytics event mapping'],
+  ['Deployment and rollback readiness', 'CMS handoff and governance', 'Issue triage during launch window', 'Iteration backlog for phase two'],
+] as const;
+
 export const techStackDefaults = [
   { name: 'Frontend systems', desc: 'React interfaces with durable component patterns and content-aware layouts.', tags: ['React', 'TypeScript', 'Routing'] },
   { name: 'Backend workflows', desc: 'Serverless endpoints and operational logic built for forms, content, and admin tooling.', tags: ['Node', 'Vercel Functions', 'Validation'] },
@@ -299,10 +306,27 @@ const heroFields: AdminFieldDefinition[] = [
   { key: 'stat_2_label', label: 'Stat 2 label', fallback: heroDefaults.stat_2_label },
   { key: 'stat_3_number', label: 'Stat 3 value', fallback: heroDefaults.stat_3_number },
   { key: 'stat_3_label', label: 'Stat 3 label', fallback: heroDefaults.stat_3_label },
+  { key: 'spec_1_label', label: 'Spec 1 label', fallback: 'Delivery mode' },
+  { key: 'spec_1_value', label: 'Spec 1 value', fallback: 'Embedded sprint' },
+  { key: 'spec_2_label', label: 'Spec 2 label', fallback: 'Iteration cycle' },
+  { key: 'spec_2_value', label: 'Spec 2 value', fallback: '48-hour checkpoints' },
+  { key: 'spec_3_label', label: 'Spec 3 label', fallback: 'Stack bias' },
+  { key: 'spec_3_value', label: 'Spec 3 value', fallback: 'React + TypeScript + Supabase' },
+  { key: 'spec_4_label', label: 'Spec 4 label', fallback: 'Launch profile' },
+  { key: 'spec_4_value', label: 'Spec 4 value', fallback: 'Content-ready + measurable' },
   { key: 'proof_kicker', label: 'Proof card kicker', fallback: heroDefaults.proof_kicker },
   { key: 'proof_title', label: 'Proof card title', fallback: heroDefaults.proof_title, type: 'textarea' },
   { key: 'proof_description', label: 'Proof card description', fallback: heroDefaults.proof_description, type: 'textarea' },
   { key: 'proof_image', label: 'Proof card image', fallback: heroDefaults.proof_image, type: 'image', description: 'Optional. Upload an image for the delivery board panel. If empty, the first portfolio project image is used.' },
+  { key: 'info_1_title', label: 'Info box 1 title', fallback: 'Build brief' },
+  { key: 'info_1_text', label: 'Info box 1 text', fallback: 'Clear scoping, focused execution, and handoff-ready delivery in one loop.', type: 'textarea' },
+  { key: 'info_1_image', label: 'Info box 1 image', fallback: '', type: 'image' },
+  { key: 'info_2_title', label: 'Info box 2 title', fallback: 'System specs' },
+  { key: 'info_2_text', label: 'Info box 2 text', fallback: 'Critical constraints and architecture details.', type: 'textarea' },
+  { key: 'info_2_image', label: 'Info box 2 image', fallback: '', type: 'image' },
+  { key: 'info_3_title', label: 'Info box 3 title', fallback: 'Delivery metrics' },
+  { key: 'info_3_text', label: 'Info box 3 text', fallback: 'Operational metrics for timeline confidence.', type: 'textarea' },
+  { key: 'info_3_image', label: 'Info box 3 image', fallback: '', type: 'image' },
   { key: 'proof_location', label: 'Proof card location label', fallback: 'Home', description: 'Small label in the proof-card header (top right).' },
   { key: 'featured_fallback_alt', label: 'Featured image alt (fallback)', fallback: 'Featured release' },
   { key: 'featured_fallback_tag', label: 'Featured tag (fallback)', fallback: 'Featured release' },
@@ -318,9 +342,15 @@ const serviceFields: AdminFieldDefinition[] = [
   { key: 'card_count', label: 'Number of service cards', fallback: String(serviceDefaults.length), type: 'text', description: 'Set the number of service cards to display (1-10).' },
   ...serviceDefaults.flatMap((service, index) => {
     const number = index + 1;
+    const details = serviceDetailDefaults[index] || ['', '', '', ''];
     return [
       { key: `card_${number}_title`, label: `Service ${number} title`, fallback: service.title },
       { key: `card_${number}_desc`, label: `Service ${number} description`, fallback: service.description, type: 'textarea' as const },
+      { key: `card_${number}_image`, label: `Service ${number} image`, fallback: '', type: 'image' as const, description: 'Optional card image. Leave empty to use the built-in gradient fallback.' },
+      { key: `card_${number}_detail_1`, label: `Service ${number} detail 1`, fallback: details[0] },
+      { key: `card_${number}_detail_2`, label: `Service ${number} detail 2`, fallback: details[1] },
+      { key: `card_${number}_detail_3`, label: `Service ${number} detail 3`, fallback: details[2] },
+      { key: `card_${number}_detail_4`, label: `Service ${number} detail 4`, fallback: details[3] },
     ];
   }),
 ];

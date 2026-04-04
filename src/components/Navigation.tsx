@@ -1,13 +1,12 @@
 import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { NavLink } from 'react-router-dom';
-import { Archive, BarChart3, CircleUserRound, FlaskConical, LayoutGrid, Menu, X } from 'lucide-react';
+import { Archive, BarChart3, CircleUserRound, LayoutGrid, Menu, X } from 'lucide-react';
 import { useContent } from '../lib/useContent';
 
 interface NavLinkItem { href: string; label: string; }
 
 export default function Navigation() {
-  const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const { getContentValue } = useContent();
 
@@ -19,18 +18,6 @@ export default function Navigation() {
     { label: getContentValue('nav', 'link_5', 'Pricing'),  href: getContentValue('nav', 'link_5_href', '/pricing') },
     { label: getContentValue('nav', 'link_6', 'Contact'),  href: getContentValue('nav', 'link_6_href', '/contact') },
   ];
-
-  useEffect(() => {
-    let ticking = false;
-    const handleScroll = () => {
-      if (ticking) return;
-      ticking = true;
-      requestAnimationFrame(() => { setScrolled(window.scrollY > 48); ticking = false; });
-    };
-    handleScroll();
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
 
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? 'hidden' : '';
@@ -48,19 +35,12 @@ export default function Navigation() {
     <>
       <nav
         aria-label="Primary"
-        className="fixed left-0 right-0 top-0 z-50 h-[72px]"
-        style={{
-          background: scrolled ? 'rgba(2, 18, 52, 0.95)' : 'rgba(2, 18, 52, 0.78)',
-          backdropFilter: 'blur(18px)',
-          WebkitBackdropFilter: 'blur(18px)',
-          borderBottom: '1px solid rgba(126, 164, 224, 0.2)',
-          transition: 'background 0.4s, border-color 0.4s',
-        }}
+        className="fixed left-0 right-0 top-0 z-50 h-[84px] border-b border-white/10 bg-black/80 backdrop-blur-xl"
       >
-        <div className="relative mx-auto flex h-full w-full max-w-[1280px] items-center justify-between px-5 md:px-8">
+        <div className="relative mx-auto flex h-full w-full max-w-screen-xl items-center justify-between px-5 md:px-8">
           <button
             type="button"
-            className="flex h-10 w-10 items-center justify-center border border-[rgba(126,164,224,0.35)] bg-[rgba(6,24,58,0.8)] text-[rgba(255,44,27,0.95)] md:hidden"
+            className="flex h-10 w-10 items-center justify-center border border-white/20 bg-black/50 text-[rgba(255,44,27,0.95)] md:hidden"
             onClick={() => setMobileOpen((s) => !s)}
             aria-expanded={mobileOpen}
             aria-controls="mobile-navigation"
@@ -106,15 +86,7 @@ export default function Navigation() {
               </NavLink>
             ))}
           </div>
-
-          <NavLink
-            to="/admin"
-            className="flex h-10 w-10 items-center justify-center border border-[rgba(126,164,224,0.35)] bg-[rgba(6,24,58,0.8)] text-[rgba(255,44,27,0.95)] transition-colors hover:text-[#ff5f51]"
-            aria-label="Admin"
-            title="Admin"
-          >
-            <FlaskConical size={15} />
-          </NavLink>
+          <div className="h-10 w-10 md:hidden" aria-hidden />
         </div>
       </nav>
 
@@ -127,8 +99,7 @@ export default function Navigation() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -16 }}
             transition={{ duration: 0.28, ease: [0.16, 0.77, 0.47, 0.97] }}
-            className="fixed inset-0 z-40 flex flex-col pt-[72px]"
-            style={{ background: 'rgba(2, 18, 52, 0.96)' }}
+            className="fixed inset-0 z-40 flex flex-col bg-black/95 pt-[84px]"
             role="dialog"
             aria-modal="true"
           >

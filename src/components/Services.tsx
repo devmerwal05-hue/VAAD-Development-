@@ -42,6 +42,7 @@ export default function Services() {
     return {
       title: getContentValue('services', `card_${index + 1}_title`, fallback?.title || ''),
       description: getContentValue('services', `card_${index + 1}_desc`, fallback?.description || ''),
+      image: getContentValue('services', `card_${index + 1}_image`, ''),
       details,
     };
   }).filter((s) => s.title);
@@ -99,7 +100,17 @@ export default function Services() {
               className="archive-panel group overflow-hidden lg:col-span-6"
             >
               <div className="relative h-[280px] border-b border-[rgba(126,164,224,0.25)] md:h-[320px]">
-                <div className="absolute inset-0" style={{ background: visualFallbacks[index % visualFallbacks.length] }} />
+                {service.image ? (
+                  <img
+                    src={service.image}
+                    alt={service.title}
+                    loading="lazy"
+                    decoding="async"
+                    className="absolute inset-0 h-full w-full object-cover"
+                  />
+                ) : (
+                  <div className="absolute inset-0" style={{ background: visualFallbacks[index % visualFallbacks.length] }} />
+                )}
 
                 <div className="absolute inset-0 bg-[linear-gradient(to_top,rgba(1,14,42,0.96)_5%,rgba(1,14,42,0.18)_58%)]" />
                 <div className="absolute left-4 top-4 border border-[rgba(255,44,27,0.62)] bg-[rgba(2,18,52,0.9)] px-3 py-1">
