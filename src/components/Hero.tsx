@@ -41,8 +41,8 @@ export default function Hero() {
     <section className="section-pad swiss-section relative overflow-hidden py-20 md:py-24">
       <div className="absolute inset-0 grid-pattern opacity-20" />
       <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_50%_15%,rgba(95,160,255,0.12),transparent_58%)]" />
-      <span className="swiss-meta swiss-meta--tl">hero.layout // 12-col</span>
-      <span className="swiss-meta swiss-meta--tr">v3.1 // bento-grid</span>
+      <span className="swiss-meta swiss-meta--tl">{getContentValue('hero', 'meta_left', 'hero.layout // 12-col')}</span>
+      <span className="swiss-meta swiss-meta--tr">{getContentValue('hero', 'meta_right', 'v3.1 // bento-grid')}</span>
 
       <div className="relative z-10 site-container swiss-grid max-w-[1320px] gap-8 px-5 md:px-8 lg:gap-12 xl:px-10">
         <motion.div

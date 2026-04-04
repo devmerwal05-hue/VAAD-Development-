@@ -37,8 +37,8 @@ export default function TechStack() {
   return (
     <section className="section-pad swiss-section relative overflow-hidden py-20 md:py-24">
       <div className="absolute inset-0 grid-pattern opacity-15 pointer-events-none" />
-      <span className="swiss-meta swiss-meta--tl">tech.registry</span>
-      <span className="swiss-meta swiss-meta--tr">hash // 0x12AF</span>
+      <span className="swiss-meta swiss-meta--tl">{getContentValue('techstack', 'meta_left', 'tech.registry')}</span>
+      <span className="swiss-meta swiss-meta--tr">{getContentValue('techstack', 'meta_right', 'hash // 0x12AF')}</span>
 
       <div className="site-container swiss-grid relative z-10 max-w-[1320px] gap-8 px-5 md:px-8 lg:gap-12 xl:px-10">
         {/* Header */}
@@ -91,7 +91,9 @@ export default function TechStack() {
               </span>
 
               <div className="relative z-10">
-                <p className="annotation-label mb-5">Module / {String(i + 1).padStart(2, '0')}</p>
+                <p className="annotation-label mb-5">
+                  {getContentValue('techstack', 'module_prefix', 'Module')} / {String(i + 1).padStart(2, '0')}
+                </p>
 
                 <h3
                   className="mb-4 group-hover:text-[#E8132A] transition-colors duration-300"

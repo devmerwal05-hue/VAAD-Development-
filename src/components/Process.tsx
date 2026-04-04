@@ -30,8 +30,8 @@ export default function Process() {
   return (
     <section className="section-pad swiss-section relative py-20 md:py-24">
       <div className="absolute inset-0 grid-pattern opacity-15 pointer-events-none" />
-      <span className="swiss-meta swiss-meta--tl">process.timeline</span>
-      <span className="swiss-meta swiss-meta--tr">coord // 19.07N</span>
+      <span className="swiss-meta swiss-meta--tl">{getContentValue('process', 'meta_left', 'process.timeline')}</span>
+      <span className="swiss-meta swiss-meta--tr">{getContentValue('process', 'meta_right', 'coord // 19.07N')}</span>
 
       <div className="site-container swiss-grid relative z-10 max-w-[1320px] gap-8 px-5 md:px-8 lg:gap-12 xl:px-10">
         {/* Section header */}
@@ -91,7 +91,9 @@ export default function Process() {
                   {step.number}
                 </p>
 
-                <p className="annotation-label mb-5">Phase / {step.number}</p>
+                <p className="annotation-label mb-5">
+                  {getContentValue('process', 'phase_prefix', 'Phase')} / {step.number}
+                </p>
 
                 <h3
                   className="mb-5 group-hover:text-[#E8132A] transition-colors duration-300"

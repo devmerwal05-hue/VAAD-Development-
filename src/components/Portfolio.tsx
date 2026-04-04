@@ -16,8 +16,8 @@ export default function Portfolio() {
   return (
     <section className="section-pad swiss-section relative overflow-hidden py-20 md:py-24">
       <div className="absolute inset-0 grid-pattern opacity-12 pointer-events-none" />
-      <span className="swiss-meta swiss-meta--tl">portfolio.archive</span>
-      <span className="swiss-meta swiss-meta--tr">spec // v1.92</span>
+      <span className="swiss-meta swiss-meta--tl">{getContentValue('portfolio', 'meta_left', 'portfolio.archive')}</span>
+      <span className="swiss-meta swiss-meta--tr">{getContentValue('portfolio', 'meta_right', 'spec // v1.92')}</span>
 
       <div className="site-container swiss-grid relative z-10 max-w-[1320px] gap-8 px-5 md:px-8 lg:gap-12 xl:px-10">
         <div className="swiss-full-col mb-4 flex items-center justify-between">
@@ -25,7 +25,7 @@ export default function Portfolio() {
             <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#ff2c1b', display: 'inline-block' }} />
             <span className="section-ref">{labelParts[0] || '04'} / {labelParts[1] || 'Work'}</span>
           </div>
-          <span className="archive-tag hidden md:block">specimen_gallery</span>
+          <span className="archive-tag hidden md:block">{getContentValue('portfolio', 'archive_tag', 'specimen_gallery')}</span>
         </div>
 
         <motion.h2

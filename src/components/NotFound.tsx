@@ -21,8 +21,8 @@ export default function NotFound() {
       <main id="page-content" className="relative swiss-section flex min-h-[88svh] items-center border-b border-white/5 pt-[72px]">
         <div className="absolute inset-0 grid-pattern opacity-18 pointer-events-none" />
         <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_65%_50%_at_50%_45%,rgba(232,19,42,0.1),transparent_68%)]" />
-        <span className="swiss-meta swiss-meta--tl">404.route</span>
-        <span className="swiss-meta swiss-meta--tr">status // missing</span>
+        <span className="swiss-meta swiss-meta--tl">{getContentValue('not_found', 'meta_left', '404.route')}</span>
+        <span className="swiss-meta swiss-meta--tr">{getContentValue('not_found', 'meta_right', 'status // missing')}</span>
 
         <div className="site-container swiss-grid relative z-10">
           <motion.div

@@ -30,8 +30,8 @@ export default function TeamPage() {
       <Team />
 
       <section className="section-pad swiss-section relative">
-        <span className="swiss-meta swiss-meta--tl">team.cta</span>
-        <span className="swiss-meta swiss-meta--tr">prompt // 04</span>
+        <span className="swiss-meta swiss-meta--tl">{getContentValue('team_page', 'cta_meta_left', 'team.cta')}</span>
+        <span className="swiss-meta swiss-meta--tr">{getContentValue('team_page', 'cta_meta_right', 'prompt // 04')}</span>
         <div className="site-container swiss-grid">
           <div className="corner-marks swiss-full-col border border-[rgba(232,19,42,0.2)] bg-[rgba(9,22,40,0.76)] px-8 py-10 text-center md:px-12 md:py-14 lg:col-span-6 lg:col-start-4">
             <h2

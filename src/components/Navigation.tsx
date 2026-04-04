@@ -25,7 +25,7 @@ export default function Navigation() {
   }, [mobileOpen]);
 
   const dockItems = [
-    { href: '/', icon: LayoutGrid, label: 'Home' },
+    { href: '/', icon: LayoutGrid, label: getContentValue('nav', 'home_label', 'Home') },
     { href: '/work', icon: Archive, label: getContentValue('nav', 'link_1', 'Work') },
     { href: '/services', icon: BarChart3, label: getContentValue('nav', 'link_2', 'Services') },
     { href: '/contact', icon: CircleUserRound, label: getContentValue('nav', 'link_6', 'Contact') },
@@ -34,7 +34,7 @@ export default function Navigation() {
   return (
     <>
       <nav
-        aria-label="Primary"
+        aria-label={getContentValue('nav', 'primary_aria_label', 'Primary navigation')}
         className="fixed left-0 right-0 top-0 z-50 h-[84px] border-b border-white/10 bg-black/80 backdrop-blur-xl"
       >
         <div className="relative mx-auto flex h-full w-full max-w-screen-xl items-center justify-between px-5 md:px-8">
@@ -44,7 +44,11 @@ export default function Navigation() {
             onClick={() => setMobileOpen((s) => !s)}
             aria-expanded={mobileOpen}
             aria-controls="mobile-navigation"
-            aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+            aria-label={
+              mobileOpen
+                ? getContentValue('nav', 'mobile_close_aria', 'Close navigation menu')
+                : getContentValue('nav', 'mobile_open_aria', 'Open navigation menu')
+            }
           >
             {mobileOpen ? <X size={16} /> : <Menu size={16} />}
           </button>
@@ -52,7 +56,7 @@ export default function Navigation() {
           <NavLink
             to="/"
             className="absolute left-1/2 -translate-x-1/2 text-[#e8ecf8] md:static md:translate-x-0"
-            aria-label="VAAD Development home"
+            aria-label={getContentValue('nav', 'home_aria_label', 'VAAD Development home')}
           >
             <span
               style={{
@@ -64,7 +68,7 @@ export default function Navigation() {
                 lineHeight: 1,
               }}
             >
-              VAAD
+              {getContentValue('nav', 'logo_text', 'VAAD')}
             </span>
           </NavLink>
 
@@ -107,7 +111,7 @@ export default function Navigation() {
 
             <div className="flex-1 px-6 py-8">
               <div className="archive-panel p-5">
-                <p className="archive-tag mb-6">System Navigation</p>
+                <p className="archive-tag mb-6">{getContentValue('nav', 'mobile_overlay_title', 'System Navigation')}</p>
 
                 {navLinks.map((link, index) => (
                   <motion.div
@@ -144,7 +148,9 @@ export default function Navigation() {
             </div>
 
             <div className="px-6 pb-8">
-              <p className="annotation-label" style={{ color: 'rgba(142,168,209,0.6)' }}>swipe to navigate</p>
+              <p className="annotation-label" style={{ color: 'rgba(142,168,209,0.6)' }}>
+                {getContentValue('nav', 'mobile_overlay_hint', 'swipe to navigate')}
+              </p>
             </div>
           </motion.div>
         )}

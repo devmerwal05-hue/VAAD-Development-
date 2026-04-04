@@ -13,8 +13,8 @@ export default function Marquee() {
       style={{ background: 'rgba(4,19,48,0.95)' }}
       aria-hidden="true"
     >
-      <span className="swiss-meta swiss-meta--tl">stream.buffer</span>
-      <span className="swiss-meta swiss-meta--tr">seq // 0031</span>
+      <span className="swiss-meta swiss-meta--tl">{getContentValue('marquee', 'meta_left', 'stream.buffer')}</span>
+      <span className="swiss-meta swiss-meta--tr">{getContentValue('marquee', 'meta_right', 'seq // 0031')}</span>
 
       {/* Fade edges */}
       <div className="absolute left-0 top-0 bottom-0 w-16 z-10 pointer-events-none"

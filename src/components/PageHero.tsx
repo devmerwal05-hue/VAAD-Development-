@@ -1,4 +1,5 @@
 import { m as motion } from 'framer-motion';
+import { useContent } from '../lib/useContent';
 
 interface PageHeroProps {
   description: string;
@@ -15,11 +16,13 @@ export default function PageHero({
   titleBefore,
   titleHighlight,
 }: PageHeroProps) {
+  const { getContentValue } = useContent();
+
   return (
     <section className="section-pad swiss-section relative overflow-hidden pt-28 md:pt-36">
       <div className="absolute inset-0 grid-pattern opacity-20 pointer-events-none" />
-      <span className="swiss-meta swiss-meta--tl">page.hero</span>
-      <span className="swiss-meta swiss-meta--tr">layout // 12-col</span>
+      <span className="swiss-meta swiss-meta--tl">{getContentValue('ui', 'page_hero_meta_left', 'page.hero')}</span>
+      <span className="swiss-meta swiss-meta--tr">{getContentValue('ui', 'page_hero_meta_right', 'layout // 12-col')}</span>
 
       <div className="absolute inset-0 pointer-events-none">
         <div
@@ -76,16 +79,20 @@ export default function PageHero({
           >
             <div className="corner-marks border border-[rgba(232,19,42,0.2)] bg-[rgba(9,22,40,0.78)] p-9">
               <div className="mb-6 flex items-center justify-between">
-                <span className="annotation-label">00 / 01</span>
-                <span className="annotation-label">01</span>
+                <span className="annotation-label">{getContentValue('ui', 'page_hero_panel_top_left', '00 / 01')}</span>
+                <span className="annotation-label">{getContentValue('ui', 'page_hero_panel_top_right', '01')}</span>
               </div>
 
               <div className="h-[1px] bg-[rgba(232,19,42,0.2)]" />
 
               <div className="mt-6 grid grid-cols-3 gap-4">
-                {[1, 2, 3].map((n) => (
-                  <div key={n} className="border border-[rgba(232,19,42,0.14)] px-4 py-2 text-center">
-                    <span className="annotation-label">{String(n).padStart(2, '0')}</span>
+                {[
+                  getContentValue('ui', 'page_hero_panel_grid_1', '01'),
+                  getContentValue('ui', 'page_hero_panel_grid_2', '02'),
+                  getContentValue('ui', 'page_hero_panel_grid_3', '03'),
+                ].map((label, index) => (
+                  <div key={`${index}-${label}`} className="border border-[rgba(232,19,42,0.14)] px-4 py-2 text-center">
+                    <span className="annotation-label">{label}</span>
                   </div>
                 ))}
               </div>
@@ -93,7 +100,7 @@ export default function PageHero({
               <div className="mt-7 rounded-lg border border-[rgba(232,19,42,0.14)] px-4 py-5">
                 <div className="mb-3 flex items-center gap-2">
                   <span className="dot-red" />
-                  <span className="annotation-label">00 / 00</span>
+                  <span className="annotation-label">{getContentValue('ui', 'page_hero_panel_bottom', '00 / 00')}</span>
                 </div>
                 <div className="h-[1px] bg-[rgba(232,19,42,0.2)]" />
               </div>

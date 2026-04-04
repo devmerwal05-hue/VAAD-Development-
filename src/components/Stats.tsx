@@ -63,8 +63,8 @@ export default function Stats() {
     <section className="section-pad swiss-section relative">
       <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_50%_40%,rgba(120,174,255,0.12),transparent_60%)]" />
       <div className="absolute inset-0 grid-pattern opacity-12 pointer-events-none" />
-      <span className="swiss-meta swiss-meta--tl">stats.matrix</span>
-      <span className="swiss-meta swiss-meta--tr">coord // 48.12N</span>
+      <span className="swiss-meta swiss-meta--tl">{getContentValue('stats', 'meta_left', 'stats.matrix')}</span>
+      <span className="swiss-meta swiss-meta--tr">{getContentValue('stats', 'meta_right', 'coord // 48.12N')}</span>
 
       <div className="site-container swiss-grid relative z-10">
         <div className="swiss-full-col mb-4 flex items-center justify-between">
@@ -72,7 +72,7 @@ export default function Stats() {
             <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#ff2c1b', display: 'inline-block' }} />
             <span className="section-ref">{labelParts[0] || '02'} / {labelParts[1] || 'Why Us'}</span>
           </div>
-          <span className="archive-tag hidden md:block">sync_stability_matrix</span>
+          <span className="archive-tag hidden md:block">{getContentValue('stats', 'archive_tag', 'sync_stability_matrix')}</span>
         </div>
 
         <motion.h2
@@ -95,7 +95,9 @@ export default function Stats() {
                 transition={{ duration: 0.55, ease, delay: i * 0.08 }}
                 className="border border-[rgba(126,164,224,0.24)] bg-[rgba(5,22,52,0.85)] p-6"
               >
-                <p className="archive-tag" style={{ color: 'rgba(255,44,27,0.92)' }}>metric_{String(i + 1).padStart(2, '0')}</p>
+                <p className="archive-tag" style={{ color: 'rgba(255,44,27,0.92)' }}>
+                  {getContentValue('stats', 'metric_prefix', 'metric')}_{String(i + 1).padStart(2, '0')}
+                </p>
 
                 <div
                   className="mt-3 text-[58px] leading-none text-[#dfe8f8]"

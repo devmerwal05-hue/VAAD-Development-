@@ -1,10 +1,12 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
+import { useContent } from '../lib/useContent';
 
 interface Props { onComplete: () => void; }
 
 export default function IntroSplash({ onComplete }: Props) {
   const [phase, setPhase] = useState<'enter' | 'hold' | 'exit'>('enter');
+  const { getContentValue } = useContent();
 
   useEffect(() => {
     const t1 = setTimeout(() => setPhase('hold'), 600);
@@ -32,9 +34,9 @@ export default function IntroSplash({ onComplete }: Props) {
             transition={{ duration: 0.4 }}
             className="absolute top-8 left-0 right-0 flex items-center justify-between px-8"
           >
-            <span className="annotation-label">SPECIMEN / 001</span>
-            <span className="annotation-label">EST. 2024</span>
-            <span className="annotation-label">VAA-DEV-X</span>
+            <span className="annotation-label">{getContentValue('intro_splash', 'top_left', 'SPECIMEN / 001')}</span>
+            <span className="annotation-label">{getContentValue('intro_splash', 'top_center', 'EST. 2024')}</span>
+            <span className="annotation-label">{getContentValue('intro_splash', 'top_right', 'VAA-DEV-X')}</span>
           </motion.div>
 
           {/* Horizontal scan line — animates across */}
@@ -64,7 +66,7 @@ export default function IntroSplash({ onComplete }: Props) {
                   lineHeight: 0.85,
                 }}
               >
-                VAAD
+                {getContentValue('nav', 'logo_text', 'VAAD')}
               </h1>
 
               {/* Red overlay accent — partial text */}
@@ -85,7 +87,7 @@ export default function IntroSplash({ onComplete }: Props) {
                     lineHeight: 0.85,
                   }}
                 >
-                  VAAD
+                  {getContentValue('nav', 'logo_text', 'VAAD')}
                 </h1>
               </motion.div>
 
@@ -108,7 +110,7 @@ export default function IntroSplash({ onComplete }: Props) {
                 className="text-[9px] tracking-[0.35em] uppercase"
                 style={{ fontFamily: "'JetBrains Mono', monospace", color: 'rgba(234,230,219,0.4)' }}
               >
-                Development
+                {getContentValue('intro_splash', 'tagline', 'Development')}
               </span>
               <div className="h-[1px] w-12" style={{ background: 'rgba(232,19,42,0.4)' }} />
             </motion.div>
@@ -121,16 +123,16 @@ export default function IntroSplash({ onComplete }: Props) {
             transition={{ duration: 0.4 }}
             className="absolute bottom-8 left-0 right-0 flex items-center justify-between px-8"
           >
-            <span className="annotation-label">SYSTEM / INIT</span>
+            <span className="annotation-label">{getContentValue('intro_splash', 'bottom_left', 'SYSTEM / INIT')}</span>
             <div className="flex items-center gap-2">
               <motion.span
                 animate={{ opacity: [0.4, 1, 0.4] }}
                 transition={{ duration: 1.2, repeat: Infinity }}
                 style={{ width: 4, height: 4, borderRadius: '50%', background: '#E8132A', display: 'inline-block' }}
               />
-              <span className="annotation-label">Loading</span>
+              <span className="annotation-label">{getContentValue('intro_splash', 'loading_label', 'Loading')}</span>
             </div>
-            <span className="annotation-label">VX / 2026</span>
+            <span className="annotation-label">{getContentValue('intro_splash', 'bottom_right', 'VX / 2026')}</span>
           </motion.div>
         </motion.div>
       )}

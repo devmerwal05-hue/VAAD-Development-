@@ -276,6 +276,7 @@ export const footerDefaults = {
 
 const navFields: AdminFieldDefinition[] = [
   { key: 'logo_text', label: 'Logo text', fallback: 'VAAD' },
+  { key: 'home_label', label: 'Home label', fallback: 'Home' },
   { key: 'link_1', label: 'Link 1 label', fallback: 'Work' },
   { key: 'link_1_href', label: 'Link 1 URL', fallback: '/work', type: 'url' },
   { key: 'link_2', label: 'Link 2 label', fallback: 'Services' },
@@ -288,11 +289,17 @@ const navFields: AdminFieldDefinition[] = [
   { key: 'link_5_href', label: 'Link 5 URL', fallback: '/pricing', type: 'url' },
   { key: 'link_6', label: 'Link 6 label', fallback: 'Contact' },
   { key: 'link_6_href', label: 'Link 6 URL', fallback: '/contact', type: 'url' },
+  { key: 'primary_aria_label', label: 'Primary nav ARIA label', fallback: 'Primary navigation', description: 'Screen reader label for the main navigation landmark.' },
+  { key: 'home_aria_label', label: 'Home link ARIA label', fallback: 'VAAD Development home', description: 'Screen reader label for the logo/home link.' },
   { key: 'mobile_open_aria', label: 'Mobile menu open (ARIA label)', fallback: 'Open navigation menu', description: 'Screen reader label for the mobile navigation toggle when the menu is closed.' },
   { key: 'mobile_close_aria', label: 'Mobile menu close (ARIA label)', fallback: 'Close navigation menu', description: 'Screen reader label for the mobile navigation toggle when the menu is open.' },
+  { key: 'mobile_overlay_title', label: 'Mobile overlay title', fallback: 'System Navigation' },
+  { key: 'mobile_overlay_hint', label: 'Mobile overlay hint', fallback: 'swipe to navigate' },
 ];
 
 const heroFields: AdminFieldDefinition[] = [
+  { key: 'meta_left', label: 'Top-left meta label', fallback: 'hero.layout // 12-col' },
+  { key: 'meta_right', label: 'Top-right meta label', fallback: 'v3.1 // bento-grid' },
   { key: 'eyebrow', label: 'Eyebrow', fallback: heroDefaults.eyebrow },
   { key: 'headline_line1', label: 'Headline line 1', fallback: heroDefaults.headline_line1 },
   { key: 'headline_line2', label: 'Headline line 2', fallback: heroDefaults.headline_line2 },
@@ -335,7 +342,16 @@ const heroFields: AdminFieldDefinition[] = [
   { key: 'scroll_hint', label: 'Scroll hint label', fallback: 'scroll' },
 ];
 
+const marqueeFields: AdminFieldDefinition[] = [
+  { key: 'items', label: 'Marquee items', fallback: marqueeDefaults.items, type: 'list', description: 'Comma-separated items.' },
+  { key: 'meta_left', label: 'Top-left meta label', fallback: 'stream.buffer' },
+  { key: 'meta_right', label: 'Top-right meta label', fallback: 'seq // 0031' },
+];
+
 const serviceFields: AdminFieldDefinition[] = [
+  { key: 'meta_left', label: 'Top-left meta label', fallback: 'services.node' },
+  { key: 'meta_right', label: 'Top-right meta label', fallback: 'v2.6 // 12-col' },
+  { key: 'archive_tag', label: 'Top-right archive tag', fallback: 'bionic_catalog_stream' },
   { key: 'label', label: 'Section label', fallback: '01 / Services' },
   { key: 'title', label: 'Section title', fallback: 'What we build' },
   { key: 'subtitle', label: 'Section subtitle', fallback: 'Delivery is structured around what your team actually needs to launch, maintain, and extend after handoff.', type: 'textarea' },
@@ -356,6 +372,9 @@ const serviceFields: AdminFieldDefinition[] = [
 ];
 
 const techStackFields: AdminFieldDefinition[] = [
+  { key: 'meta_left', label: 'Top-left meta label', fallback: 'tech.registry' },
+  { key: 'meta_right', label: 'Top-right meta label', fallback: 'hash // 0x12AF' },
+  { key: 'module_prefix', label: 'Module label prefix', fallback: 'Module' },
   { key: 'label', label: 'Section label', fallback: '09 / Capabilities' },
   { key: 'title', label: 'Section title', fallback: 'How we build' },
   { key: 'subtitle', label: 'Section subtitle', fallback: 'The stack is chosen around delivery speed, maintainability, and how much control your team needs after launch.', type: 'textarea' },
@@ -372,6 +391,10 @@ const techStackFields: AdminFieldDefinition[] = [
 ];
 
 const statsFields: AdminFieldDefinition[] = [
+  { key: 'meta_left', label: 'Top-left meta label', fallback: 'stats.matrix' },
+  { key: 'meta_right', label: 'Top-right meta label', fallback: 'coord // 48.12N' },
+  { key: 'archive_tag', label: 'Top-right archive tag', fallback: 'sync_stability_matrix' },
+  { key: 'metric_prefix', label: 'Metric badge prefix', fallback: 'metric' },
   { key: 'label', label: 'Section label', fallback: '02 / Why Us' },
   { key: 'title', label: 'Section title', fallback: 'Why teams choose VAAD' },
   { key: 'stat_count', label: 'Number of stats', fallback: String(statsDefaults.length), type: 'text', description: 'Set the number of stats to display (1-6).' },
@@ -388,6 +411,9 @@ const statsFields: AdminFieldDefinition[] = [
 ];
 
 const processFields: AdminFieldDefinition[] = [
+  { key: 'meta_left', label: 'Top-left meta label', fallback: 'process.timeline' },
+  { key: 'meta_right', label: 'Top-right meta label', fallback: 'coord // 19.07N' },
+  { key: 'phase_prefix', label: 'Step prefix label', fallback: 'Phase' },
   { key: 'label', label: 'Section label', fallback: '03 / Process' },
   { key: 'title', label: 'Section title', fallback: 'How a project works' },
   { key: 'step_count', label: 'Number of process steps', fallback: String(processDefaults.length), type: 'text', description: 'Set the number of process steps to display (1-6).' },
@@ -401,6 +427,9 @@ const processFields: AdminFieldDefinition[] = [
 ];
 
 const portfolioMetaFields: AdminFieldDefinition[] = [
+  { key: 'meta_left', label: 'Top-left meta label', fallback: 'portfolio.archive' },
+  { key: 'meta_right', label: 'Top-right meta label', fallback: 'spec // v1.92' },
+  { key: 'archive_tag', label: 'Top-right archive tag', fallback: 'specimen_gallery' },
   { key: 'label', label: 'Section label', fallback: '04 / Work' },
   { key: 'title', label: 'Section title', fallback: 'Selected work' },
   { key: 'footer_text', label: 'Footer text', fallback: 'Detailed breakdowns are available during discovery for projects that match your workflow, audience, and launch window.', type: 'textarea' },
@@ -411,6 +440,16 @@ const portfolioMetaFields: AdminFieldDefinition[] = [
 const uiFields: AdminFieldDefinition[] = [
   { key: 'skip_to_content', label: 'Skip link label', fallback: 'Skip to content', description: 'Accessible skip-to-content link shown on focus.' },
   { key: 'loading', label: 'Generic loading label', fallback: 'Loading' },
+  { key: 'frame_meta_left', label: 'Global frame meta (left)', fallback: 'VAAD // DEV_2026' },
+  { key: 'frame_meta_right', label: 'Global frame meta (right)', fallback: 'SYSTEM // ACTIVE' },
+  { key: 'page_hero_meta_left', label: 'Page hero meta (left)', fallback: 'page.hero' },
+  { key: 'page_hero_meta_right', label: 'Page hero meta (right)', fallback: 'layout // 12-col' },
+  { key: 'page_hero_panel_top_left', label: 'Page hero panel top-left label', fallback: '00 / 01' },
+  { key: 'page_hero_panel_top_right', label: 'Page hero panel top-right label', fallback: '01' },
+  { key: 'page_hero_panel_grid_1', label: 'Page hero panel grid label 1', fallback: '01' },
+  { key: 'page_hero_panel_grid_2', label: 'Page hero panel grid label 2', fallback: '02' },
+  { key: 'page_hero_panel_grid_3', label: 'Page hero panel grid label 3', fallback: '03' },
+  { key: 'page_hero_panel_bottom', label: 'Page hero panel bottom label', fallback: '00 / 00' },
   { key: 'enable_3d_card_effect', label: 'Enable 3D card effect', fallback: 'false', type: 'boolean', description: 'Toggles the interactive 3D tilt effect on supported cards (disabled on touch/coarse pointers and when reduced-motion is enabled).' },
   { key: 'enable_floating_dock_nav', label: 'Enable floating dock navigation', fallback: 'true', type: 'boolean', description: 'Toggles the icon-based floating dock navigation in the top bar (desktop only).' },
   { key: 'content_loading_banner', label: 'Content banner (loading)', fallback: 'Loading live content from Supabase.', type: 'textarea' },
@@ -437,6 +476,8 @@ const seoFields: AdminFieldDefinition[] = [
 ];
 
 const notFoundFields: AdminFieldDefinition[] = [
+  { key: 'meta_left', label: 'Top-left meta label', fallback: '404.route' },
+  { key: 'meta_right', label: 'Top-right meta label', fallback: 'status // missing' },
   { key: 'heading', label: 'Heading', fallback: 'Page not found' },
   { key: 'description', label: 'Description', fallback: 'The route does not exist, or the page was removed while the site structure changed.', type: 'textarea' },
   { key: 'button', label: 'Button label', fallback: 'Return home' },
@@ -449,7 +490,13 @@ const errorBoundaryFields: AdminFieldDefinition[] = [
 ];
 
 const introSplashFields: AdminFieldDefinition[] = [
+  { key: 'top_left', label: 'Top annotation left', fallback: 'SPECIMEN / 001' },
+  { key: 'top_center', label: 'Top annotation center', fallback: 'EST. 2024' },
+  { key: 'top_right', label: 'Top annotation right', fallback: 'VAA-DEV-X' },
   { key: 'tagline', label: 'Tagline', fallback: 'Development' },
+  { key: 'bottom_left', label: 'Bottom annotation left', fallback: 'SYSTEM / INIT' },
+  { key: 'loading_label', label: 'Bottom loading label', fallback: 'Loading' },
+  { key: 'bottom_right', label: 'Bottom annotation right', fallback: 'VX / 2026' },
 ];
 
 const contactFormFields: AdminFieldDefinition[] = [
@@ -490,12 +537,19 @@ const contactFormFields: AdminFieldDefinition[] = [
 ];
 
 const teamMetaFields: AdminFieldDefinition[] = [
+  { key: 'meta_left', label: 'Top-left meta label', fallback: 'team.directory' },
+  { key: 'meta_right', label: 'Top-right meta label', fallback: 'rev // 05.04' },
+  { key: 'member_prefix', label: 'Member prefix label', fallback: 'Member' },
   { key: 'label', label: 'Section label', fallback: '05 / Team' },
   { key: 'title', label: 'Section title', fallback: 'The people behind the work' },
   { key: 'subtitle', label: 'Section subtitle', fallback: 'A compact team that scopes, designs, builds, and launches without handoff fog.', type: 'textarea' },
 ];
 
 const pricingFields: AdminFieldDefinition[] = [
+  { key: 'meta_left', label: 'Top-left meta label', fallback: 'pricing.matrix' },
+  { key: 'meta_right', label: 'Top-right meta label', fallback: 'schema // usd.v3' },
+  { key: 'plan_prefix', label: 'Plan prefix label', fallback: 'Plan' },
+  { key: 'currency_label', label: 'Currency label', fallback: 'USD' },
   { key: 'label', label: 'Section label', fallback: '06 / Pricing' },
   { key: 'title', label: 'Section title', fallback: 'Transparent pricing' },
   { key: 'subtitle', label: 'Section subtitle', fallback: 'Clear ranges for common scopes. Final pricing depends on content volume, integrations, and operational complexity.', type: 'textarea' },
@@ -517,6 +571,8 @@ const pricingFields: AdminFieldDefinition[] = [
 ];
 
 const faqFields: AdminFieldDefinition[] = [
+  { key: 'meta_left', label: 'Top-left meta label', fallback: 'faq.module' },
+  { key: 'meta_right', label: 'Top-right meta label', fallback: 'cache // on' },
   { key: 'label', label: 'Section label', fallback: '07 / FAQ' },
   { key: 'title', label: 'Section title', fallback: 'Common questions' },
   { key: 'faq_count', label: 'Number of FAQs', fallback: String(faqDefaults.length), type: 'text', description: 'Set the number of FAQ items to display (1-10).' },
@@ -531,6 +587,8 @@ const faqFields: AdminFieldDefinition[] = [
 ];
 
 const contactFields: AdminFieldDefinition[] = [
+  { key: 'meta_left', label: 'Top-left meta label', fallback: 'contact.endpoint' },
+  { key: 'meta_right', label: 'Top-right meta label', fallback: 'tls // active' },
   { key: 'label', label: 'Section label', fallback: '08 / Contact' },
   { key: 'title', label: 'Section title', fallback: 'Tell us what needs to ship' },
   { key: 'heading', label: 'Sidebar heading', fallback: 'Share the scope, timeline, and blockers.' },
@@ -544,6 +602,7 @@ const contactFields: AdminFieldDefinition[] = [
 ];
 
 const footerFields: AdminFieldDefinition[] = [
+  { key: 'ready_label', label: 'CTA eyebrow label', fallback: 'Ready to build' },
   { key: 'cta_title', label: 'Footer CTA title', fallback: footerDefaults.cta_title, type: 'textarea' },
   { key: 'cta_description', label: 'Footer CTA description', fallback: footerDefaults.cta_description, type: 'textarea' },
   { key: 'cta_button', label: 'Footer CTA button', fallback: footerDefaults.cta_button },
@@ -562,6 +621,11 @@ const footerFields: AdminFieldDefinition[] = [
 ];
 
 const workPageFields: AdminFieldDefinition[] = [
+  { key: 'grid_meta_left', label: 'Project grid meta (left)', fallback: 'work.index' },
+  { key: 'grid_meta_right', label: 'Project grid meta (right)', fallback: 'catalog // active' },
+  { key: 'project_prefix', label: 'Project prefix label', fallback: 'Project' },
+  { key: 'cta_meta_left', label: 'CTA meta (left)', fallback: 'work.cta' },
+  { key: 'cta_meta_right', label: 'CTA meta (right)', fallback: 'prompt // 01' },
   { key: 'eyebrow', label: 'Hero eyebrow', fallback: 'Selected Work' },
   { key: 'title_before', label: 'Hero title before highlight', fallback: 'Sites and products that had to' },
   { key: 'title_highlight', label: 'Hero highlighted title', fallback: 'ship on time' },
@@ -572,6 +636,8 @@ const workPageFields: AdminFieldDefinition[] = [
 ];
 
 const servicesPageFields: AdminFieldDefinition[] = [
+  { key: 'cta_meta_left', label: 'CTA meta (left)', fallback: 'services.cta' },
+  { key: 'cta_meta_right', label: 'CTA meta (right)', fallback: 'prompt // 02' },
   { key: 'eyebrow', label: 'Hero eyebrow', fallback: 'What We Build' },
   { key: 'title_before', label: 'Hero title before highlight', fallback: 'Design and engineering for teams that need a' },
   { key: 'title_highlight', label: 'Hero highlighted title', fallback: 'working release' },
@@ -582,6 +648,8 @@ const servicesPageFields: AdminFieldDefinition[] = [
 ];
 
 const processPageFields: AdminFieldDefinition[] = [
+  { key: 'cta_meta_left', label: 'CTA meta (left)', fallback: 'process.cta' },
+  { key: 'cta_meta_right', label: 'CTA meta (right)', fallback: 'prompt // 03' },
   { key: 'eyebrow', label: 'Hero eyebrow', fallback: 'How Delivery Works' },
   { key: 'title_before', label: 'Hero title before highlight', fallback: 'Clear checkpoints from brief to' },
   { key: 'title_highlight', label: 'Hero highlighted title', fallback: 'launch day' },
@@ -592,6 +660,8 @@ const processPageFields: AdminFieldDefinition[] = [
 ];
 
 const teamPageFields: AdminFieldDefinition[] = [
+  { key: 'cta_meta_left', label: 'CTA meta (left)', fallback: 'team.cta' },
+  { key: 'cta_meta_right', label: 'CTA meta (right)', fallback: 'prompt // 04' },
   { key: 'eyebrow', label: 'Hero eyebrow', fallback: 'The Team' },
   { key: 'title_before', label: 'Hero title before highlight', fallback: 'Small crew, direct accountability,' },
   { key: 'title_highlight', label: 'Hero highlighted title', fallback: 'no relay race' },
@@ -629,7 +699,7 @@ export const homeSectionDefinitions: Record<string, AdminSectionDefinition> = {
   marquee: {
     title: 'Marquee',
     description: 'Scrolling capability strip below the hero. Use commas to separate items.',
-    fields: [{ key: 'items', label: 'Marquee items', fallback: marqueeDefaults.items, type: 'list', description: 'Comma-separated items.' }],
+    fields: marqueeFields,
   },
   services: {
     title: 'Services',

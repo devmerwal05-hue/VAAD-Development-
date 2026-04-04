@@ -33,8 +33,8 @@ export default function WorkPage() {
       />
 
       <section className="section-pad swiss-section relative py-20 md:py-24">
-        <span className="swiss-meta swiss-meta--tl">work.index</span>
-        <span className="swiss-meta swiss-meta--tr">catalog // active</span>
+        <span className="swiss-meta swiss-meta--tl">{getContentValue('work_page', 'grid_meta_left', 'work.index')}</span>
+        <span className="swiss-meta swiss-meta--tr">{getContentValue('work_page', 'grid_meta_right', 'catalog // active')}</span>
         <div className="site-container swiss-grid max-w-[1320px] gap-8 px-5 md:px-8 lg:gap-12 xl:px-10">
           {projects.map((project, index) => (
             <motion.article
@@ -76,7 +76,9 @@ export default function WorkPage() {
               </div>
 
               <div className={`relative border-[rgba(232,19,42,0.14)] p-8 md:p-10 lg:border-l ${index % 2 === 1 ? 'lg:order-1 lg:border-l-0 lg:border-r' : ''}`}>
-                <p className="annotation-label mb-5">Project / {String(index + 1).padStart(2, '0')}</p>
+                <p className="annotation-label mb-5">
+                  {getContentValue('work_page', 'project_prefix', 'Project')} / {String(index + 1).padStart(2, '0')}
+                </p>
 
                 <h2
                   className="mb-3 text-text-primary"
@@ -137,8 +139,8 @@ export default function WorkPage() {
       <Marquee />
 
       <section className="section-pad swiss-section relative py-20 md:py-24">
-        <span className="swiss-meta swiss-meta--tl">work.cta</span>
-        <span className="swiss-meta swiss-meta--tr">prompt // 01</span>
+        <span className="swiss-meta swiss-meta--tl">{getContentValue('work_page', 'cta_meta_left', 'work.cta')}</span>
+        <span className="swiss-meta swiss-meta--tr">{getContentValue('work_page', 'cta_meta_right', 'prompt // 01')}</span>
         <div className="site-container swiss-grid max-w-[1320px] gap-8 px-5 md:px-8 lg:gap-12 xl:px-10">
           <div className="corner-marks swiss-full-col border border-[rgba(232,19,42,0.2)] bg-[rgba(9,22,40,0.76)] px-8 py-10 text-center md:px-12 md:py-14 lg:col-span-6 lg:col-start-4">
             <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>

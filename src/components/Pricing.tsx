@@ -33,8 +33,8 @@ export default function Pricing() {
   return (
     <section className="section-pad swiss-section relative py-20 md:py-24">
       <div className="absolute inset-0 grid-pattern opacity-15 pointer-events-none" />
-      <span className="swiss-meta swiss-meta--tl">pricing.matrix</span>
-      <span className="swiss-meta swiss-meta--tr">schema // usd.v3</span>
+      <span className="swiss-meta swiss-meta--tl">{getContentValue('pricing', 'meta_left', 'pricing.matrix')}</span>
+      <span className="swiss-meta swiss-meta--tr">{getContentValue('pricing', 'meta_right', 'schema // usd.v3')}</span>
 
       <div className="site-container swiss-grid relative z-10 max-w-[1320px] gap-8 px-5 md:px-8 lg:gap-12 xl:px-10">
         {/* Header */}
@@ -93,7 +93,9 @@ export default function Pricing() {
 
               <div className="flex flex-1 flex-col p-8 md:p-10">
                 {/* Plan index */}
-                <p className="annotation-label mb-7">Plan / {String(i + 1).padStart(2, '0')}</p>
+                <p className="annotation-label mb-7">
+                  {getContentValue('pricing', 'plan_prefix', 'Plan')} / {String(i + 1).padStart(2, '0')}
+                </p>
 
                 <h3
                   className="mb-5"
@@ -106,7 +108,7 @@ export default function Pricing() {
                 <div className="mb-5 flex items-end gap-1">
                   <span
                     style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, fontSize: 14, color: 'rgba(234,230,219,0.5)', marginBottom: 8 }}
-                  >USD</span>
+                  >{getContentValue('pricing', 'currency_label', 'USD')}</span>
                   <span
                     style={{ fontFamily: "'Playfair Display', serif", fontWeight: 900, fontSize: 'clamp(36px, 4vw, 52px)', lineHeight: 1, color: plan.highlighted ? '#E8132A' : '#EAE6DB', letterSpacing: '-0.03em' }}
                   >

@@ -130,8 +130,8 @@ export default function Contact() {
   return (
     <section className="relative section-pad swiss-section py-20 md:py-24">
       <div className="absolute inset-0 grid-pattern opacity-12 pointer-events-none" />
-      <span className="swiss-meta swiss-meta--tl">contact.endpoint</span>
-      <span className="swiss-meta swiss-meta--tr">tls // active</span>
+      <span className="swiss-meta swiss-meta--tl">{getContentValue('contact', 'meta_left', 'contact.endpoint')}</span>
+      <span className="swiss-meta swiss-meta--tr">{getContentValue('contact', 'meta_right', 'tls // active')}</span>
 
       <div className="site-container swiss-grid relative z-10 max-w-[1320px] gap-8 px-5 md:px-8 lg:gap-12 xl:px-10">
         <div className="swiss-full-col">

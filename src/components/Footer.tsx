@@ -16,7 +16,7 @@ export default function Footer() {
     {
       title: getContentValue('footer', 'explore_title', 'Explore'),
       items: [
-        { label: 'Home', href: '/' },
+        { label: getContentValue('nav', 'home_label', 'Home'), href: '/' },
         { label: getContentValue('nav', 'link_1', 'Work'),     href: getContentValue('nav', 'link_1_href', '/work') },
         { label: getContentValue('nav', 'link_2', 'Services'), href: getContentValue('nav', 'link_2_href', '/services') },
         { label: getContentValue('nav', 'link_6', 'Contact'),  href: getContentValue('nav', 'link_6_href', '/contact') },
@@ -73,7 +73,7 @@ export default function Footer() {
           {/* Annotation */}
           <div className="flex items-center justify-center gap-4 mb-8">
             <div className="h-[1px] w-12" style={{ background: 'rgba(232,19,42,0.4)' }} />
-            <span className="section-ref">Ready to build</span>
+            <span className="section-ref">{getContentValue('footer', 'ready_label', 'Ready to build')}</span>
             <div className="h-[1px] w-12" style={{ background: 'rgba(232,19,42,0.4)' }} />
           </div>
 
@@ -126,7 +126,7 @@ export default function Footer() {
               <span
                 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: 20, letterSpacing: '0.14em', color: '#EAE6DB' }}
               >
-                VAAD
+                {getContentValue('nav', 'logo_text', 'VAAD')}
               </span>
               <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#E8132A', display: 'inline-block' }} />
             </div>

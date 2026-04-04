@@ -26,8 +26,8 @@ export default function FAQ() {
   return (
     <section className="section-pad swiss-section relative py-20 md:py-24">
       <div className="absolute inset-0 grid-pattern opacity-15 pointer-events-none" />
-      <span className="swiss-meta swiss-meta--tl">faq.module</span>
-      <span className="swiss-meta swiss-meta--tr">cache // on</span>
+      <span className="swiss-meta swiss-meta--tl">{getContentValue('faq', 'meta_left', 'faq.module')}</span>
+      <span className="swiss-meta swiss-meta--tr">{getContentValue('faq', 'meta_right', 'cache // on')}</span>
 
       <div className="site-container swiss-grid relative z-10 max-w-[1320px] gap-8 px-5 md:px-8 lg:gap-12 xl:px-10">
         {/* Header */}

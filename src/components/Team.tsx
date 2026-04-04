@@ -34,8 +34,8 @@ export default function Team() {
   return (
     <section className="section-pad swiss-section relative overflow-hidden py-20 md:py-24">
       <div className="absolute inset-0 grid-pattern opacity-15 pointer-events-none" />
-      <span className="swiss-meta swiss-meta--tl">team.directory</span>
-      <span className="swiss-meta swiss-meta--tr">rev // 05.04</span>
+      <span className="swiss-meta swiss-meta--tl">{getContentValue('team', 'meta_left', 'team.directory')}</span>
+      <span className="swiss-meta swiss-meta--tr">{getContentValue('team', 'meta_right', 'rev // 05.04')}</span>
 
       <div className="site-container swiss-grid relative z-10 max-w-[1320px] gap-8 px-5 md:px-8 lg:gap-12 xl:px-10">
         {/* Section header */}
@@ -107,7 +107,9 @@ export default function Team() {
 
                 {/* Annotation */}
                 <div className="absolute left-4 bottom-4">
-                  <span className="annotation-label">Member / {String(i + 1).padStart(2, '0')}</span>
+                  <span className="annotation-label">
+                    {getContentValue('team', 'member_prefix', 'Member')} / {String(i + 1).padStart(2, '0')}
+                  </span>
                 </div>
               </div>
 

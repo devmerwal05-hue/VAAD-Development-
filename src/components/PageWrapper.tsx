@@ -26,10 +26,10 @@ export default function PageWrapper({ children }: { children: ReactNode }) {
           />
 
           <div className="absolute left-6 top-[120px]">
-            <span className="frame-meta-text">VAAD // DEV_2026</span>
+            <span className="frame-meta-text">{getContentValue('ui', 'frame_meta_left', 'VAAD // DEV_2026')}</span>
           </div>
           <div className="absolute right-6 top-[120px]">
-            <span className="frame-meta-text rotate-180">SYSTEM // ACTIVE</span>
+            <span className="frame-meta-text rotate-180">{getContentValue('ui', 'frame_meta_right', 'SYSTEM // ACTIVE')}</span>
           </div>
 
           <span className="absolute left-4 top-4 h-4 w-4 border-l border-t border-[rgba(234,230,219,0.28)]" />
