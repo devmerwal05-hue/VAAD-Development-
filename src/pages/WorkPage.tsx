@@ -32,10 +32,10 @@ export default function WorkPage() {
         description={getContentValue('work_page', 'description', 'These are the kinds of builds we take on: lean teams, real delivery pressure, and a clear need for design and engineering to move in the same sprint.')}
       />
 
-      <section className="section-pad swiss-section relative">
+      <section className="section-pad swiss-section relative py-20 md:py-24">
         <span className="swiss-meta swiss-meta--tl">work.index</span>
         <span className="swiss-meta swiss-meta--tr">catalog // active</span>
-        <div className="site-container swiss-grid">
+        <div className="site-container swiss-grid max-w-[1320px] gap-8 px-5 md:px-8 lg:gap-12 xl:px-10">
           {projects.map((project, index) => (
             <motion.article
               key={`${project.name}-${index}`}
@@ -43,7 +43,7 @@ export default function WorkPage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.1 }}
               transition={{ duration: 0.72 }}
-              className="swiss-full-col group relative grid grid-cols-1 border border-[rgba(232,19,42,0.2)] bg-[rgba(9,22,40,0.62)] lg:grid-cols-[1fr_0.95fr]"
+              className="swiss-full-col group relative grid grid-cols-1 overflow-hidden border border-[rgba(232,19,42,0.2)] bg-[rgba(9,22,40,0.62)] lg:grid-cols-[1fr_0.95fr]"
             >
               <div className={`relative min-h-[320px] overflow-hidden border-b border-[rgba(232,19,42,0.12)] lg:min-h-[420px] lg:border-b-0 ${index % 2 === 1 ? 'lg:order-2' : ''}`}>
                 <div
@@ -75,7 +75,7 @@ export default function WorkPage() {
                 </div>
               </div>
 
-              <div className={`relative border-[rgba(232,19,42,0.14)] px-6 py-9 md:px-8 md:py-10 lg:border-l ${index % 2 === 1 ? 'lg:order-1 lg:border-l-0 lg:border-r' : ''}`}>
+              <div className={`relative border-[rgba(232,19,42,0.14)] p-8 md:p-10 lg:border-l ${index % 2 === 1 ? 'lg:order-1 lg:border-l-0 lg:border-r' : ''}`}>
                 <p className="annotation-label mb-5">Project / {String(index + 1).padStart(2, '0')}</p>
 
                 <h2
@@ -91,12 +91,12 @@ export default function WorkPage() {
 
                 <div className="mb-7 h-[1px] w-16 bg-[rgba(232,19,42,0.42)]" />
 
-                <p className="reading-track mb-9 max-w-[58ch] text-[16px] leading-[1.85] text-[rgba(234,230,219,0.6)]" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}>
+                <p className="reading-track mb-10 max-w-[58ch] text-[16px] leading-[1.9] text-[rgba(234,230,219,0.6)]" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}>
                   {project.description}
                 </p>
 
                 {project.gallery.length > 0 && (
-                  <div className="mb-8 flex gap-3 overflow-x-auto pb-1">
+                  <div className="mb-10 flex gap-4 overflow-x-auto pb-1">
                     {project.gallery.map((imageUrl, galleryIndex) => (
                       <div
                         key={`${project.name}-gallery-${galleryIndex}`}
@@ -136,10 +136,10 @@ export default function WorkPage() {
 
       <Marquee />
 
-      <section className="section-pad swiss-section relative">
+      <section className="section-pad swiss-section relative py-20 md:py-24">
         <span className="swiss-meta swiss-meta--tl">work.cta</span>
         <span className="swiss-meta swiss-meta--tr">prompt // 01</span>
-        <div className="site-container swiss-grid">
+        <div className="site-container swiss-grid max-w-[1320px] gap-8 px-5 md:px-8 lg:gap-12 xl:px-10">
           <div className="corner-marks swiss-full-col border border-[rgba(232,19,42,0.2)] bg-[rgba(9,22,40,0.76)] px-8 py-10 text-center md:px-12 md:py-14 lg:col-span-6 lg:col-start-4">
             <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
               {getContentValue('portfolio', 'footer_text', '') && (

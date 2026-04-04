@@ -31,19 +31,19 @@ export default function Pricing() {
   const planSpanClass = planCount <= 2 ? 'lg:col-span-6' : 'lg:col-span-4';
 
   return (
-    <section className="section-pad swiss-section relative">
+    <section className="section-pad swiss-section relative py-20 md:py-24">
       <div className="absolute inset-0 grid-pattern opacity-15 pointer-events-none" />
       <span className="swiss-meta swiss-meta--tl">pricing.matrix</span>
       <span className="swiss-meta swiss-meta--tr">schema // usd.v3</span>
 
-      <div className="site-container swiss-grid relative z-10">
+      <div className="site-container swiss-grid relative z-10 max-w-[1320px] gap-8 px-5 md:px-8 lg:gap-12 xl:px-10">
         {/* Header */}
-        <div className="swiss-full-col mb-4 flex items-center gap-4">
+        <div className="swiss-full-col mb-6 flex items-center gap-4">
           <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#E8132A', display: 'inline-block' }} />
           <span className="section-ref">{labelParts[0] || '06'} / {labelParts[1] || 'Pricing'}</span>
         </div>
 
-        <div className="swiss-full-col mb-12 grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-end">
+        <div className="swiss-full-col mb-12 grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-end lg:gap-12">
           <motion.h2
             initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }} transition={{ duration: 0.6, ease }}
@@ -64,7 +64,7 @@ export default function Pricing() {
 
         <div className="swiss-full-col rule-line-full mb-4" />
 
-        <div className="swiss-full-col grid grid-cols-1 gap-8 lg:grid-cols-12">
+        <div className="swiss-full-col grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-12">
           {plans.map((plan, i) => (
             <motion.div
               key={plan.name}
@@ -72,7 +72,7 @@ export default function Pricing() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.2 }}
               transition={{ duration: 0.5, ease, delay: i * 0.07 }}
-              className={`group relative flex flex-col ${planSpanClass}`}
+              className={`group relative flex h-full flex-col overflow-hidden ${planSpanClass}`}
               style={{
                 border: plan.highlighted ? '1px solid rgba(232,19,42,0.35)' : '1px solid rgba(232,19,42,0.1)',
                 background: plan.highlighted ? 'rgba(232,19,42,0.05)' : 'transparent',
@@ -91,7 +91,7 @@ export default function Pricing() {
                 </span>
               )}
 
-              <div className="flex flex-1 flex-col p-8 md:p-9">
+              <div className="flex flex-1 flex-col p-8 md:p-10">
                 {/* Plan index */}
                 <p className="annotation-label mb-7">Plan / {String(i + 1).padStart(2, '0')}</p>
 
@@ -115,17 +115,17 @@ export default function Pricing() {
                 </div>
 
                 <p
-                  className="mb-7 text-[14px] leading-[1.85]"
+                  className="mb-8 text-[14px] leading-[1.9]"
                   style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, color: 'rgba(234,230,219,0.5)', wordSpacing: '0.06em' }}
                 >
                   {plan.description}
                 </p>
 
-                <div className="mb-7 h-[1px]" style={{ background: 'rgba(232,19,42,0.12)' }} />
+                <div className="mb-8 h-[1px]" style={{ background: 'rgba(232,19,42,0.12)' }} />
 
-                <ul className="mb-9 flex flex-1 flex-col gap-4">
+                <ul className="mb-10 flex flex-1 flex-col gap-4">
                   {plan.features.map((feature) => (
-                    <li key={feature} className="flex items-start gap-4 text-[14px] leading-[1.75]" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, color: 'rgba(234,230,219,0.65)', wordSpacing: '0.06em' }}>
+                    <li key={feature} className="flex items-start gap-4 text-[14px] leading-[1.85]" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, color: 'rgba(234,230,219,0.65)', wordSpacing: '0.06em' }}>
                       <Check size={13} style={{ color: '#E8132A', flexShrink: 0, marginTop: 2 }} />
                       {feature}
                     </li>
@@ -166,10 +166,10 @@ export default function Pricing() {
         <motion.div
           initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }} transition={{ duration: 0.6, ease, delay: 0.3 }}
-          className="swiss-text-col mt-10 overflow-hidden border border-white/10 bg-zinc-900/50 p-6 md:p-7"
+          className="swiss-text-col mt-12 overflow-hidden border border-white/10 bg-zinc-900/50 p-8 md:p-10"
         >
           <p
-            className="reading-track mb-7 text-[15px] leading-[1.85]"
+            className="reading-track mb-8 text-[15px] leading-[1.9]"
             style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, color: 'rgba(234,230,219,0.45)', wordSpacing: '0.06em' }}
           >
             {getContentValue('pricing', 'cta_text', 'If the scope is unusual, we price it from the workflow backward instead of forcing it into a generic package.')}

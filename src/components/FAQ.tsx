@@ -24,12 +24,12 @@ export default function FAQ() {
   })).filter((f) => f.q);
 
   return (
-    <section className="section-pad swiss-section relative">
+    <section className="section-pad swiss-section relative py-20 md:py-24">
       <div className="absolute inset-0 grid-pattern opacity-15 pointer-events-none" />
       <span className="swiss-meta swiss-meta--tl">faq.module</span>
       <span className="swiss-meta swiss-meta--tr">cache // on</span>
 
-      <div className="site-container swiss-grid relative z-10">
+      <div className="site-container swiss-grid relative z-10 max-w-[1320px] gap-8 px-5 md:px-8 lg:gap-12 xl:px-10">
         {/* Header */}
         <div className="swiss-full-col mb-4 flex items-center gap-4">
           <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#E8132A', display: 'inline-block' }} />
@@ -47,7 +47,7 @@ export default function FAQ() {
 
         <div className="swiss-full-col rule-line-full mb-4" />
 
-        <div className="swiss-text-col flex flex-col gap-5">
+        <div className="swiss-text-col flex flex-col gap-6">
           {faqs.map((faq, i) => (
             <motion.div
               key={faq.q}
@@ -55,7 +55,7 @@ export default function FAQ() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.3 }}
               transition={{ duration: 0.4, ease, delay: i * 0.07 }}
-              className="border border-[rgba(232,19,42,0.24)] bg-[rgba(9,22,40,0.62)]"
+              className="overflow-hidden border border-[rgba(232,19,42,0.24)] bg-[rgba(9,22,40,0.62)]"
             >
               <button
                 type="button"
@@ -63,7 +63,7 @@ export default function FAQ() {
                 aria-expanded={open === i}
                 aria-controls={`faq-panel-${i}`}
                 id={`faq-trigger-${i}`}
-                className="group flex w-full items-center justify-between px-6 py-7 text-left md:px-7 md:py-8"
+                className="group flex w-full items-center justify-between px-7 py-8 text-left md:px-8 md:py-9"
               >
                 <div className="flex min-w-0 flex-1 items-start gap-6">
                   <span
@@ -73,7 +73,7 @@ export default function FAQ() {
                     {String(i + 1).padStart(2, '0')}
                   </span>
                   <span
-                    className="pr-4 text-[16px] leading-[1.5] transition-colors duration-200 md:text-[18px]"
+                    className="pr-4 text-[16px] leading-[1.6] transition-colors duration-200 md:text-[18px]"
                     style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 400, color: open === i ? '#EAE6DB' : 'rgba(234,230,219,0.65)' }}
                   >
                     {faq.q}
@@ -105,7 +105,7 @@ export default function FAQ() {
                     className="overflow-hidden"
                   >
                     <p
-                      className="pb-7 pl-14 pr-6 text-[15px] leading-[1.9] md:pl-16 md:pr-7"
+                      className="pb-9 pl-14 pr-7 text-[15px] leading-[1.95] md:pl-16 md:pr-8"
                       style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, color: 'rgba(234,230,219,0.55)' }}
                     >
                       {faq.a}

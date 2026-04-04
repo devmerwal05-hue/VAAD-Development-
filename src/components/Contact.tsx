@@ -128,12 +128,12 @@ export default function Contact() {
   }
 
   return (
-    <section className="relative section-pad swiss-section">
+    <section className="relative section-pad swiss-section py-20 md:py-24">
       <div className="absolute inset-0 grid-pattern opacity-12 pointer-events-none" />
       <span className="swiss-meta swiss-meta--tl">contact.endpoint</span>
       <span className="swiss-meta swiss-meta--tr">tls // active</span>
 
-      <div className="site-container swiss-grid relative z-10">
+      <div className="site-container swiss-grid relative z-10 max-w-[1320px] gap-8 px-5 md:px-8 lg:gap-12 xl:px-10">
         <div className="swiss-full-col">
           <SectionLabel number={labelParts[0] || '08'} label={labelParts[1] || 'Contact'} />
         </div>
@@ -141,13 +141,13 @@ export default function Contact() {
           <SectionTitle>{getContentValue('contact', 'title', 'Tell us what needs to ship')}</SectionTitle>
         </div>
 
-        <div className="swiss-full-col grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-10">
+        <div className="swiss-full-col grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-12">
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-10%' }}
             transition={{ duration: 0.7, ease }}
-            className="corner-marks border border-[rgba(232,19,42,0.2)] bg-[rgba(9,22,40,0.68)] p-6 md:p-8 lg:col-span-6"
+            className="corner-marks border border-[rgba(232,19,42,0.2)] bg-[rgba(9,22,40,0.68)] p-8 md:p-10 lg:col-span-6"
           >
             <h3
               className="mb-6 break-words text-[28px] text-text-primary [text-wrap:balance] md:text-[32px]"
@@ -155,7 +155,7 @@ export default function Contact() {
             >
               {getContentValue('contact', 'heading', 'Share the scope, timeline, and blockers.')}
             </h3>
-            <p className="reading-track mb-12 break-words text-[15px] leading-[1.7] text-text-secondary" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>
+            <p className="reading-track mb-12 break-words text-[15px] leading-[1.9] text-text-secondary" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>
               {getContentValue(
                 'contact',
                 'description',
@@ -194,7 +194,7 @@ export default function Contact() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-10%' }}
             transition={{ duration: 0.7, ease, delay: 0.1 }}
-            className="border border-[rgba(232,19,42,0.2)] bg-[rgba(9,22,40,0.68)] p-8 lg:col-span-6"
+            className="border border-[rgba(232,19,42,0.2)] bg-[rgba(9,22,40,0.68)] p-8 md:p-10 lg:col-span-6"
           >
             {submitted ? (
               <div className="p-12 text-center" style={{ border: '1px solid rgba(232,19,42,0.25)', background: 'rgba(9,22,40,0.8)' }}>
@@ -211,7 +211,7 @@ export default function Contact() {
                 </p>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="flex flex-col gap-6" style={{ fontFamily: 'DM Sans' }} noValidate>
+              <form onSubmit={handleSubmit} className="flex flex-col gap-8" style={{ fontFamily: 'DM Sans' }} noValidate>
                 <div className="absolute left-[-9999px] top-auto w-px h-px overflow-hidden" aria-hidden="true">
                   <label htmlFor="website">{getContentValue('contact_form', 'honeypot_label', 'Website')}</label>
                   <input
@@ -224,7 +224,7 @@ export default function Contact() {
                   />
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                   <div>
                     <label htmlFor="contact-name" className="block text-[12px] mb-2" style={{ fontFamily: "'JetBrains Mono', monospace", letterSpacing: '0.15em', textTransform: 'uppercase', color: 'rgba(234,230,219,0.35)' }}>
                       {getContentValue('contact_form', 'name_label', 'Name')}
@@ -299,7 +299,7 @@ export default function Contact() {
                   />
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                   <div>
                     <label htmlFor="contact-project-type" className="block text-[12px] mb-2" style={{ fontFamily: "'JetBrains Mono', monospace", letterSpacing: '0.15em', textTransform: 'uppercase', color: 'rgba(234,230,219,0.35)' }}>
                       {getContentValue('contact_form', 'project_type_label', 'Project type')}
@@ -397,7 +397,7 @@ export default function Contact() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="shimmer-btn w-full py-4 text-[11px] tracking-[0.18em] uppercase transition-all duration-300 disabled:opacity-60 hover:shadow-[0_0_40px_rgba(232,19,42,0.3)]"
+                  className="shimmer-btn w-full py-[18px] text-[11px] tracking-[0.18em] uppercase transition-all duration-300 disabled:opacity-60 hover:shadow-[0_0_40px_rgba(232,19,42,0.3)]"
                   style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 600, background: '#E8132A', color: '#EAE6DB', border: '1px solid #E8132A' }}
                 >
                   {submitting ? (
