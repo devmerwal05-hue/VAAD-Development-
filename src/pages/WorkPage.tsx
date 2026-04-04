@@ -45,7 +45,7 @@ export default function WorkPage() {
               transition={{ duration: 0.72 }}
               className="swiss-full-col group relative grid grid-cols-1 border border-[rgba(232,19,42,0.2)] bg-[rgba(9,22,40,0.62)] lg:grid-cols-[1fr_0.95fr]"
             >
-              <div className={`relative min-h-[280px] overflow-hidden border-b border-[rgba(232,19,42,0.12)] lg:min-h-[340px] lg:border-b-0 ${index % 2 === 1 ? 'lg:order-2' : ''}`}>
+              <div className={`relative min-h-[320px] overflow-hidden border-b border-[rgba(232,19,42,0.12)] lg:min-h-[420px] lg:border-b-0 ${index % 2 === 1 ? 'lg:order-2' : ''}`}>
                 <div
                   className="absolute inset-0"
                   style={{
@@ -70,37 +70,37 @@ export default function WorkPage() {
 
                 <div className="absolute inset-0 bg-gradient-to-t from-[rgba(6,12,32,0.9)] via-[rgba(6,12,32,0.25)] to-transparent" />
 
-                <div className="absolute left-4 top-4 border border-[rgba(232,19,42,0.34)] bg-[rgba(6,12,32,0.72)] px-4 py-1.5">
+                <div className="absolute left-5 top-5 border border-[rgba(232,19,42,0.34)] bg-[rgba(6,12,32,0.72)] px-4 py-1.5">
                   <span className="section-ref">{project.tag}</span>
                 </div>
               </div>
 
-              <div className={`relative border-[rgba(232,19,42,0.14)] px-6 py-8 md:px-8 md:py-8 lg:border-l ${index % 2 === 1 ? 'lg:order-1 lg:border-l-0 lg:border-r' : ''}`}>
-                <p className="annotation-label mb-4">Project / {String(index + 1).padStart(2, '0')}</p>
+              <div className={`relative border-[rgba(232,19,42,0.14)] px-6 py-9 md:px-8 md:py-10 lg:border-l ${index % 2 === 1 ? 'lg:order-1 lg:border-l-0 lg:border-r' : ''}`}>
+                <p className="annotation-label mb-5">Project / {String(index + 1).padStart(2, '0')}</p>
 
                 <h2
-                  className="mb-2 text-text-primary"
-                  style={{ fontFamily: "'Playfair Display', serif", fontWeight: 900, fontSize: 'clamp(34px, 3.6vw, 58px)', lineHeight: 0.9, letterSpacing: '-0.04em' }}
+                  className="mb-3 text-text-primary"
+                  style={{ fontFamily: "'Playfair Display', serif", fontWeight: 900, fontSize: 'clamp(36px, 3.8vw, 62px)', lineHeight: 0.9, letterSpacing: '-0.04em' }}
                 >
                   {project.name}
                 </h2>
 
-                <p className="mb-4 text-[11px] uppercase tracking-[0.2em] text-[rgba(232,19,42,0.72)]" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+                <p className="mb-5 text-[11px] uppercase tracking-[0.2em] text-[rgba(232,19,42,0.72)]" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
                   {project.subtitle}
                 </p>
 
-                <div className="mb-6 h-[1px] w-16 bg-[rgba(232,19,42,0.42)]" />
+                <div className="mb-7 h-[1px] w-16 bg-[rgba(232,19,42,0.42)]" />
 
-                <p className="reading-track mb-8 max-w-[54ch] text-[15px] leading-[1.8] text-[rgba(234,230,219,0.58)]" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}>
+                <p className="reading-track mb-9 max-w-[58ch] text-[16px] leading-[1.85] text-[rgba(234,230,219,0.6)]" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}>
                   {project.description}
                 </p>
 
                 {project.gallery.length > 0 && (
-                  <div className="mb-7 flex gap-2 overflow-x-auto pb-1">
+                  <div className="mb-8 flex gap-3 overflow-x-auto pb-1">
                     {project.gallery.map((imageUrl, galleryIndex) => (
                       <div
                         key={`${project.name}-gallery-${galleryIndex}`}
-                        className="h-14 w-20 shrink-0 overflow-hidden border border-[rgba(232,19,42,0.2)] md:h-16 md:w-24"
+                        className="h-16 w-24 shrink-0 overflow-hidden border border-[rgba(232,19,42,0.2)] md:h-20 md:w-28"
                       >
                         <img
                           src={imageUrl}
@@ -140,33 +140,33 @@ export default function WorkPage() {
         <span className="swiss-meta swiss-meta--tl">work.cta</span>
         <span className="swiss-meta swiss-meta--tr">prompt // 01</span>
         <div className="site-container swiss-grid">
-          <div className="corner-marks swiss-full-col border border-[rgba(232,19,42,0.2)] bg-[rgba(9,22,40,0.76)] px-8 py-8 text-center md:px-12 md:py-12 lg:col-span-6 lg:col-start-4">
-          <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
-            {getContentValue('portfolio', 'footer_text', '') && (
-              <p className="reading-track mx-auto mb-8 text-[15px] leading-[1.8] text-[rgba(234,230,219,0.56)]" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}>
-                {getContentValue('portfolio', 'footer_text', '')}
+          <div className="corner-marks swiss-full-col border border-[rgba(232,19,42,0.2)] bg-[rgba(9,22,40,0.76)] px-8 py-10 text-center md:px-12 md:py-14 lg:col-span-6 lg:col-start-4">
+            <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
+              {getContentValue('portfolio', 'footer_text', '') && (
+                <p className="reading-track mx-auto mb-9 text-[15px] leading-[1.85] text-[rgba(234,230,219,0.56)]" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}>
+                  {getContentValue('portfolio', 'footer_text', '')}
+                </p>
+              )}
+
+              <h2
+                className="mb-5 text-text-primary"
+                style={{ fontFamily: "'Playfair Display', serif", fontWeight: 800, fontSize: 'clamp(30px, 4vw, 56px)', lineHeight: 0.9, letterSpacing: '-0.03em' }}
+              >
+                {getContentValue('work_page', 'cta_title', 'Have a build that needs traction?')}
+              </h2>
+
+              <p className="reading-track mx-auto mb-9 text-[15px] leading-[1.85] text-[rgba(234,230,219,0.56)]" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}>
+                {getContentValue('work_page', 'cta_description', 'We can scope the work, call out the risks, and tell you what should happen in the first release.')}
               </p>
-            )}
 
-            <h2
-              className="mb-4 text-text-primary"
-              style={{ fontFamily: "'Playfair Display', serif", fontWeight: 800, fontSize: 'clamp(30px, 4vw, 56px)', lineHeight: 0.9, letterSpacing: '-0.03em' }}
-            >
-              {getContentValue('work_page', 'cta_title', 'Have a build that needs traction?')}
-            </h2>
-
-            <p className="reading-track mx-auto mb-8 text-[15px] leading-[1.8] text-[rgba(234,230,219,0.56)]" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}>
-              {getContentValue('work_page', 'cta_description', 'We can scope the work, call out the risks, and tell you what should happen in the first release.')}
-            </p>
-
-            <Link
-              to="/contact"
-              className="shimmer-btn inline-flex items-center gap-2 border border-accent bg-accent px-8 py-4 text-[11px] uppercase tracking-[0.18em] text-text-primary transition-all duration-300 hover:shadow-[0_0_40px_rgba(232,19,42,0.28)]"
-              style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 600 }}
-            >
-              {getContentValue('work_page', 'cta_button', 'Start the conversation')}
-            </Link>
-          </motion.div>
+              <Link
+                to="/contact"
+                className="shimmer-btn inline-flex items-center gap-2 border border-accent bg-accent px-8 py-4 text-[11px] uppercase tracking-[0.18em] text-text-primary transition-all duration-300 hover:shadow-[0_0_40px_rgba(232,19,42,0.28)]"
+                style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 600 }}
+              >
+                {getContentValue('work_page', 'cta_button', 'Start the conversation')}
+              </Link>
+            </motion.div>
           </div>
         </div>
       </section>

@@ -38,16 +38,16 @@ export default function Pricing() {
 
       <div className="site-container swiss-grid relative z-10">
         {/* Header */}
-        <div className="swiss-full-col flex items-center gap-4 mb-2">
+        <div className="swiss-full-col mb-4 flex items-center gap-4">
           <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#E8132A', display: 'inline-block' }} />
           <span className="section-ref">{labelParts[0] || '06'} / {labelParts[1] || 'Pricing'}</span>
         </div>
 
-        <div className="swiss-full-col mb-8 grid grid-cols-1 gap-6 lg:grid-cols-12">
+        <div className="swiss-full-col mb-12 grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-end">
           <motion.h2
             initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }} transition={{ duration: 0.6, ease }}
-            className="lg:col-span-6"
+            className="lg:col-span-7"
             style={{ fontFamily: "'Playfair Display', serif", fontWeight: 900, fontSize: 'clamp(36px, 5vw, 68px)', letterSpacing: '-0.03em', lineHeight: 0.9, color: '#EAE6DB' }}
           >
             {getContentValue('pricing', 'title', 'Transparent pricing')}
@@ -55,16 +55,16 @@ export default function Pricing() {
           <motion.p
             initial={{ opacity: 0 }} whileInView={{ opacity: 1 }}
             viewport={{ once: true }} transition={{ duration: 0.55, delay: 0.1 }}
-            className="reading-track swiss-text-col text-[13px] leading-[1.8]"
-            style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, color: 'rgba(234,230,219,0.45)' }}
+            className="reading-track lg:col-span-5 text-[14px] leading-[1.85]"
+            style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, color: 'rgba(234,230,219,0.5)' }}
           >
             {getContentValue('pricing', 'subtitle', 'Clear ranges for common scopes. Final pricing depends on content volume, integrations, and operational complexity.')}
           </motion.p>
         </div>
 
-        <div className="swiss-full-col rule-line-full mb-2" />
+        <div className="swiss-full-col rule-line-full mb-4" />
 
-        <div className="swiss-full-col grid grid-cols-1 gap-6 lg:grid-cols-12">
+        <div className="swiss-full-col grid grid-cols-1 gap-8 lg:grid-cols-12">
           {plans.map((plan, i) => (
             <motion.div
               key={plan.name}
@@ -84,26 +84,26 @@ export default function Pricing() {
               {/* Popular badge */}
               {plan.highlighted && (
                 <span
-                  className="absolute right-4 top-4 px-4 py-1 text-[9px] uppercase tracking-[0.2em]"
+                  className="absolute right-4 top-4 px-4 py-1.5 text-[9px] uppercase tracking-[0.2em]"
                   style={{ fontFamily: "'JetBrains Mono', monospace", color: '#E8132A', border: '1px solid rgba(232,19,42,0.4)' }}
                 >
                   {getContentValue('pricing', 'popular_badge', 'Popular')}
                 </span>
               )}
 
-              <div className="flex flex-1 flex-col p-8">
+              <div className="flex flex-1 flex-col p-8 md:p-9">
                 {/* Plan index */}
-                <p className="annotation-label mb-6">Plan / {String(i + 1).padStart(2, '0')}</p>
+                <p className="annotation-label mb-7">Plan / {String(i + 1).padStart(2, '0')}</p>
 
                 <h3
-                  className="mb-4"
+                  className="mb-5"
                   style={{ fontFamily: "'Playfair Display', serif", fontWeight: 700, fontSize: 'clamp(20px, 2vw, 26px)', letterSpacing: '-0.02em', color: '#EAE6DB' }}
                 >
                   {plan.name}
                 </h3>
 
                 {/* Price */}
-                <div className="flex items-end gap-1 mb-4">
+                <div className="mb-5 flex items-end gap-1">
                   <span
                     style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, fontSize: 14, color: 'rgba(234,230,219,0.5)', marginBottom: 8 }}
                   >USD</span>
@@ -115,17 +115,17 @@ export default function Pricing() {
                 </div>
 
                 <p
-                  className="text-[13px] leading-[1.8] mb-6"
+                  className="mb-7 text-[14px] leading-[1.85]"
                   style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, color: 'rgba(234,230,219,0.5)', wordSpacing: '0.06em' }}
                 >
                   {plan.description}
                 </p>
 
-                <div className="h-[1px] mb-6" style={{ background: 'rgba(232,19,42,0.12)' }} />
+                <div className="mb-7 h-[1px]" style={{ background: 'rgba(232,19,42,0.12)' }} />
 
-                <ul className="mb-8 flex flex-1 flex-col gap-4">
+                <ul className="mb-9 flex flex-1 flex-col gap-4">
                   {plan.features.map((feature) => (
-                    <li key={feature} className="flex items-start gap-4 text-[13px]" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, color: 'rgba(234,230,219,0.65)', wordSpacing: '0.06em' }}>
+                    <li key={feature} className="flex items-start gap-4 text-[14px] leading-[1.75]" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, color: 'rgba(234,230,219,0.65)', wordSpacing: '0.06em' }}>
                       <Check size={13} style={{ color: '#E8132A', flexShrink: 0, marginTop: 2 }} />
                       {feature}
                     </li>
@@ -166,10 +166,10 @@ export default function Pricing() {
         <motion.div
           initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }} transition={{ duration: 0.6, ease, delay: 0.3 }}
-          className="swiss-text-col mt-8 overflow-hidden border border-white/10 bg-zinc-900/50 p-5 md:p-6"
+          className="swiss-text-col mt-10 overflow-hidden border border-white/10 bg-zinc-900/50 p-6 md:p-7"
         >
           <p
-            className="reading-track mb-6 text-[14px] leading-[1.8]"
+            className="reading-track mb-7 text-[15px] leading-[1.85]"
             style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, color: 'rgba(234,230,219,0.45)', wordSpacing: '0.06em' }}
           >
             {getContentValue('pricing', 'cta_text', 'If the scope is unusual, we price it from the workflow backward instead of forcing it into a generic package.')}

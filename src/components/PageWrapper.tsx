@@ -15,7 +15,7 @@ export default function PageWrapper({ children }: { children: ReactNode }) {
         {getContentValue('ui', 'skip_to_content', 'Skip to content')}
       </a>
       <Navigation />
-      <div id="page-content" className="relative pb-24 pt-[88px] md:pb-0 md:pt-[92px]">
+      <div id="page-content" className="relative pb-24 pt-[92px] md:pb-0 md:pt-[98px]">
         <div aria-hidden className="pointer-events-none fixed inset-0 z-[1] hidden lg:block">
           <div
             className="absolute inset-0"
@@ -37,7 +37,7 @@ export default function PageWrapper({ children }: { children: ReactNode }) {
           <span className="absolute bottom-4 left-4 h-4 w-4 border-b border-l border-[rgba(234,230,219,0.28)]" />
           <span className="absolute bottom-4 right-4 h-4 w-4 border-b border-r border-[rgba(234,230,219,0.28)]" />
         </div>
-        <div className="mx-auto w-full max-w-screen-xl">{children}</div>
+        <div className="mx-auto w-full">{children}</div>
       </div>
       <Footer />
     </>

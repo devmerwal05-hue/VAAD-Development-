@@ -49,7 +49,7 @@ export default function Hero() {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.45, ease }}
-          className="swiss-full-col flex items-center justify-between overflow-hidden border-b border-white/10 pb-5"
+          className="swiss-full-col flex items-center justify-between overflow-hidden border-b border-white/10 pb-6"
         >
           <span className="archive-tag text-[rgba(198,213,239,0.9)]">{getContentValue('hero', 'eyebrow', 'Web Design + Web App Delivery')}</span>
           <span className="archive-tag hidden md:block">{getContentValue('hero', 'proof_kicker', 'System specs')}</span>
@@ -59,7 +59,7 @@ export default function Hero() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease, delay: 0.05 }}
-          className="swiss-full-col mt-2 overflow-hidden lg:col-span-8 lg:col-start-3"
+          className="swiss-full-col mt-4 overflow-hidden lg:col-span-8 lg:col-start-3"
         >
           <div className="overflow-hidden">
             <h1
@@ -67,7 +67,7 @@ export default function Hero() {
               style={{
                 fontFamily: "'Playfair Display', serif",
                 fontWeight: 900,
-                fontSize: 'clamp(56px, 11vw, 150px)',
+                fontSize: 'clamp(48px, 10vw, 136px)',
                 fontStyle: 'italic',
               }}
             >
@@ -76,13 +76,13 @@ export default function Hero() {
             </h1>
 
             <p
-              className="reading-track mx-auto mt-8 text-center text-[20px] leading-[1.85] text-[rgba(199,214,239,0.92)] md:text-[24px]"
+              className="reading-track mx-auto mt-10 text-center text-[17px] leading-[1.9] text-[rgba(199,214,239,0.9)] md:text-[20px]"
               style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}
             >
               {subheadline}
             </p>
 
-            <div className="mt-9 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
+            <div className="mt-11 flex flex-col items-center gap-4 sm:flex-row sm:justify-center sm:gap-5">
               <Link
                 to="/contact"
                 className="shimmer-btn inline-flex items-center justify-center gap-2.5 bg-accent px-9 py-4 text-[12px] uppercase tracking-[0.28em] text-[#050d22] transition-all duration-300 hover:brightness-110"
@@ -101,72 +101,76 @@ export default function Hero() {
           </div>
         </motion.div>
 
-        <div className="swiss-full-col mt-6 grid grid-cols-1 gap-4 overflow-hidden lg:grid-cols-3">
+        <div className="swiss-full-col mt-10 grid grid-cols-1 gap-5 overflow-hidden lg:grid-cols-12">
           <motion.article
             initial={{ opacity: 0, y: 18 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.45, ease }}
-            className="overflow-hidden border border-white/10 bg-zinc-900/50 p-6 lg:col-span-2"
+            className="overflow-hidden border border-white/10 bg-zinc-900/50 p-6 md:p-8 lg:col-span-8"
           >
             {coreServiceImage && (
-              <div className="mb-4 h-28 overflow-hidden border border-white/10">
+              <div className="mb-6 h-36 overflow-hidden border border-white/10 md:h-44">
                 <img src={coreServiceImage} alt={coreServiceTitle} loading="lazy" decoding="async" className="h-full w-full object-cover" />
               </div>
             )}
-            <p className="archive-tag mb-4">{coreServiceTitle}</p>
-            <p className="text-[18px] leading-[1.8] text-[rgba(220,232,251,0.94)] md:text-[20px]" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}>
+            <p className="archive-tag mb-5">{coreServiceTitle}</p>
+            <p className="reading-track text-[17px] leading-[1.9] text-[rgba(220,232,251,0.92)] md:text-[19px]" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}>
               {coreServiceText}
             </p>
 
-            <div className="mt-6 grid grid-cols-3 gap-3">
+            <div className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-3 md:gap-4">
               {stats.map((stat, i) => (
-                <div key={`${stat.label}-${i}`} className="overflow-hidden border border-white/10 bg-black/45 p-3 text-center">
+                <div key={`${stat.label}-${i}`} className="min-h-[128px] overflow-hidden border border-white/10 bg-black/45 p-4 text-center">
                   <p className="text-[34px] leading-none text-[#e8f0ff]" style={{ fontFamily: "'Playfair Display', serif", fontWeight: 800, fontStyle: 'italic' }}>
                     {stat.value}
                   </p>
-                  <p className="mono-readable mt-2 text-[11px] uppercase text-[rgba(164,188,225,0.86)]">{stat.label}</p>
+                  <p className="mono-readable mt-3 text-[11px] uppercase text-[rgba(164,188,225,0.86)]">{stat.label}</p>
                 </div>
               ))}
             </div>
           </motion.article>
 
-          <div className="grid grid-cols-2 gap-3 overflow-hidden">
-            <div className="col-span-2 overflow-hidden border border-white/20 bg-black/75">
+          <div className="grid grid-cols-1 gap-4 overflow-hidden lg:col-span-4">
+            <div className="overflow-hidden border border-white/20 bg-black/75">
               {technicalSpecsImage ? (
-                <div className="relative h-24 overflow-hidden">
+                <div className="relative h-24 overflow-hidden md:h-28">
                   <img src={technicalSpecsImage} alt={technicalSpecsTitle} loading="lazy" decoding="async" className="h-full w-full object-cover" />
                   <div className="absolute inset-0 bg-black/45" />
                   <p className="archive-tag absolute bottom-2 left-3 text-[rgba(255,255,255,0.9)]">{technicalSpecsTitle}</p>
                 </div>
               ) : (
-                <div className="px-3 py-2">
+                <div className="px-4 py-4">
                   <p className="archive-tag text-[rgba(255,255,255,0.82)]">{technicalSpecsTitle}</p>
                 </div>
               )}
             </div>
-            {systemSpecs.slice(0, 4).map((spec, index) => (
-              <motion.article
-                key={spec.label}
-                initial={{ opacity: 0, y: 18 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.42, ease, delay: 0.05 * index }}
-                className="aspect-square overflow-hidden border border-white/20 bg-black/80 p-3"
-              >
-                <p className="archive-tag text-[rgba(255,255,255,0.7)]">{spec.label}</p>
-                <p className="mono-readable mt-3 text-[12px] uppercase text-[rgba(226,236,252,0.92)]">{spec.value}</p>
-              </motion.article>
-            ))}
-            <div className="col-span-2 overflow-hidden border border-white/20 bg-black/70">
+
+            <div className="grid grid-cols-2 gap-4">
+              {systemSpecs.slice(0, 4).map((spec, index) => (
+                <motion.article
+                  key={spec.label}
+                  initial={{ opacity: 0, y: 18 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.42, ease, delay: 0.05 * index }}
+                  className="aspect-square overflow-hidden border border-white/20 bg-black/80 p-4"
+                >
+                  <p className="archive-tag text-[rgba(255,255,255,0.7)]">{spec.label}</p>
+                  <p className="mono-readable mt-4 text-[12px] uppercase text-[rgba(226,236,252,0.92)]">{spec.value}</p>
+                </motion.article>
+              ))}
+            </div>
+
+            <div className="overflow-hidden border border-white/20 bg-black/70">
               {metricsImage ? (
-                <div className="relative h-20 overflow-hidden">
+                <div className="relative h-24 overflow-hidden md:h-28">
                   <img src={metricsImage} alt={metricsTitle} loading="lazy" decoding="async" className="h-full w-full object-cover" />
                   <div className="absolute inset-0 bg-black/45" />
                   <p className="archive-tag absolute bottom-2 left-3 text-[rgba(255,255,255,0.9)]">{metricsTitle}</p>
                 </div>
               ) : (
-                <div className="px-3 py-2">
+                <div className="px-4 py-4">
                   <p className="archive-tag text-[rgba(255,255,255,0.82)]">{metricsTitle}</p>
                 </div>
               )}

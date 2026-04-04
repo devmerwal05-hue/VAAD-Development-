@@ -61,7 +61,7 @@ export default function Services() {
       <span className="swiss-meta swiss-meta--tr">v2.6 // 12-col</span>
 
       <div className="site-container swiss-grid relative z-10">
-        <div className="swiss-full-col mb-2 flex items-center justify-between">
+        <div className="swiss-full-col mb-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#ff2c1b', display: 'inline-block' }} />
             <span className="section-ref">{labelParts[0] || '01'} / {labelParts[1] || 'Services'}</span>
@@ -69,11 +69,11 @@ export default function Services() {
           <span className="archive-tag hidden md:block">bionic_catalog_stream</span>
         </div>
 
-        <div className="swiss-full-col mb-10 grid grid-cols-1 gap-6 lg:grid-cols-12">
+        <div className="swiss-full-col mb-12 grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-end">
           <motion.h2
             initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }} transition={{ duration: 0.6, ease }}
-            className="display-section lg:col-span-6 text-[#dbe5f8]"
+            className="display-section lg:col-span-7 text-[#dbe5f8]"
             style={{ fontFamily: "'Playfair Display', serif", fontWeight: 900, fontSize: 'clamp(44px, 8vw, 98px)', fontStyle: 'italic' }}
           >
             {getContentValue('services', 'title', 'What we build')}
@@ -82,14 +82,14 @@ export default function Services() {
           <motion.p
             initial={{ opacity: 0, y: 14 }} whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }} transition={{ duration: 0.55, ease, delay: 0.1 }}
-            className="reading-track swiss-text-col text-[13px] text-[rgba(164,188,226,0.88)]"
+            className="reading-track lg:col-span-5 text-[14px] leading-[1.85] text-[rgba(164,188,226,0.88)]"
             style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}
           >
             {getContentValue('services', 'subtitle', 'Delivery is structured around what your team actually needs to launch, maintain, and extend after handoff.')}
           </motion.p>
         </div>
 
-        <div className="swiss-full-col grid grid-cols-1 gap-8 lg:grid-cols-12">
+        <div className="swiss-full-col grid grid-cols-1 gap-10 lg:grid-cols-12">
           {services.map((service, index) => (
             <motion.article
               key={service.title}
@@ -99,7 +99,7 @@ export default function Services() {
               transition={{ duration: 0.52, ease, delay: index * 0.06 }}
               className="archive-panel group overflow-hidden lg:col-span-6"
             >
-              <div className="relative h-[280px] border-b border-[rgba(126,164,224,0.25)] md:h-[320px]">
+              <div className="relative h-[300px] border-b border-[rgba(126,164,224,0.25)] md:h-[340px]">
                 {service.image ? (
                   <img
                     src={service.image}
@@ -113,31 +113,32 @@ export default function Services() {
                 )}
 
                 <div className="absolute inset-0 bg-[linear-gradient(to_top,rgba(1,14,42,0.96)_5%,rgba(1,14,42,0.18)_58%)]" />
-                <div className="absolute left-4 top-4 border border-[rgba(255,44,27,0.62)] bg-[rgba(2,18,52,0.9)] px-3 py-1">
+                <div className="absolute left-5 top-5 border border-[rgba(255,44,27,0.62)] bg-[rgba(2,18,52,0.9)] px-3 py-1">
                   <span className="archive-tag">index.{String(index + 1).padStart(3, '0')}</span>
                 </div>
               </div>
 
-              <div className="p-5 md:p-6">
+              <div className="p-6 md:p-8">
                 <h3
-                  className="display-section mb-3 text-[#dfe7f8]"
-                  style={{ fontFamily: "'Playfair Display', serif", fontWeight: 800, fontSize: 'clamp(34px, 4.2vw, 56px)', fontStyle: 'italic' }}
+                  className="display-section mb-4 text-[#dfe7f8]"
+                  style={{ fontFamily: "'Playfair Display', serif", fontWeight: 800, fontSize: 'clamp(34px, 3.8vw, 54px)', fontStyle: 'italic' }}
                 >
                   {service.title}
                 </h3>
 
                 <p
-                  className="reading-track text-[14px] text-[rgba(168,190,226,0.9)]"
+                  className="reading-track text-[15px] leading-[1.85] text-[rgba(168,190,226,0.9)]"
                   style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}
                 >
                   {service.description}
                 </p>
 
-                <div className="mt-5 border-t border-[rgba(126,164,224,0.2)] pt-4">
-                  <div className="grid grid-cols-2 gap-3">
+                <div className="mt-8 border-t border-[rgba(126,164,224,0.2)] pt-5">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
                     {service.details.slice(0, 4).map((detail) => (
-                      <p key={detail} className="mono-readable text-[10px] uppercase text-[rgba(255,44,27,0.9)]">
-                        {detail}
+                      <p key={detail} className="mono-readable flex items-start gap-2 text-[10px] uppercase text-[rgba(255,44,27,0.9)]">
+                        <span className="mt-[6px] inline-block h-[3px] w-[3px] shrink-0 rounded-full bg-[rgba(255,44,27,0.9)]" />
+                        <span>{detail}</span>
                       </p>
                     ))}
                   </div>

@@ -31,7 +31,7 @@ export default function FAQ() {
 
       <div className="site-container swiss-grid relative z-10">
         {/* Header */}
-        <div className="swiss-full-col flex items-center gap-4 mb-2">
+        <div className="swiss-full-col mb-4 flex items-center gap-4">
           <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#E8132A', display: 'inline-block' }} />
           <span className="section-ref">{labelParts[0] || '07'} / {labelParts[1] || 'FAQ'}</span>
         </div>
@@ -39,15 +39,15 @@ export default function FAQ() {
         <motion.h2
           initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }} transition={{ duration: 0.6, ease }}
-          className="swiss-text-col mb-2"
+          className="swiss-text-col mb-4"
           style={{ fontFamily: "'Playfair Display', serif", fontWeight: 900, fontSize: 'clamp(36px, 5vw, 68px)', letterSpacing: '-0.03em', lineHeight: 0.9, color: '#EAE6DB' }}
         >
           {getContentValue('faq', 'title', 'Common questions')}
         </motion.h2>
 
-        <div className="swiss-full-col rule-line-full mb-2" />
+        <div className="swiss-full-col rule-line-full mb-4" />
 
-        <div className="swiss-text-col flex flex-col gap-4">
+        <div className="swiss-text-col flex flex-col gap-5">
           {faqs.map((faq, i) => (
             <motion.div
               key={faq.q}
@@ -55,7 +55,7 @@ export default function FAQ() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.3 }}
               transition={{ duration: 0.4, ease, delay: i * 0.07 }}
-              className="border border-[rgba(232,19,42,0.2)] bg-[rgba(9,22,40,0.62)]"
+              className="border border-[rgba(232,19,42,0.24)] bg-[rgba(9,22,40,0.62)]"
             >
               <button
                 type="button"
@@ -63,7 +63,7 @@ export default function FAQ() {
                 aria-expanded={open === i}
                 aria-controls={`faq-panel-${i}`}
                 id={`faq-trigger-${i}`}
-                className="group flex w-full items-center justify-between px-6 py-8 text-left"
+                className="group flex w-full items-center justify-between px-6 py-7 text-left md:px-7 md:py-8"
               >
                 <div className="flex min-w-0 flex-1 items-start gap-6">
                   <span
@@ -73,7 +73,7 @@ export default function FAQ() {
                     {String(i + 1).padStart(2, '0')}
                   </span>
                   <span
-                    className="text-[15px] md:text-[17px] pr-4 transition-colors duration-200"
+                    className="pr-4 text-[16px] leading-[1.5] transition-colors duration-200 md:text-[18px]"
                     style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 400, color: open === i ? '#EAE6DB' : 'rgba(234,230,219,0.65)' }}
                   >
                     {faq.q}
@@ -81,8 +81,8 @@ export default function FAQ() {
                 </div>
                 {/* Plus / minus indicator */}
                 <span
-                  className="shrink-0 w-6 h-6 flex items-center justify-center transition-all duration-300"
-                  style={{ color: '#E8132A' }}
+                  className="flex h-7 w-7 shrink-0 items-center justify-center border border-[rgba(232,19,42,0.35)] transition-all duration-300"
+                  style={{ color: '#E8132A', background: 'rgba(232,19,42,0.06)' }}
                 >
                   <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
                     <line x1="6" y1="0" x2="6" y2="12" stroke="currentColor" strokeWidth="1.5"
@@ -105,8 +105,8 @@ export default function FAQ() {
                     className="overflow-hidden"
                   >
                     <p
-                      className="pb-6 pl-16 pr-6 text-[15px] leading-[1.8]"
-                      style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, color: 'rgba(234,230,219,0.5)' }}
+                      className="pb-7 pl-14 pr-6 text-[15px] leading-[1.9] md:pl-16 md:pr-7"
+                      style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, color: 'rgba(234,230,219,0.55)' }}
                     >
                       {faq.a}
                     </p>

@@ -39,16 +39,16 @@ export default function Team() {
 
       <div className="site-container swiss-grid relative z-10">
         {/* Section header */}
-        <div className="swiss-full-col flex items-center gap-4 mb-2">
+        <div className="swiss-full-col mb-4 flex items-center gap-4">
           <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#E8132A', display: 'inline-block' }} />
           <span className="section-ref">{labelParts[0] || '05'} / {labelParts[1] || 'Team'}</span>
         </div>
 
-        <div className="swiss-full-col mb-8 grid grid-cols-1 gap-6 lg:grid-cols-12">
+        <div className="swiss-full-col mb-12 grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-end">
           <m.h2
             initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }} transition={{ duration: 0.6, ease }}
-            className="lg:col-span-6"
+            className="lg:col-span-7"
             style={{ fontFamily: "'Playfair Display', serif", fontWeight: 900, fontSize: 'clamp(36px, 5vw, 68px)', letterSpacing: '-0.03em', lineHeight: 0.9, color: '#EAE6DB' }}
           >
             {getContentValue('team', 'title', 'The people behind the work')}
@@ -56,17 +56,17 @@ export default function Team() {
           <m.p
             initial={{ opacity: 0 }} whileInView={{ opacity: 1 }}
             viewport={{ once: true }} transition={{ duration: 0.55, delay: 0.1 }}
-            className="reading-track swiss-text-col text-[13px] leading-[1.8]"
-            style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, color: 'rgba(234,230,219,0.45)' }}
+            className="reading-track lg:col-span-5 text-[14px] leading-[1.85]"
+            style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, color: 'rgba(234,230,219,0.5)' }}
           >
             {getContentValue('team', 'subtitle', 'A compact team that scopes, designs, builds, and launches without handoff fog.')}
           </m.p>
         </div>
 
-        <div className="swiss-full-col rule-line-full mb-2" />
+        <div className="swiss-full-col rule-line-full mb-4" />
 
         {/* Member grid */}
-        <div className="swiss-full-col grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-12">
+        <div className="swiss-full-col grid grid-cols-1 gap-7 sm:grid-cols-2 lg:grid-cols-12">
           {members.map((member, i) => (
             <m.article
               key={`${member.name}-${i}`}
@@ -112,22 +112,22 @@ export default function Team() {
               </div>
 
               {/* Info */}
-              <div className="px-6 py-6" style={{ borderTop: '1px solid rgba(232,19,42,0.1)' }}>
+              <div className="px-6 py-7" style={{ borderTop: '1px solid rgba(232,19,42,0.1)' }}>
                 <p
-                  className="text-[10px] tracking-[0.22em] uppercase mb-2 group-hover:text-[#E8132A] transition-colors duration-300"
+                  className="mb-3 text-[10px] uppercase tracking-[0.22em] transition-colors duration-300 group-hover:text-[#E8132A]"
                   style={{ fontFamily: "'JetBrains Mono', monospace", color: 'rgba(232,19,42,0.6)' }}
                 >
                   {member.role}
                 </p>
                 <h3
-                  className="mb-3"
+                  className="mb-4"
                   style={{ fontFamily: "'Playfair Display', serif", fontWeight: 700, fontSize: 22, letterSpacing: '-0.02em', color: '#EAE6DB', lineHeight: 1.1 }}
                 >
                   {member.name}
                 </h3>
                 <p
-                  className="text-[13px] leading-[1.75]"
-                  style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, color: 'rgba(234,230,219,0.45)' }}
+                  className="text-[14px] leading-[1.85]"
+                  style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, color: 'rgba(234,230,219,0.5)' }}
                 >
                   {member.description}
                 </p>

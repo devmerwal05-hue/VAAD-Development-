@@ -42,16 +42,16 @@ export default function TechStack() {
 
       <div className="site-container swiss-grid relative z-10">
         {/* Header */}
-        <div className="swiss-full-col flex items-center gap-4 mb-2">
+        <div className="swiss-full-col mb-4 flex items-center gap-4">
           <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#E8132A', display: 'inline-block' }} />
           <span className="section-ref">{labelParts[0] || '09'} / {labelParts[1] || 'Capabilities'}</span>
         </div>
 
-        <div className="swiss-full-col mb-8 grid grid-cols-1 gap-6 lg:grid-cols-12">
+        <div className="swiss-full-col mb-12 grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-end">
           <motion.h2
             initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }} transition={{ duration: 0.6, ease }}
-            className="lg:col-span-6"
+            className="lg:col-span-7"
             style={{ fontFamily: "'Playfair Display', serif", fontWeight: 900, fontSize: 'clamp(36px, 5vw, 68px)', letterSpacing: '-0.03em', lineHeight: 0.9, color: '#EAE6DB' }}
           >
             {getContentValue('techstack', 'title', 'How we build')}
@@ -59,16 +59,16 @@ export default function TechStack() {
           <motion.p
             initial={{ opacity: 0 }} whileInView={{ opacity: 1 }}
             viewport={{ once: true }} transition={{ duration: 0.55, delay: 0.1 }}
-            className="reading-track swiss-text-col text-[13px] leading-[1.8]"
+            className="reading-track lg:col-span-5 text-[14px] leading-[1.85]"
             style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, color: 'rgba(234,230,219,0.45)' }}
           >
             {getContentValue('techstack', 'subtitle', 'The stack is chosen around delivery speed, maintainability, and how much control your team needs after launch.')}
           </motion.p>
         </div>
 
-        <div className="swiss-full-col rule-line-full mb-2" />
+        <div className="swiss-full-col rule-line-full mb-4" />
 
-        <div className="swiss-full-col grid grid-cols-1 gap-6 lg:grid-cols-12">
+        <div className="swiss-full-col grid grid-cols-1 gap-8 lg:grid-cols-12">
           {categories.map((cat, i) => (
             <motion.div
               key={cat.name}
@@ -76,7 +76,7 @@ export default function TechStack() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-5%' }}
               transition={{ duration: 0.6, ease, delay: i * 0.06 }}
-              className="group relative border border-[rgba(232,19,42,0.18)] bg-[rgba(9,22,40,0.62)] px-8 py-8 lg:col-span-6"
+              className="group relative border border-[rgba(232,19,42,0.18)] bg-[rgba(9,22,40,0.62)] px-7 py-8 md:px-8 md:py-9 lg:col-span-6 xl:col-span-4"
             >
               {/* Hover */}
               <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" style={{ background: 'rgba(232,19,42,0.03)' }} />
@@ -91,28 +91,28 @@ export default function TechStack() {
               </span>
 
               <div className="relative z-10">
-                <p className="annotation-label mb-4">Module / {String(i + 1).padStart(2, '0')}</p>
+                <p className="annotation-label mb-5">Module / {String(i + 1).padStart(2, '0')}</p>
 
                 <h3
-                  className="mb-3 group-hover:text-[#E8132A] transition-colors duration-300"
-                  style={{ fontFamily: "'Playfair Display', serif", fontWeight: 700, fontSize: 'clamp(18px, 2vw, 22px)', letterSpacing: '-0.02em', color: '#EAE6DB', lineHeight: 1.1 }}
+                  className="mb-4 group-hover:text-[#E8132A] transition-colors duration-300"
+                  style={{ fontFamily: "'Playfair Display', serif", fontWeight: 700, fontSize: 'clamp(19px, 2vw, 24px)', letterSpacing: '-0.02em', color: '#EAE6DB', lineHeight: 1.12 }}
                 >
                   {cat.name}
                 </h3>
 
-                <p className="mb-6 text-[13px] leading-[1.75]" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, color: 'rgba(234,230,219,0.45)' }}>
+                <p className="mb-7 text-[14px] leading-[1.85]" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, color: 'rgba(234,230,219,0.5)' }}>
                   {cat.desc}
                 </p>
 
                 {/* Tags */}
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2.5">
                   {cat.tags.map((tag) => (
                     <span
                       key={tag}
-                      className="text-[9px] tracking-[0.18em] uppercase px-2.5 py-1 transition-all duration-200 group-hover:border-[rgba(232,19,42,0.3)]"
+                      className="px-2.5 py-1.5 text-[9px] uppercase tracking-[0.18em] transition-all duration-200 group-hover:border-[rgba(232,19,42,0.3)]"
                       style={{
                         fontFamily: "'JetBrains Mono', monospace",
-                        color: 'rgba(234,230,219,0.35)',
+                        color: 'rgba(234,230,219,0.42)',
                         border: '1px solid rgba(234,230,219,0.1)',
                       }}
                     >

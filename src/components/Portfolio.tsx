@@ -20,7 +20,7 @@ export default function Portfolio() {
       <span className="swiss-meta swiss-meta--tr">spec // v1.92</span>
 
       <div className="site-container swiss-grid relative z-10">
-        <div className="swiss-full-col mb-2 flex items-center justify-between">
+        <div className="swiss-full-col mb-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#ff2c1b', display: 'inline-block' }} />
             <span className="section-ref">{labelParts[0] || '04'} / {labelParts[1] || 'Work'}</span>
@@ -31,17 +31,17 @@ export default function Portfolio() {
         <motion.h2
           initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }} transition={{ duration: 0.6, ease }}
-          className="display-section swiss-text-col mb-2 text-[#dfe8f8]"
+          className="display-section swiss-text-col mb-4 text-[#dfe8f8]"
           style={{ fontFamily: "'Playfair Display', serif", fontWeight: 900, fontSize: 'clamp(44px, 8vw, 96px)', fontStyle: 'italic' }}
         >
           {getContentValue('portfolio', 'title', 'Selected work')}
         </motion.h2>
 
-        <div className="swiss-full-col grid grid-cols-1 gap-8 lg:grid-cols-12">
+        <div className="swiss-full-col grid grid-cols-1 gap-10 lg:grid-cols-12">
           {projects.map((project, i) => {
             const inner = (
               <div className="archive-panel group overflow-hidden">
-                <div className="relative overflow-hidden" style={{ aspectRatio: '4/3', minHeight: 260 }}>
+                <div className="relative overflow-hidden" style={{ aspectRatio: '4/3', minHeight: 300 }}>
                   {project.image ? (
                     <img
                       src={project.image}
@@ -72,21 +72,21 @@ export default function Portfolio() {
                   </div>
                 </div>
 
-                <div className="p-5 md:p-6">
+                <div className="p-6 md:p-7">
                   <h3
-                    className="display-section mb-2 text-[#e3ebfb]"
-                    style={{ fontFamily: "'Playfair Display', serif", fontWeight: 800, fontSize: 'clamp(34px, 5vw, 60px)', fontStyle: 'italic' }}
+                    className="display-section mb-3 text-[#e3ebfb]"
+                    style={{ fontFamily: "'Playfair Display', serif", fontWeight: 800, fontSize: 'clamp(32px, 4.2vw, 54px)', fontStyle: 'italic' }}
                   >
                     {project.name}
                   </h3>
 
-                  <p className="archive-tag mb-3">#{project.subtitle}</p>
+                  <p className="archive-tag mb-4">#{project.subtitle}</p>
 
-                  <p className="reading-track text-[14px] text-[rgba(168,190,226,0.88)]" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}>
+                  <p className="reading-track text-[15px] leading-[1.85] text-[rgba(168,190,226,0.88)]" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}>
                     {project.description}
                   </p>
 
-                  <div className="mt-5 border-t border-[rgba(126,164,224,0.2)] pt-4">
+                  <div className="mt-6 border-t border-[rgba(126,164,224,0.2)] pt-5">
                     <span
                       className="mono-readable inline-flex items-center gap-2 text-[11px] uppercase text-[rgba(255,44,27,0.95)]"
                       style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 500 }}

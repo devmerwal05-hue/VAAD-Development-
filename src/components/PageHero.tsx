@@ -16,7 +16,7 @@ export default function PageHero({
   titleHighlight,
 }: PageHeroProps) {
   return (
-    <section className="section-pad swiss-section relative overflow-hidden pt-24 md:pt-32">
+    <section className="section-pad swiss-section relative overflow-hidden pt-28 md:pt-36">
       <div className="absolute inset-0 grid-pattern opacity-20 pointer-events-none" />
       <span className="swiss-meta swiss-meta--tl">page.hero</span>
       <span className="swiss-meta swiss-meta--tr">layout // 12-col</span>
@@ -33,21 +33,21 @@ export default function PageHero({
       </div>
 
       <div className="relative z-10 site-container swiss-grid">
-        <div className="swiss-full-col grid grid-cols-1 items-end gap-8 lg:grid-cols-12 lg:gap-10">
+        <div className="swiss-full-col grid grid-cols-1 items-end gap-8 lg:grid-cols-12 lg:gap-12">
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, ease }}
-            className="corner-marks border border-[rgba(232,19,42,0.22)] bg-[rgba(9,22,40,0.72)] px-6 py-8 md:px-8 md:py-12 lg:col-span-6 lg:px-10"
+            className="corner-marks border border-[rgba(232,19,42,0.22)] bg-[rgba(9,22,40,0.72)] px-6 py-9 md:px-9 md:py-12 lg:col-span-6 lg:px-10"
           >
-            <div className="mb-8 flex items-center gap-4">
+            <div className="mb-9 flex items-center gap-4">
               <span className="dot-red" />
               <span className="section-ref">{eyebrow}</span>
               <div className="h-[1px] w-20 bg-[rgba(232,19,42,0.35)]" />
             </div>
 
             <h1
-              className="display-hero max-w-[18ch] text-text-primary"
+              className="display-hero max-w-[19ch] text-text-primary"
               style={{
                 fontFamily: "'Playfair Display', serif",
                 fontWeight: 900,
@@ -58,10 +58,10 @@ export default function PageHero({
               <span className="mt-2 block break-words italic text-accent">{titleHighlight}</span>
             </h1>
 
-            <div className="my-8 h-[1px] w-full max-w-[280px] bg-[linear-gradient(90deg,rgba(232,19,42,0.65),rgba(232,19,42,0.08),transparent)]" />
+            <div className="my-9 h-[1px] w-full max-w-[300px] bg-[linear-gradient(90deg,rgba(232,19,42,0.65),rgba(232,19,42,0.08),transparent)]" />
 
             <p
-              className="reading-track text-[15px] leading-[1.85] text-[rgba(234,230,219,0.62)] md:text-[17px]"
+              className="reading-track text-[15px] leading-[1.9] text-[rgba(234,230,219,0.62)] md:text-[17px]"
               style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}
             >
               {description}
@@ -74,7 +74,7 @@ export default function PageHero({
             transition={{ duration: 0.75, ease, delay: 0.06 }}
             className="hidden lg:col-span-6 lg:block"
           >
-            <div className="corner-marks border border-[rgba(232,19,42,0.2)] bg-[rgba(9,22,40,0.78)] p-8">
+            <div className="corner-marks border border-[rgba(232,19,42,0.2)] bg-[rgba(9,22,40,0.78)] p-9">
               <div className="mb-6 flex items-center justify-between">
                 <span className="annotation-label">00 / 01</span>
                 <span className="annotation-label">01</span>
@@ -90,7 +90,7 @@ export default function PageHero({
                 ))}
               </div>
 
-              <div className="mt-6 rounded-lg border border-[rgba(232,19,42,0.14)] px-4 py-4">
+              <div className="mt-7 rounded-lg border border-[rgba(232,19,42,0.14)] px-4 py-5">
                 <div className="mb-3 flex items-center gap-2">
                   <span className="dot-red" />
                   <span className="annotation-label">00 / 00</span>
