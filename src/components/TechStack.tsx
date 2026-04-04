@@ -35,20 +35,23 @@ export default function TechStack() {
   if (categories.length === 0) return null;
 
   return (
-    <section className="section-pad relative overflow-hidden">
+    <section className="section-pad swiss-section relative overflow-hidden">
       <div className="absolute inset-0 grid-pattern opacity-15 pointer-events-none" />
+      <span className="swiss-meta swiss-meta--tl">tech.registry</span>
+      <span className="swiss-meta swiss-meta--tr">hash // 0x12AF</span>
 
-      <div className="site-container relative z-10">
+      <div className="site-container swiss-grid relative z-10">
         {/* Header */}
-        <div className="flex items-center gap-4 mb-4">
+        <div className="swiss-full-col flex items-center gap-4 mb-2">
           <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#E8132A', display: 'inline-block' }} />
           <span className="section-ref">{labelParts[0] || '09'} / {labelParts[1] || 'Capabilities'}</span>
         </div>
 
-        <div className="mb-16 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+        <div className="swiss-full-col mb-8 grid grid-cols-1 gap-6 lg:grid-cols-12">
           <motion.h2
             initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }} transition={{ duration: 0.6, ease }}
+            className="lg:col-span-6"
             style={{ fontFamily: "'Playfair Display', serif", fontWeight: 900, fontSize: 'clamp(36px, 5vw, 68px)', letterSpacing: '-0.03em', lineHeight: 0.9, color: '#EAE6DB' }}
           >
             {getContentValue('techstack', 'title', 'How we build')}
@@ -56,16 +59,16 @@ export default function TechStack() {
           <motion.p
             initial={{ opacity: 0 }} whileInView={{ opacity: 1 }}
             viewport={{ once: true }} transition={{ duration: 0.55, delay: 0.1 }}
-            className="reading-track max-w-[340px] text-[13px] leading-[1.8]"
+            className="reading-track swiss-text-col text-[13px] leading-[1.8]"
             style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, color: 'rgba(234,230,219,0.45)' }}
           >
             {getContentValue('techstack', 'subtitle', 'The stack is chosen around delivery speed, maintainability, and how much control your team needs after launch.')}
           </motion.p>
         </div>
 
-        <div className="rule-line-full mb-8" />
+        <div className="swiss-full-col rule-line-full mb-2" />
 
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-8">
+        <div className="swiss-full-col grid grid-cols-1 gap-6 lg:grid-cols-12">
           {categories.map((cat, i) => (
             <motion.div
               key={cat.name}
@@ -73,7 +76,7 @@ export default function TechStack() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-5%' }}
               transition={{ duration: 0.6, ease, delay: i * 0.06 }}
-              className="group relative border border-[rgba(232,19,42,0.18)] bg-[rgba(9,22,40,0.62)] px-8 py-8"
+              className="group relative border border-[rgba(232,19,42,0.18)] bg-[rgba(9,22,40,0.62)] px-8 py-8 lg:col-span-6"
             >
               {/* Hover */}
               <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" style={{ background: 'rgba(232,19,42,0.03)' }} />

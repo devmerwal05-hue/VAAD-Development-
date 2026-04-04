@@ -28,21 +28,26 @@ export default function Pricing() {
     };
   }).filter((p) => p.name);
 
-  return (
-    <section className="section-pad relative">
-      <div className="absolute inset-0 grid-pattern opacity-15 pointer-events-none" />
+  const planSpanClass = planCount <= 2 ? 'lg:col-span-6' : 'lg:col-span-4';
 
-      <div className="site-container relative z-10">
+  return (
+    <section className="section-pad swiss-section relative">
+      <div className="absolute inset-0 grid-pattern opacity-15 pointer-events-none" />
+      <span className="swiss-meta swiss-meta--tl">pricing.matrix</span>
+      <span className="swiss-meta swiss-meta--tr">schema // usd.v3</span>
+
+      <div className="site-container swiss-grid relative z-10">
         {/* Header */}
-        <div className="flex items-center gap-4 mb-4">
+        <div className="swiss-full-col flex items-center gap-4 mb-2">
           <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#E8132A', display: 'inline-block' }} />
           <span className="section-ref">{labelParts[0] || '06'} / {labelParts[1] || 'Pricing'}</span>
         </div>
 
-        <div className="mb-16 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+        <div className="swiss-full-col mb-8 grid grid-cols-1 gap-6 lg:grid-cols-12">
           <motion.h2
             initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }} transition={{ duration: 0.6, ease }}
+            className="lg:col-span-6"
             style={{ fontFamily: "'Playfair Display', serif", fontWeight: 900, fontSize: 'clamp(36px, 5vw, 68px)', letterSpacing: '-0.03em', lineHeight: 0.9, color: '#EAE6DB' }}
           >
             {getContentValue('pricing', 'title', 'Transparent pricing')}
@@ -50,16 +55,16 @@ export default function Pricing() {
           <motion.p
             initial={{ opacity: 0 }} whileInView={{ opacity: 1 }}
             viewport={{ once: true }} transition={{ duration: 0.55, delay: 0.1 }}
-            className="text-[13px] max-w-[340px] leading-[1.8]"
+            className="reading-track swiss-text-col text-[13px] leading-[1.8]"
             style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, color: 'rgba(234,230,219,0.45)' }}
           >
             {getContentValue('pricing', 'subtitle', 'Clear ranges for common scopes. Final pricing depends on content volume, integrations, and operational complexity.')}
           </motion.p>
         </div>
 
-        <div className="rule-line-full mb-12" />
+        <div className="swiss-full-col rule-line-full mb-2" />
 
-        <div className={`grid grid-cols-1 ${planCount <= 2 ? 'sm:grid-cols-2' : 'lg:grid-cols-3'} gap-6 md:gap-8`}>
+        <div className="swiss-full-col grid grid-cols-1 gap-6 lg:grid-cols-12">
           {plans.map((plan, i) => (
             <motion.div
               key={plan.name}
@@ -67,7 +72,7 @@ export default function Pricing() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.2 }}
               transition={{ duration: 0.5, ease, delay: i * 0.07 }}
-              className="group relative flex flex-col"
+              className={`group relative flex flex-col ${planSpanClass}`}
               style={{
                 border: plan.highlighted ? '1px solid rgba(232,19,42,0.35)' : '1px solid rgba(232,19,42,0.1)',
                 background: plan.highlighted ? 'rgba(232,19,42,0.05)' : 'transparent',
@@ -161,10 +166,10 @@ export default function Pricing() {
         <motion.div
           initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }} transition={{ duration: 0.6, ease, delay: 0.3 }}
-          className="mt-16 text-center"
+          className="swiss-text-col mt-8"
         >
           <p
-            className="reading-track mx-auto mb-6 max-w-[480px] text-[14px] leading-[1.8]"
+            className="reading-track mb-6 text-[14px] leading-[1.8]"
             style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, color: 'rgba(234,230,219,0.45)' }}
           >
             {getContentValue('pricing', 'cta_text', 'If the scope is unusual, we price it from the workflow backward instead of forcing it into a generic package.')}

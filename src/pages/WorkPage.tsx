@@ -32,8 +32,10 @@ export default function WorkPage() {
         description={getContentValue('work_page', 'description', 'These are the kinds of builds we take on: lean teams, real delivery pressure, and a clear need for design and engineering to move in the same sprint.')}
       />
 
-      <section className="section-pad">
-        <div className="site-container flex flex-col gap-8 md:gap-12">
+      <section className="section-pad swiss-section relative">
+        <span className="swiss-meta swiss-meta--tl">work.index</span>
+        <span className="swiss-meta swiss-meta--tr">catalog // active</span>
+        <div className="site-container swiss-grid">
           {projects.map((project, index) => (
             <motion.article
               key={`${project.name}-${index}`}
@@ -41,7 +43,7 @@ export default function WorkPage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.1 }}
               transition={{ duration: 0.72 }}
-              className="group relative grid grid-cols-1 border border-[rgba(232,19,42,0.2)] bg-[rgba(9,22,40,0.62)] lg:grid-cols-[1fr_0.95fr]"
+              className="swiss-full-col group relative grid grid-cols-1 border border-[rgba(232,19,42,0.2)] bg-[rgba(9,22,40,0.62)] lg:grid-cols-[1fr_0.95fr]"
             >
               <div className={`relative min-h-[280px] overflow-hidden border-b border-[rgba(232,19,42,0.12)] lg:min-h-[340px] lg:border-b-0 ${index % 2 === 1 ? 'lg:order-2' : ''}`}>
                 <div
@@ -134,11 +136,14 @@ export default function WorkPage() {
 
       <Marquee />
 
-      <section className="px-6 section-pad">
-        <div className="corner-marks mx-auto max-w-[920px] border border-[rgba(232,19,42,0.2)] bg-[rgba(9,22,40,0.76)] px-8 py-8 text-center md:px-12 md:py-12">
+      <section className="section-pad swiss-section relative">
+        <span className="swiss-meta swiss-meta--tl">work.cta</span>
+        <span className="swiss-meta swiss-meta--tr">prompt // 01</span>
+        <div className="site-container swiss-grid">
+          <div className="corner-marks swiss-full-col border border-[rgba(232,19,42,0.2)] bg-[rgba(9,22,40,0.76)] px-8 py-8 text-center md:px-12 md:py-12 lg:col-span-6 lg:col-start-4">
           <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
             {getContentValue('portfolio', 'footer_text', '') && (
-              <p className="reading-track mx-auto mb-8 max-w-[58ch] text-[15px] leading-[1.8] text-[rgba(234,230,219,0.56)]" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}>
+              <p className="reading-track mx-auto mb-8 text-[15px] leading-[1.8] text-[rgba(234,230,219,0.56)]" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}>
                 {getContentValue('portfolio', 'footer_text', '')}
               </p>
             )}
@@ -150,7 +155,7 @@ export default function WorkPage() {
               {getContentValue('work_page', 'cta_title', 'Have a build that needs traction?')}
             </h2>
 
-            <p className="reading-track mx-auto mb-8 max-w-[58ch] text-[15px] leading-[1.8] text-[rgba(234,230,219,0.56)]" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}>
+            <p className="reading-track mx-auto mb-8 text-[15px] leading-[1.8] text-[rgba(234,230,219,0.56)]" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}>
               {getContentValue('work_page', 'cta_description', 'We can scope the work, call out the risks, and tell you what should happen in the first release.')}
             </p>
 
@@ -162,6 +167,7 @@ export default function WorkPage() {
               {getContentValue('work_page', 'cta_button', 'Start the conversation')}
             </Link>
           </motion.div>
+          </div>
         </div>
       </section>
     </PageWrapper>

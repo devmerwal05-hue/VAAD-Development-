@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { NavLink } from 'react-router-dom';
+import { Archive, BarChart3, CircleUserRound, FlaskConical, LayoutGrid, Menu, X } from 'lucide-react';
 import { useContent } from '../lib/useContent';
 
 interface NavLinkItem { href: string; label: string; }
@@ -36,92 +37,84 @@ export default function Navigation() {
     return () => { document.body.style.overflow = ''; };
   }, [mobileOpen]);
 
+  const dockItems = [
+    { href: '/', icon: LayoutGrid, label: 'Home' },
+    { href: '/work', icon: Archive, label: getContentValue('nav', 'link_1', 'Work') },
+    { href: '/services', icon: BarChart3, label: getContentValue('nav', 'link_2', 'Services') },
+    { href: '/contact', icon: CircleUserRound, label: getContentValue('nav', 'link_6', 'Contact') },
+  ];
+
   return (
     <>
       <nav
         aria-label="Primary"
-        className="fixed top-0 left-0 right-0 z-50 h-[64px] flex items-center"
+        className="fixed left-0 right-0 top-0 z-50 h-[72px]"
         style={{
-          background: scrolled ? 'rgba(6, 12, 32, 0.95)' : 'transparent',
-          backdropFilter: scrolled ? 'blur(24px)' : 'none',
-          WebkitBackdropFilter: scrolled ? 'blur(24px)' : 'none',
-          borderBottom: scrolled ? '1px solid rgba(232, 19, 42, 0.12)' : '1px solid transparent',
+          background: scrolled ? 'rgba(2, 18, 52, 0.95)' : 'rgba(2, 18, 52, 0.78)',
+          backdropFilter: 'blur(18px)',
+          WebkitBackdropFilter: 'blur(18px)',
+          borderBottom: '1px solid rgba(126, 164, 224, 0.2)',
           transition: 'background 0.4s, border-color 0.4s',
         }}
       >
-        <div className="flex w-full items-center justify-between gap-4 px-6 md:px-8">
-
-          {/* Logo */}
-          <NavLink to="/" className="group flex items-center gap-2" aria-label="VAAD Development home">
-            <div className="flex items-center gap-1">
-              <span
-                className="text-[20px] text-[#EAE6DB] tracking-[0.12em]"
-                style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, letterSpacing: '0.14em' }}
-              >
-                VAAD
-              </span>
-              <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#E8132A', display: 'inline-block', marginBottom: 1 }} />
-            </div>
-            <span
-              className="hidden border-l border-[rgba(232,19,42,0.3)] pl-2 text-[9px] uppercase tracking-[0.28em] sm:block"
-              style={{ fontFamily: "'JetBrains Mono', monospace", color: 'rgba(234,230,219,0.35)', marginTop: 1 }}
-            >
-              Dev
-            </span>
-          </NavLink>
-
-          {/* Desktop nav */}
-          <div className="hidden md:flex items-center gap-2">
-            {navLinks.map((link) => (
-              <NavLink
-                key={link.href}
-                to={link.href}
-                className={({ isActive }) =>
-                  `relative border px-4 py-2 text-[11px] uppercase tracking-[0.18em] transition-all duration-200 ${
-                    isActive
-                      ? 'text-[#EAE6DB] border-[rgba(232,19,42,0.45)] bg-[rgba(232,19,42,0.12)]'
-                      : 'text-[rgba(234,230,219,0.52)] border-[rgba(232,19,42,0.15)] hover:text-[#EAE6DB] hover:border-[rgba(232,19,42,0.42)] hover:bg-[rgba(232,19,42,0.06)]'
-                  }`
-                }
-                style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 500 }}
-              >
-                {link.label}
-              </NavLink>
-            ))}
-          </div>
-
-          {/* Contact CTA */}
-          <NavLink
-            to="/contact"
-            className="hidden md:flex items-center gap-2 px-4 py-2 border border-[rgba(232,19,42,0.35)] text-[11px] tracking-[0.18em] uppercase text-[rgba(234,230,219,0.7)] hover:text-[#EAE6DB] hover:border-[rgba(232,19,42,0.7)] transition-all duration-300"
-            style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 500 }}
-          >
-            <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#E8132A', display: 'inline-block' }} />
-            Start Project
-          </NavLink>
-
-          {/* Hamburger */}
+        <div className="relative mx-auto flex h-full w-full max-w-[1280px] items-center justify-between px-5 md:px-8">
           <button
             type="button"
-            className="md:hidden flex flex-col gap-[5px] p-2"
+            className="flex h-10 w-10 items-center justify-center border border-[rgba(126,164,224,0.35)] bg-[rgba(6,24,58,0.8)] text-[rgba(255,44,27,0.95)] md:hidden"
             onClick={() => setMobileOpen((s) => !s)}
             aria-expanded={mobileOpen}
             aria-controls="mobile-navigation"
             aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
           >
-            <span
-              className="block h-[1px] bg-[#EAE6DB] transition-all duration-300"
-              style={{ width: 22, transformOrigin: 'left', transform: mobileOpen ? 'rotate(45deg) translateY(-1px)' : 'none' }}
-            />
-            <span
-              className="block h-[1px] bg-[#EAE6DB] transition-all duration-300"
-              style={{ width: 16, opacity: mobileOpen ? 0 : 1 }}
-            />
-            <span
-              className="block h-[1px] bg-[#EAE6DB] transition-all duration-300"
-              style={{ width: 22, transformOrigin: 'left', transform: mobileOpen ? 'rotate(-45deg) translateY(1px)' : 'none' }}
-            />
+            {mobileOpen ? <X size={16} /> : <Menu size={16} />}
           </button>
+
+          <NavLink
+            to="/"
+            className="absolute left-1/2 -translate-x-1/2 text-[#e8ecf8] md:static md:translate-x-0"
+            aria-label="VAAD Development home"
+          >
+            <span
+              style={{
+                fontFamily: "'Playfair Display', serif",
+                fontWeight: 800,
+                fontSize: 'clamp(24px, 3vw, 44px)',
+                fontStyle: 'italic',
+                letterSpacing: '-0.02em',
+                lineHeight: 1,
+              }}
+            >
+              VAAD
+            </span>
+          </NavLink>
+
+          <div className="hidden items-center gap-2 md:flex">
+            {navLinks.map((link, index) => (
+              <NavLink
+                key={link.href}
+                to={link.href}
+                className={({ isActive }) =>
+                  `archive-tag border px-3 py-2 transition-all duration-200 ${
+                    isActive
+                      ? 'border-[rgba(255,44,27,0.75)] bg-[rgba(255,44,27,0.12)] text-[rgba(255,44,27,0.95)]'
+                      : 'border-[rgba(126,164,224,0.24)] text-[rgba(158,182,219,0.75)] hover:border-[rgba(255,44,27,0.5)] hover:text-[rgba(236,242,255,0.95)]'
+                  }`
+                }
+                style={{ minWidth: 88, textAlign: 'center' }}
+              >
+                {String(index + 1).padStart(2, '0')} {link.label}
+              </NavLink>
+            ))}
+          </div>
+
+          <NavLink
+            to="/admin"
+            className="flex h-10 w-10 items-center justify-center border border-[rgba(126,164,224,0.35)] bg-[rgba(6,24,58,0.8)] text-[rgba(255,44,27,0.95)] transition-colors hover:text-[#ff5f51]"
+            aria-label="Admin"
+            title="Admin"
+          >
+            <FlaskConical size={15} />
+          </NavLink>
         </div>
       </nav>
 
@@ -130,68 +123,87 @@ export default function Navigation() {
         {mobileOpen && (
           <motion.div
             id="mobile-navigation"
-            initial={{ opacity: 0, clipPath: 'inset(0 0 100% 0)' }}
-            animate={{ opacity: 1, clipPath: 'inset(0 0 0% 0)' }}
-            exit={{ opacity: 0, clipPath: 'inset(0 0 100% 0)' }}
-            transition={{ duration: 0.4, ease: [0.16, 0.77, 0.47, 0.97] }}
-            className="fixed inset-0 z-40 flex flex-col"
-            style={{ background: '#060C20' }}
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -16 }}
+            transition={{ duration: 0.28, ease: [0.16, 0.77, 0.47, 0.97] }}
+            className="fixed inset-0 z-40 flex flex-col pt-[72px]"
+            style={{ background: 'rgba(2, 18, 52, 0.96)' }}
             role="dialog"
             aria-modal="true"
           >
-            {/* Grid overlay */}
-            <div className="absolute inset-0 grid-pattern opacity-30 pointer-events-none" />
+            <div className="absolute inset-0 grid-pattern opacity-20 pointer-events-none" />
 
-            <div className="h-[64px] shrink-0 border-b border-[rgba(232,19,42,0.12)]" />
+            <div className="flex-1 px-6 py-8">
+              <div className="archive-panel p-5">
+                <p className="archive-tag mb-6">System Navigation</p>
 
-            <div className="flex-1 flex flex-col justify-center px-8 gap-1">
-              {/* Annotation */}
-              <p className="annotation-label mb-8">Navigation / Menu</p>
-
-              {navLinks.map((link, index) => (
-                <motion.div
-                  key={link.href}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.08 * index, duration: 0.35 }}
-                >
-                  <NavLink
-                    to={link.href}
-                    onClick={() => setMobileOpen(false)}
-                    className={({ isActive }) =>
-                      `group flex items-center gap-4 border-b border-[rgba(232,19,42,0.08)] py-4 ${
-                        isActive ? 'text-[#EAE6DB]' : 'text-[rgba(234,230,219,0.5)]'
-                      }`
-                    }
+                {navLinks.map((link, index) => (
+                  <motion.div
+                    key={link.href}
+                    initial={{ opacity: 0, x: -14 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.06 * index, duration: 0.28 }}
                   >
-                    {({ isActive }) => (
-                      <>
-                        <span
-                          className="text-[9px] tracking-[0.2em] w-6 shrink-0"
-                          style={{ fontFamily: "'JetBrains Mono', monospace", color: isActive ? '#E8132A' : 'rgba(234,230,219,0.25)' }}
-                        >
-                          {String(index + 1).padStart(2, '0')}
-                        </span>
-                        <span
-                          className="text-[40px] leading-none group-hover:text-[#EAE6DB] transition-colors"
-                          style={{ fontFamily: "'Playfair Display', serif", fontWeight: 900, letterSpacing: '-0.03em' }}
-                        >
-                          {link.label}
-                        </span>
-                        {isActive && <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#E8132A', display: 'inline-block', marginLeft: 'auto' }} />}
-                      </>
-                    )}
-                  </NavLink>
-                </motion.div>
-              ))}
+                    <NavLink
+                      to={link.href}
+                      onClick={() => setMobileOpen(false)}
+                      className={({ isActive }) =>
+                        `flex items-center justify-between border-b border-[rgba(120,158,220,0.22)] py-4 ${
+                          isActive ? 'text-[#e8ecf8]' : 'text-[rgba(160,184,220,0.76)]'
+                        }`
+                      }
+                    >
+                      {({ isActive }) => (
+                        <>
+                          <span className="archive-tag" style={{ color: isActive ? 'rgba(255,44,27,0.95)' : 'rgba(122,151,200,0.9)' }}>
+                            {String(index + 1).padStart(2, '0')}
+                          </span>
+                          <span
+                            style={{ fontFamily: "'Playfair Display', serif", fontWeight: 800, fontSize: 30, fontStyle: 'italic', lineHeight: 1 }}
+                          >
+                            {link.label}
+                          </span>
+                        </>
+                      )}
+                    </NavLink>
+                  </motion.div>
+                ))}
+              </div>
             </div>
 
-            <div className="px-8 py-6 border-t border-[rgba(232,19,42,0.1)]">
-              <p className="annotation-label">vaad-development.vercel.app</p>
+            <div className="px-6 pb-8">
+              <p className="annotation-label" style={{ color: 'rgba(142,168,209,0.6)' }}>swipe to navigate</p>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
+
+      <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-[rgba(126,164,224,0.24)] bg-[rgba(2,18,52,0.95)] backdrop-blur-md md:hidden">
+        <div className="mx-auto grid max-w-[480px] grid-cols-4 px-5 py-3">
+          {dockItems.map((item) => {
+            const Icon = item.icon;
+            return (
+              <NavLink
+                key={item.href}
+                to={item.href}
+                className={({ isActive }) =>
+                  `relative flex flex-col items-center gap-1 text-[rgba(130,156,197,0.85)] ${isActive ? 'text-[rgba(255,44,27,0.98)]' : ''}`
+                }
+                title={item.label}
+                aria-label={item.label}
+              >
+                {({ isActive }) => (
+                  <>
+                    <Icon size={18} />
+                    <span className={`h-[2px] w-7 transition-opacity ${isActive ? 'bg-[rgba(255,44,27,0.98)] opacity-100' : 'bg-transparent opacity-0'}`} />
+                  </>
+                )}
+              </NavLink>
+            );
+          })}
+        </div>
+      </div>
     </>
   );
 }

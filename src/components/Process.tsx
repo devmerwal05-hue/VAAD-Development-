@@ -25,13 +25,17 @@ export default function Process() {
     };
   }).filter((s) => s.title);
 
-  return (
-    <section className="section-pad relative">
-      <div className="absolute inset-0 grid-pattern opacity-15 pointer-events-none" />
+  const stepSpanClass = stepCount <= 2 ? 'lg:col-span-6' : stepCount === 3 ? 'lg:col-span-4' : 'lg:col-span-3';
 
-      <div className="site-container relative z-10">
+  return (
+    <section className="section-pad swiss-section relative">
+      <div className="absolute inset-0 grid-pattern opacity-15 pointer-events-none" />
+      <span className="swiss-meta swiss-meta--tl">process.timeline</span>
+      <span className="swiss-meta swiss-meta--tr">coord // 19.07N</span>
+
+      <div className="site-container swiss-grid relative z-10">
         {/* Section header */}
-        <div className="flex items-center gap-4 mb-4">
+        <div className="swiss-full-col flex items-center gap-4 mb-2">
           <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#E8132A', display: 'inline-block' }} />
           <span className="section-ref">{labelParts[0] || '03'} / {labelParts[1] || 'Process'}</span>
         </div>
@@ -39,16 +43,16 @@ export default function Process() {
         <motion.h2
           initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }} transition={{ duration: 0.6, ease }}
-          className="mb-16"
+          className="swiss-text-col mb-2"
           style={{ fontFamily: "'Playfair Display', serif", fontWeight: 900, fontSize: 'clamp(36px, 5vw, 68px)', letterSpacing: '-0.03em', lineHeight: 0.9, color: '#EAE6DB' }}
         >
           {getContentValue('process', 'title', 'How a project works')}
         </motion.h2>
 
-        <div className="rule-line-full mb-12" />
+        <div className="swiss-full-col rule-line-full mb-2" />
 
         {/* Steps — horizontal timeline */}
-        <div className={`grid grid-cols-1 ${stepCount <= 2 ? 'md:grid-cols-2' : stepCount === 3 ? 'md:grid-cols-3' : 'md:grid-cols-4'} gap-6 md:gap-8`}>
+        <div className="swiss-full-col grid grid-cols-1 gap-6 lg:grid-cols-12">
           {steps.map((step, i) => (
             <motion.div
               key={step.number}
@@ -56,7 +60,7 @@ export default function Process() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.2 }}
               transition={{ duration: 0.5, ease, delay: i * 0.1 }}
-              className="group relative border border-[rgba(232,19,42,0.18)] bg-[rgba(9,22,40,0.62)] px-8 py-8"
+              className={`group relative border border-[rgba(232,19,42,0.18)] bg-[rgba(9,22,40,0.62)] px-8 py-8 ${stepSpanClass}`}
             >
               {/* Hover fill */}
               <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" style={{ background: 'rgba(232,19,42,0.03)' }} />

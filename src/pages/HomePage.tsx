@@ -1,4 +1,3 @@
-import Navigation from '../components/Navigation';
 import Hero from '../components/Hero';
 import Marquee from '../components/Marquee';
 import Services from '../components/Services';
@@ -10,7 +9,7 @@ import Team from '../components/Team';
 import Pricing from '../components/Pricing';
 import FAQ from '../components/FAQ';
 import Contact from '../components/Contact';
-import Footer from '../components/Footer';
+import PageWrapper from '../components/PageWrapper';
 import { usePageMetadata } from '../hooks/usePageMetadata';
 import { useContent } from '../lib/useContent';
 
@@ -28,15 +27,8 @@ export default function HomePage() {
   });
 
   return (
-    <>
-      <a
-        href="#page-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[120] focus:rounded-lg focus:bg-page-bg focus:px-4 focus:py-2 focus:text-text-primary focus:shadow-[0_0_0_2px_rgba(232,19,42,0.4)]"
-      >
-        {getContentValue('ui', 'skip_to_content', 'Skip to content')}
-      </a>
-      <Navigation />
-      <main id="page-content">
+    <PageWrapper>
+      <main>
         <Hero />
         <Marquee />
         <Services />
@@ -49,7 +41,6 @@ export default function HomePage() {
         <FAQ />
         <Contact />
       </main>
-      <Footer />
-    </>
+    </PageWrapper>
   );
 }

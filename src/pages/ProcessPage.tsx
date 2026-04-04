@@ -31,15 +31,18 @@ export default function ProcessPage() {
       <Process />
       <FAQ />
 
-      <section className="px-6 section-pad">
-        <div className="corner-marks mx-auto max-w-[900px] border border-[rgba(232,19,42,0.2)] bg-[rgba(9,22,40,0.76)] px-8 py-8 text-center md:px-12 md:py-12">
+      <section className="section-pad swiss-section relative">
+        <span className="swiss-meta swiss-meta--tl">process.cta</span>
+        <span className="swiss-meta swiss-meta--tr">prompt // 03</span>
+        <div className="site-container swiss-grid">
+          <div className="corner-marks swiss-full-col border border-[rgba(232,19,42,0.2)] bg-[rgba(9,22,40,0.76)] px-8 py-8 text-center md:px-12 md:py-12 lg:col-span-6 lg:col-start-4">
           <h2
             className="mb-4 text-text-primary"
             style={{ fontFamily: "'Playfair Display', serif", fontWeight: 800, fontSize: 'clamp(30px, 4vw, 56px)', lineHeight: 0.9, letterSpacing: '-0.03em' }}
           >
             {getContentValue('process_page', 'cta_title', 'Want this process on your project?')}
           </h2>
-          <p className="reading-track mx-auto mb-8 max-w-[58ch] text-[15px] leading-[1.8] text-[rgba(234,230,219,0.56)]" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}>
+          <p className="reading-track mx-auto mb-8 text-[15px] leading-[1.8] text-[rgba(234,230,219,0.56)]" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}>
             {getContentValue('process_page', 'cta_description', 'We can start with scope, risks, and a release plan before touching design or code.')}
           </p>
 
@@ -50,6 +53,7 @@ export default function ProcessPage() {
           >
             {getContentValue('process_page', 'cta_button', 'Request a project plan')}
           </Link>
+          </div>
         </div>
       </section>
     </PageWrapper>

@@ -46,89 +46,94 @@ export default function Services() {
     };
   }).filter((s) => s.title);
 
+  const visualFallbacks = [
+    'radial-gradient(circle at 50% 45%, rgba(188,208,242,0.68) 0%, rgba(33,57,98,0.35) 34%, rgba(5,24,58,0.95) 100%)',
+    'linear-gradient(165deg, rgba(152,172,206,0.45), rgba(9,29,66,0.95) 52%), radial-gradient(circle at 25% 50%, rgba(235,240,250,0.25), transparent 55%)',
+    'linear-gradient(180deg, rgba(10,36,80,0.3), rgba(4,18,48,0.98)), radial-gradient(circle at 70% 35%, rgba(205,216,237,0.42), transparent 52%)',
+    'linear-gradient(140deg, rgba(160,183,221,0.32), rgba(5,23,55,0.96)), radial-gradient(circle at 40% 70%, rgba(220,228,244,0.28), transparent 48%)',
+  ];
+
   return (
-    <section className="section-pad relative">
-      <div className="absolute inset-0 grid-pattern opacity-18 pointer-events-none" />
-      <div className="site-container relative z-10">
-        <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(160px,0.2fr)_minmax(0,0.8fr)] lg:gap-12">
-          <aside className="border-t border-[rgba(234,230,219,0.12)] pt-6">
-            <div className="mb-6 flex items-center gap-4">
-              <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#E8132A', display: 'inline-block' }} />
-              <span className="section-ref">{labelParts[0] || '01'} // {labelParts[1] || 'Services'}</span>
-            </div>
-            <p className="annotation-label">VAAD // DEV_2026</p>
-            <p className="annotation-label mt-4">MODE // TECHNICAL LIST</p>
-          </aside>
+    <section className="section-pad swiss-section relative">
+      <div className="absolute inset-0 grid-pattern opacity-16 pointer-events-none" />
+      <span className="swiss-meta swiss-meta--tl">services.node</span>
+      <span className="swiss-meta swiss-meta--tr">v2.6 // 12-col</span>
 
-          <div>
-            <motion.h2
-              initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }} transition={{ duration: 0.6, ease }}
-              className="display-section"
-              style={{ fontFamily: "'Playfair Display', serif", fontWeight: 900, fontSize: 'clamp(36px, 5vw, 68px)', color: '#EAE6DB' }}
-            >
-              {getContentValue('services', 'title', 'What we build')}
-            </motion.h2>
-
-            <motion.p
-              initial={{ opacity: 0, y: 14 }} whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }} transition={{ duration: 0.55, ease, delay: 0.1 }}
-              className="reading-track mt-6 text-[14px] leading-[1.8]"
-              style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, color: 'rgba(234,230,219,0.5)' }}
-            >
-              {getContentValue('services', 'subtitle', 'Delivery is structured around what your team actually needs to launch, maintain, and extend after handoff.')}
-            </motion.p>
-
-            <div className="mt-10 border-t border-[rgba(234,230,219,0.12)]">
-              {services.map((service, index) => (
-                <motion.article
-                  key={service.title}
-                  initial={{ opacity: 0, y: 24 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, amount: 0.15 }}
-                  transition={{ duration: 0.55, ease, delay: index * 0.06 }}
-                  className="grid border-b border-[rgba(234,230,219,0.12)] py-8 lg:grid-cols-[minmax(0,0.42fr)_minmax(0,0.58fr)] lg:gap-8"
-                >
-                  <div>
-                    <p
-                      className="mb-4"
-                      style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, letterSpacing: '0.28em', color: 'rgba(232,19,42,0.58)', textTransform: 'uppercase' }}
-                    >
-                      Capability // {String(index + 1).padStart(2, '0')}
-                    </p>
-
-                    <h3
-                      className="display-section mb-4"
-                      style={{ fontFamily: "'Playfair Display', serif", fontWeight: 900, fontSize: 'clamp(24px, 2.8vw, 36px)', color: '#EAE6DB' }}
-                    >
-                      {service.title}
-                    </h3>
-
-                    <p
-                      className="reading-track text-[14px] leading-[1.8]"
-                      style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, color: 'rgba(234,230,219,0.52)' }}
-                    >
-                      {service.description}
-                    </p>
-                  </div>
-
-                  <ul className="mt-6 grid gap-4 lg:mt-0">
-                    {service.details.map((detail) => (
-                      <li key={detail} className="flex items-start gap-4">
-                        <span className="mt-[7px] h-[1px] w-4 bg-[rgba(232,19,42,0.55)]" />
-                        <p
-                          className="mono-readable text-[12px]"
-                          style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 300, color: 'rgba(234,230,219,0.62)' }}
-                        >
-                          {detail}
-                        </p>
-                      </li>
-                    ))}
-                  </ul>
-                </motion.article>
-              ))}
-            </div>
+      <div className="site-container swiss-grid relative z-10">
+        <div className="swiss-full-col mb-2 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#ff2c1b', display: 'inline-block' }} />
+            <span className="section-ref">{labelParts[0] || '01'} / {labelParts[1] || 'Services'}</span>
           </div>
+          <span className="archive-tag hidden md:block">bionic_catalog_stream</span>
+        </div>
+
+        <div className="swiss-full-col mb-10 grid grid-cols-1 gap-6 lg:grid-cols-12">
+          <motion.h2
+            initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }} transition={{ duration: 0.6, ease }}
+            className="display-section lg:col-span-6 text-[#dbe5f8]"
+            style={{ fontFamily: "'Playfair Display', serif", fontWeight: 900, fontSize: 'clamp(44px, 8vw, 98px)', fontStyle: 'italic' }}
+          >
+            {getContentValue('services', 'title', 'What we build')}
+          </motion.h2>
+
+          <motion.p
+            initial={{ opacity: 0, y: 14 }} whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }} transition={{ duration: 0.55, ease, delay: 0.1 }}
+            className="reading-track swiss-text-col text-[13px] text-[rgba(164,188,226,0.88)]"
+            style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}
+          >
+            {getContentValue('services', 'subtitle', 'Delivery is structured around what your team actually needs to launch, maintain, and extend after handoff.')}
+          </motion.p>
+        </div>
+
+        <div className="swiss-full-col grid grid-cols-1 gap-8 lg:grid-cols-12">
+          {services.map((service, index) => (
+            <motion.article
+              key={service.title}
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.2 }}
+              transition={{ duration: 0.52, ease, delay: index * 0.06 }}
+              className="archive-panel group overflow-hidden lg:col-span-6"
+            >
+              <div className="relative h-[280px] border-b border-[rgba(126,164,224,0.25)] md:h-[320px]">
+                <div className="absolute inset-0" style={{ background: visualFallbacks[index % visualFallbacks.length] }} />
+
+                <div className="absolute inset-0 bg-[linear-gradient(to_top,rgba(1,14,42,0.96)_5%,rgba(1,14,42,0.18)_58%)]" />
+                <div className="absolute left-4 top-4 border border-[rgba(255,44,27,0.62)] bg-[rgba(2,18,52,0.9)] px-3 py-1">
+                  <span className="archive-tag">index.{String(index + 1).padStart(3, '0')}</span>
+                </div>
+              </div>
+
+              <div className="p-5 md:p-6">
+                <h3
+                  className="display-section mb-3 text-[#dfe7f8]"
+                  style={{ fontFamily: "'Playfair Display', serif", fontWeight: 800, fontSize: 'clamp(34px, 4.2vw, 56px)', fontStyle: 'italic' }}
+                >
+                  {service.title}
+                </h3>
+
+                <p
+                  className="reading-track text-[14px] text-[rgba(168,190,226,0.9)]"
+                  style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}
+                >
+                  {service.description}
+                </p>
+
+                <div className="mt-5 border-t border-[rgba(126,164,224,0.2)] pt-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    {service.details.slice(0, 4).map((detail) => (
+                      <p key={detail} className="mono-readable text-[10px] uppercase text-[rgba(255,44,27,0.9)]">
+                        {detail}
+                      </p>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </motion.article>
+          ))}
         </div>
       </div>
     </section>

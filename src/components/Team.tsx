@@ -29,21 +29,26 @@ export default function Team() {
 
   if (members.length === 0) return null;
 
-  return (
-    <section className="section-pad relative overflow-hidden">
-      <div className="absolute inset-0 grid-pattern opacity-15 pointer-events-none" />
+  const memberSpanClass = members.length <= 2 ? 'lg:col-span-6' : members.length === 3 ? 'lg:col-span-4' : 'lg:col-span-3';
 
-      <div className="site-container relative z-10">
+  return (
+    <section className="section-pad swiss-section relative overflow-hidden">
+      <div className="absolute inset-0 grid-pattern opacity-15 pointer-events-none" />
+      <span className="swiss-meta swiss-meta--tl">team.directory</span>
+      <span className="swiss-meta swiss-meta--tr">rev // 05.04</span>
+
+      <div className="site-container swiss-grid relative z-10">
         {/* Section header */}
-        <div className="flex items-center gap-4 mb-4">
+        <div className="swiss-full-col flex items-center gap-4 mb-2">
           <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#E8132A', display: 'inline-block' }} />
           <span className="section-ref">{labelParts[0] || '05'} / {labelParts[1] || 'Team'}</span>
         </div>
 
-        <div className="mb-16 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+        <div className="swiss-full-col mb-8 grid grid-cols-1 gap-6 lg:grid-cols-12">
           <m.h2
             initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }} transition={{ duration: 0.6, ease }}
+            className="lg:col-span-6"
             style={{ fontFamily: "'Playfair Display', serif", fontWeight: 900, fontSize: 'clamp(36px, 5vw, 68px)', letterSpacing: '-0.03em', lineHeight: 0.9, color: '#EAE6DB' }}
           >
             {getContentValue('team', 'title', 'The people behind the work')}
@@ -51,17 +56,17 @@ export default function Team() {
           <m.p
             initial={{ opacity: 0 }} whileInView={{ opacity: 1 }}
             viewport={{ once: true }} transition={{ duration: 0.55, delay: 0.1 }}
-            className="reading-track max-w-[320px] text-[13px] leading-[1.8]"
+            className="reading-track swiss-text-col text-[13px] leading-[1.8]"
             style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, color: 'rgba(234,230,219,0.45)' }}
           >
             {getContentValue('team', 'subtitle', 'A compact team that scopes, designs, builds, and launches without handoff fog.')}
           </m.p>
         </div>
 
-        <div className="rule-line-full mb-12" />
+        <div className="swiss-full-col rule-line-full mb-2" />
 
         {/* Member grid */}
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:gap-8 lg:grid-cols-4">
+        <div className="swiss-full-col grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-12">
           {members.map((member, i) => (
             <m.article
               key={`${member.name}-${i}`}
@@ -69,7 +74,7 @@ export default function Team() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.2 }}
               transition={{ duration: 0.55, ease, delay: i * 0.07 }}
-              className="group relative border border-[rgba(232,19,42,0.18)] bg-[rgba(9,22,40,0.62)]"
+              className={`group relative border border-[rgba(232,19,42,0.18)] bg-[rgba(9,22,40,0.62)] ${memberSpanClass}`}
             >
               {/* Hover fill */}
               <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" style={{ background: 'rgba(232,19,42,0.03)' }} />

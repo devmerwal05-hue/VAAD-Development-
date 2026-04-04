@@ -24,12 +24,14 @@ export default function FAQ() {
   })).filter((f) => f.q);
 
   return (
-    <section className="section-pad relative">
+    <section className="section-pad swiss-section relative">
       <div className="absolute inset-0 grid-pattern opacity-15 pointer-events-none" />
+      <span className="swiss-meta swiss-meta--tl">faq.module</span>
+      <span className="swiss-meta swiss-meta--tr">cache // on</span>
 
-      <div className="max-w-[900px] mx-auto px-6 relative z-10">
+      <div className="site-container swiss-grid relative z-10">
         {/* Header */}
-        <div className="flex items-center gap-4 mb-4">
+        <div className="swiss-full-col flex items-center gap-4 mb-2">
           <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#E8132A', display: 'inline-block' }} />
           <span className="section-ref">{labelParts[0] || '07'} / {labelParts[1] || 'FAQ'}</span>
         </div>
@@ -37,15 +39,15 @@ export default function FAQ() {
         <motion.h2
           initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }} transition={{ duration: 0.6, ease }}
-          className="mb-16"
+          className="swiss-text-col mb-2"
           style={{ fontFamily: "'Playfair Display', serif", fontWeight: 900, fontSize: 'clamp(36px, 5vw, 68px)', letterSpacing: '-0.03em', lineHeight: 0.9, color: '#EAE6DB' }}
         >
           {getContentValue('faq', 'title', 'Common questions')}
         </motion.h2>
 
-        <div className="rule-line-full mb-8" />
+        <div className="swiss-full-col rule-line-full mb-2" />
 
-        <div className="flex flex-col gap-4">
+        <div className="swiss-text-col flex flex-col gap-4">
           {faqs.map((faq, i) => (
             <motion.div
               key={faq.q}

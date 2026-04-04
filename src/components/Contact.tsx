@@ -128,20 +128,26 @@ export default function Contact() {
   }
 
   return (
-    <section className="relative section-pad">
+    <section className="relative section-pad swiss-section">
       <div className="absolute inset-0 grid-pattern opacity-12 pointer-events-none" />
+      <span className="swiss-meta swiss-meta--tl">contact.endpoint</span>
+      <span className="swiss-meta swiss-meta--tr">tls // active</span>
 
-      <div className="site-container relative z-10">
-        <SectionLabel number={labelParts[0] || '08'} label={labelParts[1] || 'Contact'} />
-        <SectionTitle>{getContentValue('contact', 'title', 'Tell us what needs to ship')}</SectionTitle>
+      <div className="site-container swiss-grid relative z-10">
+        <div className="swiss-full-col">
+          <SectionLabel number={labelParts[0] || '08'} label={labelParts[1] || 'Contact'} />
+        </div>
+        <div className="swiss-text-col">
+          <SectionTitle>{getContentValue('contact', 'title', 'Tell us what needs to ship')}</SectionTitle>
+        </div>
 
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[42%_58%] lg:gap-10">
+        <div className="swiss-full-col grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-10">
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-10%' }}
             transition={{ duration: 0.7, ease }}
-            className="corner-marks border border-[rgba(232,19,42,0.2)] bg-[rgba(9,22,40,0.68)] p-6 md:p-8"
+            className="corner-marks border border-[rgba(232,19,42,0.2)] bg-[rgba(9,22,40,0.68)] p-6 md:p-8 lg:col-span-6"
           >
             <h3
               className="mb-6 break-words text-[28px] text-text-primary [text-wrap:balance] md:text-[32px]"
@@ -188,7 +194,7 @@ export default function Contact() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-10%' }}
             transition={{ duration: 0.7, ease, delay: 0.1 }}
-            className="border border-[rgba(232,19,42,0.2)] bg-[rgba(9,22,40,0.68)] p-8"
+            className="border border-[rgba(232,19,42,0.2)] bg-[rgba(9,22,40,0.68)] p-8 lg:col-span-6"
           >
             {submitted ? (
               <div className="p-12 text-center" style={{ border: '1px solid rgba(232,19,42,0.25)', background: 'rgba(9,22,40,0.8)' }}>

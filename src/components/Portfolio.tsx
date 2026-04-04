@@ -14,106 +14,82 @@ export default function Portfolio() {
   if (projects.length === 0) return null;
 
   return (
-    <section className="section-pad relative overflow-hidden">
-      <div className="absolute inset-0 grid-pattern opacity-15 pointer-events-none" />
+    <section className="section-pad swiss-section relative overflow-hidden">
+      <div className="absolute inset-0 grid-pattern opacity-12 pointer-events-none" />
+      <span className="swiss-meta swiss-meta--tl">portfolio.archive</span>
+      <span className="swiss-meta swiss-meta--tr">spec // v1.92</span>
 
-      <div className="site-container relative z-10">
-        {/* Header */}
-        <div className="flex items-center gap-4 mb-4">
-          <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#E8132A', display: 'inline-block' }} />
-          <span className="section-ref">{labelParts[0] || '04'} / {labelParts[1] || 'Work'}</span>
+      <div className="site-container swiss-grid relative z-10">
+        <div className="swiss-full-col mb-2 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#ff2c1b', display: 'inline-block' }} />
+            <span className="section-ref">{labelParts[0] || '04'} / {labelParts[1] || 'Work'}</span>
+          </div>
+          <span className="archive-tag hidden md:block">specimen_gallery</span>
         </div>
 
         <motion.h2
           initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }} transition={{ duration: 0.6, ease }}
-          className="mb-16"
-          style={{ fontFamily: "'Playfair Display', serif", fontWeight: 900, fontSize: 'clamp(36px, 5vw, 68px)', letterSpacing: '-0.03em', lineHeight: 0.9, color: '#EAE6DB' }}
+          className="display-section swiss-text-col mb-2 text-[#dfe8f8]"
+          style={{ fontFamily: "'Playfair Display', serif", fontWeight: 900, fontSize: 'clamp(44px, 8vw, 96px)', fontStyle: 'italic' }}
         >
           {getContentValue('portfolio', 'title', 'Selected work')}
         </motion.h2>
 
-        <div className="rule-line-full mb-8" />
-
-        {/* Projects */}
-        <div className="flex flex-col gap-6 md:gap-8">
+        <div className="swiss-full-col grid grid-cols-1 gap-8 lg:grid-cols-12">
           {projects.map((project, i) => {
             const inner = (
-              <div
-                className="group relative grid grid-cols-1 gap-0 border border-[rgba(232,19,42,0.18)] bg-[rgba(9,22,40,0.62)] lg:grid-cols-[1fr_400px]"
-              >
-                {/* Hover background */}
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" style={{ background: 'rgba(232,19,42,0.02)' }} />
-                <div className="absolute left-0 top-0 bottom-0 w-0 group-hover:w-[2px] transition-all duration-500" style={{ background: '#E8132A' }} />
-
-                {/* Image */}
-                <div className="relative overflow-hidden" style={{ aspectRatio: '16/9', minHeight: 240 }}>
+              <div className="archive-panel group overflow-hidden">
+                <div className="relative overflow-hidden" style={{ aspectRatio: '4/3', minHeight: 260 }}>
                   {project.image ? (
                     <img
                       src={project.image}
                       alt={project.name}
                       loading="lazy"
                       decoding="async"
-                      className="absolute inset-0 h-full w-full object-cover opacity-70 group-hover:opacity-90 group-hover:scale-[1.03] transition-all duration-700"
+                      className="absolute inset-0 h-full w-full object-cover opacity-85 transition-all duration-700 group-hover:scale-[1.04]"
                     />
                   ) : (
                     <div
                       className="absolute inset-0 flex items-center justify-center"
-                      style={{ background: 'linear-gradient(135deg, rgba(232,19,42,0.15), rgba(6,30,80,0.8))' }}
+                      style={{ background: 'linear-gradient(140deg, rgba(164,189,228,0.4), rgba(4,18,48,0.95))' }}
                     >
                       <span
-                        className="text-[#EAE6DB] opacity-10"
-                        style={{ fontFamily: "'Playfair Display', serif", fontWeight: 900, fontSize: 80, letterSpacing: '-0.04em' }}
+                        className="text-[#dce7fb] opacity-18"
+                        style={{ fontFamily: "'Playfair Display', serif", fontWeight: 900, fontSize: 80, fontStyle: 'italic' }}
                       >
                         {project.name}
                       </span>
                     </div>
                   )}
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent to-[rgba(6,12,32,0.6)]" />
+                  <div className="absolute inset-0 bg-[linear-gradient(to_top,rgba(1,14,42,0.95)_8%,rgba(1,14,42,0.22)_58%)]" />
 
-                  {/* Tag overlay */}
-                  <div className="absolute left-6 top-6">
-                    <span className="section-ref px-4 py-1.5" style={{ background: 'rgba(6,12,32,0.7)', border: '1px solid rgba(232,19,42,0.3)' }}>
+                  <div className="absolute left-4 top-4 border border-[rgba(255,44,27,0.62)] bg-[rgba(2,18,52,0.9)] px-3 py-1">
+                    <span className="archive-tag">
                       {project.tag}
                     </span>
                   </div>
                 </div>
 
-                {/* Content */}
-                <div className="flex flex-col justify-between px-8 py-8" style={{ borderLeft: '1px solid rgba(232,19,42,0.1)' }}>
-                  <div>
-                    <p className="annotation-label mb-6">Project / {String(i + 1).padStart(2, '0')}</p>
-                    <h3
-                      className="mb-4 transition-colors duration-300 group-hover:text-[#E8132A]"
-                      style={{ fontFamily: "'Playfair Display', serif", fontWeight: 900, fontSize: 'clamp(24px, 3vw, 36px)', letterSpacing: '-0.03em', color: '#EAE6DB', lineHeight: 0.95 }}
-                    >
-                      {project.name}
-                    </h3>
-                    <p
-                      className="text-[13px] mb-4"
-                      style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 500, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(232,19,42,0.7)' }}
-                    >
-                      {project.subtitle}
-                    </p>
-                    <div className="mb-6 h-[1px] max-w-[36px]" style={{ background: 'rgba(232,19,42,0.4)' }} />
-                    <p className="text-[14px] leading-[1.8]" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, color: 'rgba(234,230,219,0.45)' }}>
-                      {project.description}
-                    </p>
-                  </div>
+                <div className="p-5 md:p-6">
+                  <h3
+                    className="display-section mb-2 text-[#e3ebfb]"
+                    style={{ fontFamily: "'Playfair Display', serif", fontWeight: 800, fontSize: 'clamp(34px, 5vw, 60px)', fontStyle: 'italic' }}
+                  >
+                    {project.name}
+                  </h3>
 
-                  <div className="mt-8">
-                    {project.gallery.length > 0 && (
-                      <div className="flex gap-2 mb-4 overflow-x-auto">
-                        {project.gallery.slice(0, 3).map((img, gi) => (
-                          <div key={gi} className="w-14 h-10 overflow-hidden shrink-0" style={{ border: '1px solid rgba(232,19,42,0.2)' }}>
-                            <img src={img} alt="" loading="lazy" decoding="async" className="w-full h-full object-cover opacity-60 hover:opacity-100 transition-opacity" />
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                  <p className="archive-tag mb-3">#{project.subtitle}</p>
+
+                  <p className="reading-track text-[14px] text-[rgba(168,190,226,0.88)]" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}>
+                    {project.description}
+                  </p>
+
+                  <div className="mt-5 border-t border-[rgba(126,164,224,0.2)] pt-4">
                     <span
-                      className="inline-flex items-center gap-2 text-[11px] tracking-[0.18em] uppercase transition-colors duration-200 group-hover:text-[#E8132A]"
-                      style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 600, color: 'rgba(234,230,219,0.35)' }}
+                      className="mono-readable inline-flex items-center gap-2 text-[11px] uppercase text-[rgba(255,44,27,0.95)]"
+                      style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 500 }}
                     >
                       {project.url ? getContentValue('portfolio', 'link_label_live', 'View live project') : getContentValue('portfolio', 'link_label_internal', 'Internal showcase')}
                       {project.url && <ExternalLink size={12} />}
@@ -129,6 +105,7 @@ export default function Portfolio() {
                 href={project.url}
                 target="_blank"
                 rel="noopener noreferrer"
+                className="lg:col-span-6"
                 initial={{ opacity: 0, y: 24 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.1 }}
@@ -139,6 +116,7 @@ export default function Portfolio() {
             ) : (
               <motion.div
                 key={`${project.name}-${i}`}
+                className="lg:col-span-6"
                 initial={{ opacity: 0, y: 24 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.1 }}
@@ -149,15 +127,6 @@ export default function Portfolio() {
             );
           })}
         </div>
-
-        <motion.p
-          initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }} transition={{ duration: 0.55, delay: 0.2 }}
-          className="text-center text-[13px] max-w-[520px] mx-auto mt-12 leading-[1.8]"
-          style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, color: 'rgba(234,230,219,0.35)' }}
-        >
-          {getContentValue('portfolio', 'footer_text', 'Detailed breakdowns are available during discovery for projects that match your workflow, audience, and launch window.')}
-        </motion.p>
       </div>
     </section>
   );

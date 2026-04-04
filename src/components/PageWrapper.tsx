@@ -15,11 +15,15 @@ export default function PageWrapper({ children }: { children: ReactNode }) {
         {getContentValue('ui', 'skip_to_content', 'Skip to content')}
       </a>
       <Navigation />
-      <div id="page-content" className="relative pt-[72px]">
+      <div id="page-content" className="relative pb-24 pt-[72px] md:pb-0">
         <div aria-hidden className="pointer-events-none fixed inset-0 z-[1] hidden lg:block">
-          <div className="absolute inset-y-0 left-0 w-[16.666%] border-r border-[rgba(234,230,219,0.05)]" />
-          <div className="absolute inset-y-0 right-0 w-[16.666%] border-l border-[rgba(234,230,219,0.05)]" />
-          <div className="absolute bottom-0 left-1/2 top-0 w-px -translate-x-1/2 bg-[rgba(234,230,219,0.05)]" />
+          <div
+            className="absolute inset-0"
+            style={{
+              backgroundImage:
+                'repeating-linear-gradient(90deg, rgba(234,230,219,0) 0, rgba(234,230,219,0) calc(8.333% - 1px), rgba(234,230,219,0.05) calc(8.333% - 1px), rgba(234,230,219,0.05) 8.333%)',
+            }}
+          />
 
           <div className="absolute left-6 top-[120px]">
             <span className="frame-meta-text">VAAD // DEV_2026</span>
