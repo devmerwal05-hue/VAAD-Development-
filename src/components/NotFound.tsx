@@ -28,7 +28,7 @@ export default function NotFound() {
           transition={{ duration: 0.6 }}
           className="corner-marks w-full max-w-[760px] border border-[rgba(232,19,42,0.22)] bg-[rgba(9,22,40,0.78)] px-8 py-12 text-center md:px-12"
         >
-          <p className="section-ref mb-5">404 / ARCHIVE</p>
+          <p className="section-ref mb-6">404 / ARCHIVE</p>
 
           <span
             className="mb-4 block leading-none text-accent"
@@ -44,7 +44,7 @@ export default function NotFound() {
             {getContentValue('not_found', 'heading', 'Page not found')}
           </h1>
 
-          <p className="mx-auto mb-9 max-w-[52ch] text-[15px] leading-[1.8] text-[rgba(234,230,219,0.58)]" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}>
+          <p className="reading-track mx-auto mb-8 max-w-[52ch] text-[15px] leading-[1.8] text-[rgba(234,230,219,0.58)]" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}>
             {getContentValue(
               'not_found',
               'description',
@@ -54,7 +54,7 @@ export default function NotFound() {
 
           <Link
             to="/"
-            className="shimmer-btn inline-flex items-center gap-2 border border-accent bg-accent px-7 py-3 text-[11px] uppercase tracking-[0.18em] text-text-primary transition-all duration-300 hover:shadow-[0_0_36px_rgba(232,19,42,0.26)]"
+            className="shimmer-btn inline-flex items-center gap-2 border border-accent bg-accent px-8 py-4 text-[11px] uppercase tracking-[0.18em] text-text-primary transition-all duration-300 hover:shadow-[0_0_36px_rgba(232,19,42,0.26)]"
             style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 600 }}
           >
             {getContentValue('not_found', 'button', 'Return home')}

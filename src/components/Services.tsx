@@ -4,10 +4,26 @@ import { useContent } from '../lib/useContent';
 const ease: [number, number, number, number] = [0.16, 0.77, 0.47, 0.97];
 
 const serviceDefaults = [
-  { title: 'High-conviction websites', description: 'Marketing sites with strong information hierarchy, custom visuals, and a CMS handoff your team can actually maintain.' },
-  { title: 'Operational web apps', description: 'Internal tools, client dashboards, and workflow systems that reduce manual follow-up and keep teams aligned.' },
-  { title: 'Commerce builds', description: 'Stores and product funnels designed around clear merchandising, product storytelling, and mobile conversion paths.' },
-  { title: 'Launch support', description: 'Deployment, analytics, content updates, and post-launch improvements so the build keeps paying off after go-live.' },
+  {
+    title: 'High-conviction websites',
+    description: 'Marketing sites with strong hierarchy and conversion-driven storytelling.',
+    details: ['Narrative-first page architecture', 'CMS-driven content blocks', 'Performance budget and launch QA', 'Responsive behavior mapped before build'],
+  },
+  {
+    title: 'Operational web apps',
+    description: 'Internal and client-facing tools that remove workflow drag.',
+    details: ['Role-aware dashboard views', 'Form and approval flows', 'Audit-friendly data logging', 'Actionable status states for teams'],
+  },
+  {
+    title: 'Commerce builds',
+    description: 'Product surfaces built around trust, velocity, and checkout clarity.',
+    details: ['Catalog and merch structure', 'Conversion-focused PDP templates', 'Mobile checkout optimization', 'Analytics event mapping'],
+  },
+  {
+    title: 'Launch support',
+    description: 'Post-ship improvements and content operations that sustain momentum.',
+    details: ['Deployment and rollback readiness', 'CMS handoff and governance', 'Issue triage during launch window', 'Iteration backlog for phase two'],
+  },
 ];
 
 export default function Services() {
@@ -18,102 +34,100 @@ export default function Services() {
 
   const services = Array.from({ length: cardCount }, (_, index) => {
     const fallback = serviceDefaults[index];
+    const detailFallbacks = fallback?.details || [];
+    const details = [1, 2, 3, 4]
+      .map((n) => getContentValue('services', `card_${index + 1}_detail_${n}`, detailFallbacks[n - 1] || ''))
+      .filter(Boolean);
+
     return {
       title: getContentValue('services', `card_${index + 1}_title`, fallback?.title || ''),
       description: getContentValue('services', `card_${index + 1}_desc`, fallback?.description || ''),
+      details,
     };
   }).filter((s) => s.title);
 
-  const getBentoSpan = (index: number, total: number) => {
-    if (total <= 1) return 'md:col-span-6';
-    if (total === 2) return 'md:col-span-3';
-    if (total === 3) return index === 0 ? 'md:col-span-6' : 'md:col-span-3';
-
-    if (index === 0) return 'md:col-span-4 md:row-span-2';
-    if (index === 1) return 'md:col-span-2';
-    if (index === 2) return 'md:col-span-2';
-    if (index === 3) return 'md:col-span-4';
-    return 'md:col-span-3';
-  };
-
   return (
     <section className="section-pad relative">
-      <div className="absolute inset-0 grid-pattern opacity-20 pointer-events-none" />
-      <div className="max-w-[1360px] mx-auto px-6 relative z-10">
+      <div className="absolute inset-0 grid-pattern opacity-18 pointer-events-none" />
+      <div className="site-container relative z-10">
+        <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(160px,0.2fr)_minmax(0,0.8fr)] lg:gap-12">
+          <aside className="border-t border-[rgba(234,230,219,0.12)] pt-6">
+            <div className="mb-6 flex items-center gap-4">
+              <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#E8132A', display: 'inline-block' }} />
+              <span className="section-ref">{labelParts[0] || '01'} // {labelParts[1] || 'Services'}</span>
+            </div>
+            <p className="annotation-label">VAAD // DEV_2026</p>
+            <p className="annotation-label mt-4">MODE // TECHNICAL LIST</p>
+          </aside>
 
-        {/* Section header */}
-        <div className="flex items-center gap-4 mb-4">
-          <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#E8132A', display: 'inline-block' }} />
-          <span className="section-ref">{labelParts[0] || '01'} / {labelParts[1] || 'Services'}</span>
-        </div>
-
-        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-14">
-          <motion.h2
-            initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }} transition={{ duration: 0.6, ease }}
-            style={{ fontFamily: "'Playfair Display', serif", fontWeight: 900, fontSize: 'clamp(36px, 5vw, 68px)', letterSpacing: '-0.03em', lineHeight: 0.9, color: '#EAE6DB' }}
-          >
-            {getContentValue('services', 'title', 'What we build')}
-          </motion.h2>
-          <motion.p
-            initial={{ opacity: 0, y: 14 }} whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }} transition={{ duration: 0.55, ease, delay: 0.1 }}
-            className="text-[14px] max-w-[360px] leading-[1.8]"
-            style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, color: 'rgba(234,230,219,0.5)' }}
-          >
-            {getContentValue('services', 'subtitle', 'Delivery is structured around what your team actually needs to launch, maintain, and extend after handoff.')}
-          </motion.p>
-        </div>
-
-        {/* Rule */}
-        <div className="rule-line-full mb-10" />
-
-        <div className="grid grid-cols-1 auto-rows-[minmax(200px,auto)] gap-4 md:grid-cols-6 md:gap-6">
-          {services.map((service, index) => (
-            <motion.div
-              key={service.title}
-              initial={{ opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.15 }}
-              transition={{ duration: 0.55, ease, delay: index * 0.07 }}
-              className={`group relative border border-[rgba(255,255,255,0.1)] bg-[rgba(9,22,40,0.62)] p-8 md:p-10 ${getBentoSpan(index, services.length)}`}
+          <div>
+            <motion.h2
+              initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }} transition={{ duration: 0.6, ease }}
+              style={{ fontFamily: "'Playfair Display', serif", fontWeight: 900, fontSize: 'clamp(36px, 5vw, 68px)', letterSpacing: '-0.03em', lineHeight: 0.9, color: '#EAE6DB' }}
             >
-              {/* Hover fill */}
-              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" style={{ background: 'rgba(232,19,42,0.03)' }} />
+              {getContentValue('services', 'title', 'What we build')}
+            </motion.h2>
 
-              {/* Index */}
-              <p
-                className="mb-5"
-                style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, letterSpacing: '0.28em', color: 'rgba(232,19,42,0.5)', textTransform: 'uppercase' }}
-              >
-                Capability / {String(index + 1).padStart(2, '0')}
-              </p>
+            <motion.p
+              initial={{ opacity: 0, y: 14 }} whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }} transition={{ duration: 0.55, ease, delay: 0.1 }}
+              className="reading-track mt-6 text-[14px] leading-[1.8]"
+              style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, color: 'rgba(234,230,219,0.5)' }}
+            >
+              {getContentValue('services', 'subtitle', 'Delivery is structured around what your team actually needs to launch, maintain, and extend after handoff.')}
+            </motion.p>
 
-              {/* Big number watermark */}
-              <span
-                className="absolute top-4 right-6 select-none pointer-events-none transition-all duration-500 group-hover:opacity-[0.04]"
-                style={{ fontFamily: "'Playfair Display', serif", fontWeight: 900, fontSize: 80, color: 'rgba(234,230,219,0.02)', lineHeight: 1 }}
-              >
-                {String(index + 1).padStart(2, '0')}
-              </span>
+            <div className="mt-10 border-t border-[rgba(234,230,219,0.12)]">
+              {services.map((service, index) => (
+                <motion.article
+                  key={service.title}
+                  initial={{ opacity: 0, y: 24 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, amount: 0.15 }}
+                  transition={{ duration: 0.55, ease, delay: index * 0.06 }}
+                  className="grid border-b border-[rgba(234,230,219,0.12)] py-8 lg:grid-cols-[minmax(0,0.42fr)_minmax(0,0.58fr)] lg:gap-8"
+                >
+                  <div>
+                    <p
+                      className="mb-4"
+                      style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, letterSpacing: '0.28em', color: 'rgba(232,19,42,0.58)', textTransform: 'uppercase' }}
+                    >
+                      Capability // {String(index + 1).padStart(2, '0')}
+                    </p>
 
-              <h3
-                className="mb-4 group-hover:text-[#E8132A] transition-colors duration-400"
-                style={{ fontFamily: "'Playfair Display', serif", fontWeight: 700, fontSize: 'clamp(20px, 2.2vw, 28px)', letterSpacing: '-0.02em', color: '#EAE6DB', lineHeight: 1.1 }}
-              >
-                {service.title}
-              </h3>
-              <p
-                className="text-[14px] leading-[1.8]"
-                style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, color: 'rgba(234,230,219,0.5)' }}
-              >
-                {service.description}
-              </p>
+                    <h3
+                      className="mb-4"
+                      style={{ fontFamily: "'Playfair Display', serif", fontWeight: 900, fontSize: 'clamp(24px, 2.8vw, 36px)', letterSpacing: '-0.03em', color: '#EAE6DB', lineHeight: 0.95 }}
+                    >
+                      {service.title}
+                    </h3>
 
-              {/* Bottom rule on hover */}
-              <div className="absolute bottom-0 left-0 h-[1px] w-0 group-hover:w-full transition-all duration-500" style={{ background: 'rgba(232,19,42,0.4)' }} />
-            </motion.div>
-          ))}
+                    <p
+                      className="reading-track text-[14px] leading-[1.8]"
+                      style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, color: 'rgba(234,230,219,0.52)' }}
+                    >
+                      {service.description}
+                    </p>
+                  </div>
+
+                  <ul className="mt-6 grid gap-4 lg:mt-0">
+                    {service.details.map((detail) => (
+                      <li key={detail} className="flex items-start gap-4">
+                        <span className="mt-[7px] h-[1px] w-4 bg-[rgba(232,19,42,0.55)]" />
+                        <p
+                          className="text-[11px] uppercase tracking-[0.12em]"
+                          style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 300, color: 'rgba(234,230,219,0.62)' }}
+                        >
+                          {detail}
+                        </p>
+                      </li>
+                    ))}
+                  </ul>
+                </motion.article>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </section>

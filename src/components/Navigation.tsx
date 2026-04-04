@@ -49,11 +49,11 @@ export default function Navigation() {
           transition: 'background 0.4s, border-color 0.4s',
         }}
       >
-        <div className="w-full max-w-[1360px] mx-auto px-5 md:px-8 flex items-center justify-between gap-4">
+        <div className="flex w-full items-center justify-between gap-4 px-6 md:px-8">
 
           {/* Logo */}
-          <NavLink to="/" className="flex items-center gap-2.5 group" aria-label="VAAD Development home">
-            <div className="flex items-center gap-[3px]">
+          <NavLink to="/" className="group flex items-center gap-2" aria-label="VAAD Development home">
+            <div className="flex items-center gap-1">
               <span
                 className="text-[20px] text-[#EAE6DB] tracking-[0.12em]"
                 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, letterSpacing: '0.14em' }}
@@ -63,7 +63,7 @@ export default function Navigation() {
               <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#E8132A', display: 'inline-block', marginBottom: 1 }} />
             </div>
             <span
-              className="hidden sm:block text-[9px] tracking-[0.28em] uppercase border-l border-[rgba(232,19,42,0.3)] pl-2.5"
+              className="hidden border-l border-[rgba(232,19,42,0.3)] pl-2 text-[9px] uppercase tracking-[0.28em] sm:block"
               style={{ fontFamily: "'JetBrains Mono', monospace", color: 'rgba(234,230,219,0.35)', marginTop: 1 }}
             >
               Dev
@@ -77,7 +77,7 @@ export default function Navigation() {
                 key={link.href}
                 to={link.href}
                 className={({ isActive }) =>
-                  `relative px-4 py-2.5 text-[11px] tracking-[0.18em] uppercase border transition-all duration-200 ${
+                  `relative border px-4 py-2 text-[11px] uppercase tracking-[0.18em] transition-all duration-200 ${
                     isActive
                       ? 'text-[#EAE6DB] border-[rgba(232,19,42,0.45)] bg-[rgba(232,19,42,0.12)]'
                       : 'text-[rgba(234,230,219,0.52)] border-[rgba(232,19,42,0.15)] hover:text-[#EAE6DB] hover:border-[rgba(232,19,42,0.42)] hover:bg-[rgba(232,19,42,0.06)]'
@@ -159,7 +159,7 @@ export default function Navigation() {
                     to={link.href}
                     onClick={() => setMobileOpen(false)}
                     className={({ isActive }) =>
-                      `flex items-center gap-4 py-3 border-b border-[rgba(232,19,42,0.08)] group ${
+                      `group flex items-center gap-4 border-b border-[rgba(232,19,42,0.08)] py-4 ${
                         isActive ? 'text-[#EAE6DB]' : 'text-[rgba(234,230,219,0.5)]'
                       }`
                     }

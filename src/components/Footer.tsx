@@ -68,7 +68,7 @@ export default function Footer() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.7, ease }}
-          className="max-w-[1360px] mx-auto px-6 py-20 md:py-28 text-center relative z-10"
+          className="site-container relative z-10 py-20 text-center"
         >
           {/* Annotation */}
           <div className="flex items-center justify-center gap-4 mb-8">
@@ -92,7 +92,7 @@ export default function Footer() {
           </h2>
 
           <p
-            className="text-[15px] mb-10 max-w-[520px] mx-auto leading-[1.8]"
+            className="reading-track mx-auto mb-12 max-w-[520px] text-[15px] leading-[1.8]"
             style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, color: 'rgba(234,230,219,0.5)' }}
           >
             {getContentValue('footer', 'cta_description', 'Share the scope, timeline, and blockers. We will reply with a clear build path instead of a vague pitch deck.')}
@@ -117,12 +117,12 @@ export default function Footer() {
 
       {/* Footer grid */}
       <div
-        className="max-w-[1360px] mx-auto px-6 pt-14 pb-8"
+        className="site-container pb-8 pt-16"
         style={{ borderTop: '1px solid rgba(232,19,42,0.1)' }}
       >
-        <div className="mb-12 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+        <div className="mb-12 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
-            <div className="flex items-center gap-2 mb-3">
+            <div className="mb-4 flex items-center gap-2">
               <span
                 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: 20, letterSpacing: '0.14em', color: '#EAE6DB' }}
               >
@@ -144,11 +144,11 @@ export default function Footer() {
 
         <div className="rule-line-full mb-12" />
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 mb-14">
+        <div className="mb-16 grid grid-cols-2 gap-8 lg:grid-cols-4">
           {columns.map((col) => (
             <div key={col.title}>
-              <h4 className="annotation-label mb-5">{col.title}</h4>
-              <ul className="flex flex-col gap-3">
+              <h4 className="annotation-label mb-6">{col.title}</h4>
+              <ul className="flex flex-col gap-4">
                 {col.items.map((item) => (
                   <li key={`${col.title}-${item.label}`}>
                     {item.href?.startsWith('mailto:') ? (

@@ -32,14 +32,14 @@ export default function Pricing() {
     <section className="section-pad relative">
       <div className="absolute inset-0 grid-pattern opacity-15 pointer-events-none" />
 
-      <div className="max-w-[1360px] mx-auto px-6 relative z-10">
+      <div className="site-container relative z-10">
         {/* Header */}
         <div className="flex items-center gap-4 mb-4">
           <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#E8132A', display: 'inline-block' }} />
           <span className="section-ref">{labelParts[0] || '06'} / {labelParts[1] || 'Pricing'}</span>
         </div>
 
-        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-14">
+        <div className="mb-16 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
           <motion.h2
             initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }} transition={{ duration: 0.6, ease }}
@@ -57,9 +57,9 @@ export default function Pricing() {
           </motion.p>
         </div>
 
-        <div className="rule-line-full mb-10" />
+        <div className="rule-line-full mb-12" />
 
-        <div className={`grid grid-cols-1 ${planCount <= 2 ? 'sm:grid-cols-2' : 'lg:grid-cols-3'} gap-5 md:gap-6`}>
+        <div className={`grid grid-cols-1 ${planCount <= 2 ? 'sm:grid-cols-2' : 'lg:grid-cols-3'} gap-6 md:gap-8`}>
           {plans.map((plan, i) => (
             <motion.div
               key={plan.name}
@@ -79,14 +79,14 @@ export default function Pricing() {
               {/* Popular badge */}
               {plan.highlighted && (
                 <span
-                  className="absolute top-4 right-4 text-[9px] tracking-[0.2em] uppercase px-3 py-1"
+                  className="absolute right-4 top-4 px-4 py-1 text-[9px] uppercase tracking-[0.2em]"
                   style={{ fontFamily: "'JetBrains Mono', monospace", color: '#E8132A', border: '1px solid rgba(232,19,42,0.4)' }}
                 >
                   {getContentValue('pricing', 'popular_badge', 'Popular')}
                 </span>
               )}
 
-              <div className="p-8 md:p-10 flex flex-col flex-1">
+              <div className="flex flex-1 flex-col p-8">
                 {/* Plan index */}
                 <p className="annotation-label mb-6">Plan / {String(i + 1).padStart(2, '0')}</p>
 
@@ -118,9 +118,9 @@ export default function Pricing() {
 
                 <div className="h-[1px] mb-6" style={{ background: 'rgba(232,19,42,0.12)' }} />
 
-                <ul className="flex flex-col gap-3 flex-1 mb-8">
+                <ul className="mb-8 flex flex-1 flex-col gap-4">
                   {plan.features.map((feature) => (
-                    <li key={feature} className="flex items-start gap-3 text-[13px]" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, color: 'rgba(234,230,219,0.65)' }}>
+                    <li key={feature} className="flex items-start gap-4 text-[13px]" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, color: 'rgba(234,230,219,0.65)' }}>
                       <Check size={13} style={{ color: '#E8132A', flexShrink: 0, marginTop: 2 }} />
                       {feature}
                     </li>
@@ -129,7 +129,7 @@ export default function Pricing() {
 
                 <Link
                   to="/contact"
-                  className="flex items-center justify-center gap-2 px-6 py-3.5 text-[11px] tracking-[0.18em] uppercase transition-all duration-300"
+                  className="flex items-center justify-center gap-2 px-6 py-4 text-[11px] uppercase tracking-[0.18em] transition-all duration-300"
                   style={{
                     fontFamily: "'Barlow Condensed', sans-serif",
                     fontWeight: 600,
@@ -161,10 +161,10 @@ export default function Pricing() {
         <motion.div
           initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }} transition={{ duration: 0.6, ease, delay: 0.3 }}
-          className="text-center mt-14"
+          className="mt-16 text-center"
         >
           <p
-            className="text-[14px] mb-5 max-w-[480px] mx-auto leading-[1.8]"
+            className="reading-track mx-auto mb-6 max-w-[480px] text-[14px] leading-[1.8]"
             style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, color: 'rgba(234,230,219,0.45)' }}
           >
             {getContentValue('pricing', 'cta_text', 'If the scope is unusual, we price it from the workflow backward instead of forcing it into a generic package.')}

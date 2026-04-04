@@ -29,7 +29,7 @@ export default function Process() {
     <section className="section-pad relative">
       <div className="absolute inset-0 grid-pattern opacity-15 pointer-events-none" />
 
-      <div className="max-w-[1360px] mx-auto px-6 relative z-10">
+      <div className="site-container relative z-10">
         {/* Section header */}
         <div className="flex items-center gap-4 mb-4">
           <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#E8132A', display: 'inline-block' }} />
@@ -39,16 +39,16 @@ export default function Process() {
         <motion.h2
           initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }} transition={{ duration: 0.6, ease }}
-          className="mb-14"
+          className="mb-16"
           style={{ fontFamily: "'Playfair Display', serif", fontWeight: 900, fontSize: 'clamp(36px, 5vw, 68px)', letterSpacing: '-0.03em', lineHeight: 0.9, color: '#EAE6DB' }}
         >
           {getContentValue('process', 'title', 'How a project works')}
         </motion.h2>
 
-        <div className="rule-line-full mb-10" />
+        <div className="rule-line-full mb-12" />
 
         {/* Steps — horizontal timeline */}
-        <div className={`grid grid-cols-1 ${stepCount <= 2 ? 'md:grid-cols-2' : stepCount === 3 ? 'md:grid-cols-3' : 'md:grid-cols-4'} gap-5 md:gap-6`}>
+        <div className={`grid grid-cols-1 ${stepCount <= 2 ? 'md:grid-cols-2' : stepCount === 3 ? 'md:grid-cols-3' : 'md:grid-cols-4'} gap-6 md:gap-8`}>
           {steps.map((step, i) => (
             <motion.div
               key={step.number}
@@ -56,7 +56,7 @@ export default function Process() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.2 }}
               transition={{ duration: 0.5, ease, delay: i * 0.1 }}
-              className="group relative border border-[rgba(232,19,42,0.18)] bg-[rgba(9,22,40,0.62)] px-8 py-10"
+              className="group relative border border-[rgba(232,19,42,0.18)] bg-[rgba(9,22,40,0.62)] px-8 py-8"
             >
               {/* Hover fill */}
               <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" style={{ background: 'rgba(232,19,42,0.03)' }} />

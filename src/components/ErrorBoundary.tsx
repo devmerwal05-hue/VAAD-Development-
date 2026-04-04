@@ -33,7 +33,7 @@ export default class ErrorBoundary extends Component<Props, State> {
                 </div>
 
                 <h1
-                  className="mb-3 text-text-primary"
+                  className="mb-4 text-text-primary"
                   style={{ fontFamily: "'Playfair Display', serif", fontWeight: 800, fontSize: 'clamp(30px, 4vw, 52px)', lineHeight: 0.9, letterSpacing: '-0.03em' }}
                 >
                   {getContentValue('error_boundary', 'title', 'Something went wrong')}
@@ -45,7 +45,7 @@ export default class ErrorBoundary extends Component<Props, State> {
 
                 <button
                   onClick={() => window.location.reload()}
-                  className="shimmer-btn inline-flex items-center gap-2 border border-accent bg-accent px-7 py-3 text-[11px] uppercase tracking-[0.18em] text-text-primary transition-all duration-300 hover:shadow-[0_0_36px_rgba(232,19,42,0.26)]"
+                  className="shimmer-btn inline-flex items-center gap-2 border border-accent bg-accent px-8 py-4 text-[11px] uppercase tracking-[0.18em] text-text-primary transition-all duration-300 hover:shadow-[0_0_36px_rgba(232,19,42,0.26)]"
                   style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 600 }}
                 >
                   {getContentValue('error_boundary', 'button', 'Refresh Page')}

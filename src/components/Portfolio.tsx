@@ -17,7 +17,7 @@ export default function Portfolio() {
     <section className="section-pad relative overflow-hidden">
       <div className="absolute inset-0 grid-pattern opacity-15 pointer-events-none" />
 
-      <div className="max-w-[1360px] mx-auto px-6 relative z-10">
+      <div className="site-container relative z-10">
         {/* Header */}
         <div className="flex items-center gap-4 mb-4">
           <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#E8132A', display: 'inline-block' }} />
@@ -27,7 +27,7 @@ export default function Portfolio() {
         <motion.h2
           initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }} transition={{ duration: 0.6, ease }}
-          className="mb-14"
+          className="mb-16"
           style={{ fontFamily: "'Playfair Display', serif", fontWeight: 900, fontSize: 'clamp(36px, 5vw, 68px)', letterSpacing: '-0.03em', lineHeight: 0.9, color: '#EAE6DB' }}
         >
           {getContentValue('portfolio', 'title', 'Selected work')}
@@ -72,19 +72,19 @@ export default function Portfolio() {
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent to-[rgba(6,12,32,0.6)]" />
 
                   {/* Tag overlay */}
-                  <div className="absolute top-5 left-5">
-                    <span className="section-ref px-3 py-1.5" style={{ background: 'rgba(6,12,32,0.7)', border: '1px solid rgba(232,19,42,0.3)' }}>
+                  <div className="absolute left-6 top-6">
+                    <span className="section-ref px-4 py-1.5" style={{ background: 'rgba(6,12,32,0.7)', border: '1px solid rgba(232,19,42,0.3)' }}>
                       {project.tag}
                     </span>
                   </div>
                 </div>
 
                 {/* Content */}
-                <div className="flex flex-col justify-between px-8 py-10" style={{ borderLeft: '1px solid rgba(232,19,42,0.1)' }}>
+                <div className="flex flex-col justify-between px-8 py-8" style={{ borderLeft: '1px solid rgba(232,19,42,0.1)' }}>
                   <div>
                     <p className="annotation-label mb-6">Project / {String(i + 1).padStart(2, '0')}</p>
                     <h3
-                      className="mb-3 group-hover:text-[#E8132A] transition-colors duration-300"
+                      className="mb-4 transition-colors duration-300 group-hover:text-[#E8132A]"
                       style={{ fontFamily: "'Playfair Display', serif", fontWeight: 900, fontSize: 'clamp(24px, 3vw, 36px)', letterSpacing: '-0.03em', color: '#EAE6DB', lineHeight: 0.95 }}
                     >
                       {project.name}
@@ -95,7 +95,7 @@ export default function Portfolio() {
                     >
                       {project.subtitle}
                     </p>
-                    <div className="h-[1px] mb-5 max-w-[36px]" style={{ background: 'rgba(232,19,42,0.4)' }} />
+                    <div className="mb-6 h-[1px] max-w-[36px]" style={{ background: 'rgba(232,19,42,0.4)' }} />
                     <p className="text-[14px] leading-[1.8]" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, color: 'rgba(234,230,219,0.45)' }}>
                       {project.description}
                     </p>

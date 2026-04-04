@@ -7,9 +7,9 @@ export default function ContentStatusBanner() {
   if (!loading && !error) return null;
 
   return (
-    <div className="px-5 md:px-6 pt-3">
+    <div className="pt-2">
       <div
-        className={`mx-auto flex max-w-[1320px] items-center gap-2 rounded-xl border px-4 py-3 text-[13px] ${
+        className={`site-container flex items-center gap-2 rounded-xl border py-2 text-[13px] ${
           error
             ? 'border-[rgba(239,68,68,0.18)] bg-[rgba(239,68,68,0.08)] text-red-200'
             : 'border-[rgba(232,19,42,0.22)] bg-[rgba(232,19,42,0.12)] text-text-secondary'

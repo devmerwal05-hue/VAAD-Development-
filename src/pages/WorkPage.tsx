@@ -33,7 +33,7 @@ export default function WorkPage() {
       />
 
       <section className="section-pad">
-        <div className="mx-auto flex max-w-[1360px] flex-col gap-8 px-6 md:gap-10">
+        <div className="site-container flex flex-col gap-8 md:gap-12">
           {projects.map((project, index) => (
             <motion.article
               key={`${project.name}-${index}`}
@@ -68,12 +68,12 @@ export default function WorkPage() {
 
                 <div className="absolute inset-0 bg-gradient-to-t from-[rgba(6,12,32,0.9)] via-[rgba(6,12,32,0.25)] to-transparent" />
 
-                <div className="absolute left-4 top-4 border border-[rgba(232,19,42,0.34)] bg-[rgba(6,12,32,0.72)] px-3 py-1.5">
+                <div className="absolute left-4 top-4 border border-[rgba(232,19,42,0.34)] bg-[rgba(6,12,32,0.72)] px-4 py-1.5">
                   <span className="section-ref">{project.tag}</span>
                 </div>
               </div>
 
-              <div className={`relative border-[rgba(232,19,42,0.14)] px-6 py-8 md:px-8 md:py-10 lg:border-l ${index % 2 === 1 ? 'lg:order-1 lg:border-l-0 lg:border-r' : ''}`}>
+              <div className={`relative border-[rgba(232,19,42,0.14)] px-6 py-8 md:px-8 md:py-8 lg:border-l ${index % 2 === 1 ? 'lg:order-1 lg:border-l-0 lg:border-r' : ''}`}>
                 <p className="annotation-label mb-4">Project / {String(index + 1).padStart(2, '0')}</p>
 
                 <h2
@@ -87,9 +87,9 @@ export default function WorkPage() {
                   {project.subtitle}
                 </p>
 
-                <div className="mb-5 h-[1px] w-16 bg-[rgba(232,19,42,0.42)]" />
+                <div className="mb-6 h-[1px] w-16 bg-[rgba(232,19,42,0.42)]" />
 
-                <p className="mb-8 max-w-[54ch] text-[15px] leading-[1.8] text-[rgba(234,230,219,0.58)]" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}>
+                <p className="reading-track mb-8 max-w-[54ch] text-[15px] leading-[1.8] text-[rgba(234,230,219,0.58)]" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}>
                   {project.description}
                 </p>
 
@@ -117,7 +117,7 @@ export default function WorkPage() {
                     href={project.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="shimmer-btn inline-flex items-center gap-2 border border-accent bg-accent px-6 py-3 text-[11px] uppercase tracking-[0.18em] text-text-primary transition-all duration-300 hover:shadow-[0_0_36px_rgba(232,19,42,0.26)]"
+                    className="shimmer-btn inline-flex items-center gap-2 border border-accent bg-accent px-6 py-4 text-[11px] uppercase tracking-[0.18em] text-text-primary transition-all duration-300 hover:shadow-[0_0_36px_rgba(232,19,42,0.26)]"
                     style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 600 }}
                   >
                     {getContentValue('portfolio', 'link_label_live', 'View live project')}
@@ -135,10 +135,10 @@ export default function WorkPage() {
       <Marquee />
 
       <section className="px-6 section-pad">
-        <div className="corner-marks mx-auto max-w-[920px] border border-[rgba(232,19,42,0.2)] bg-[rgba(9,22,40,0.76)] px-8 py-10 text-center md:px-12 md:py-14">
+        <div className="corner-marks mx-auto max-w-[920px] border border-[rgba(232,19,42,0.2)] bg-[rgba(9,22,40,0.76)] px-8 py-8 text-center md:px-12 md:py-12">
           <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
             {getContentValue('portfolio', 'footer_text', '') && (
-              <p className="mx-auto mb-8 max-w-[58ch] text-[15px] leading-[1.8] text-[rgba(234,230,219,0.56)]" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}>
+              <p className="reading-track mx-auto mb-8 max-w-[58ch] text-[15px] leading-[1.8] text-[rgba(234,230,219,0.56)]" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}>
                 {getContentValue('portfolio', 'footer_text', '')}
               </p>
             )}
@@ -150,13 +150,13 @@ export default function WorkPage() {
               {getContentValue('work_page', 'cta_title', 'Have a build that needs traction?')}
             </h2>
 
-            <p className="mx-auto mb-8 max-w-[58ch] text-[15px] leading-[1.8] text-[rgba(234,230,219,0.56)]" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}>
+            <p className="reading-track mx-auto mb-8 max-w-[58ch] text-[15px] leading-[1.8] text-[rgba(234,230,219,0.56)]" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}>
               {getContentValue('work_page', 'cta_description', 'We can scope the work, call out the risks, and tell you what should happen in the first release.')}
             </p>
 
             <Link
               to="/contact"
-              className="shimmer-btn inline-flex items-center gap-2 border border-accent bg-accent px-8 py-3.5 text-[11px] uppercase tracking-[0.18em] text-text-primary transition-all duration-300 hover:shadow-[0_0_40px_rgba(232,19,42,0.28)]"
+              className="shimmer-btn inline-flex items-center gap-2 border border-accent bg-accent px-8 py-4 text-[11px] uppercase tracking-[0.18em] text-text-primary transition-all duration-300 hover:shadow-[0_0_40px_rgba(232,19,42,0.28)]"
               style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 600 }}
             >
               {getContentValue('work_page', 'cta_button', 'Start the conversation')}

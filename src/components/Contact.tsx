@@ -131,7 +131,7 @@ export default function Contact() {
     <section className="relative section-pad">
       <div className="absolute inset-0 grid-pattern opacity-12 pointer-events-none" />
 
-      <div className="max-w-[1360px] mx-auto px-6 relative z-10">
+      <div className="site-container relative z-10">
         <SectionLabel number={labelParts[0] || '08'} label={labelParts[1] || 'Contact'} />
         <SectionTitle>{getContentValue('contact', 'title', 'Tell us what needs to ship')}</SectionTitle>
 
@@ -144,12 +144,12 @@ export default function Contact() {
             className="corner-marks border border-[rgba(232,19,42,0.2)] bg-[rgba(9,22,40,0.68)] p-6 md:p-8"
           >
             <h3
-              className="text-[28px] md:text-[32px] text-text-primary mb-5 break-words [text-wrap:balance]"
+              className="mb-6 break-words text-[28px] text-text-primary [text-wrap:balance] md:text-[32px]"
               style={{ fontFamily: "'Playfair Display', serif", fontWeight: 800, lineHeight: 0.95, letterSpacing: '-0.02em' }}
             >
               {getContentValue('contact', 'heading', 'Share the scope, timeline, and blockers.')}
             </h3>
-            <p className="text-[15px] text-text-secondary leading-[1.7] mb-10 break-words" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>
+            <p className="reading-track mb-12 break-words text-[15px] leading-[1.7] text-text-secondary" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>
               {getContentValue(
                 'contact',
                 'description',
@@ -158,19 +158,19 @@ export default function Contact() {
             </p>
 
             <div className="flex flex-col gap-4">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-4">
                 <Clock size={15} className="text-accent" />
                 <span className="text-[14px] text-text-secondary" style={{ fontFamily: 'DM Sans', fontWeight: 400 }}>
                   {getContentValue('contact', 'response_time', 'Replies within one business day')}
                 </span>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-4">
                 <Globe size={15} className="text-accent" />
                 <span className="text-[14px] text-text-secondary" style={{ fontFamily: 'DM Sans', fontWeight: 400 }}>
                   {getContentValue('contact', 'timezone', 'Based in India, working with remote teams globally')}
                 </span>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-4">
                 <Mail size={15} className="text-accent" />
                 <a
                   href={`mailto:${contactEmail}`}
@@ -188,7 +188,7 @@ export default function Contact() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-10%' }}
             transition={{ duration: 0.7, ease, delay: 0.1 }}
-            className="border border-[rgba(232,19,42,0.2)] bg-[rgba(9,22,40,0.68)] p-5 md:p-7"
+            className="border border-[rgba(232,19,42,0.2)] bg-[rgba(9,22,40,0.68)] p-8"
           >
             {submitted ? (
               <div className="p-12 text-center" style={{ border: '1px solid rgba(232,19,42,0.25)', background: 'rgba(9,22,40,0.8)' }}>
@@ -197,7 +197,7 @@ export default function Contact() {
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
                 </div>
-                <h3 className="text-[24px] mb-3" style={{ fontFamily: "'Playfair Display', serif", fontWeight: 700, color: '#EAE6DB' }}>
+                <h3 className="mb-4 text-[24px]" style={{ fontFamily: "'Playfair Display', serif", fontWeight: 700, color: '#EAE6DB' }}>
                   {getContentValue('contact', 'success_title', 'Message sent')}
                 </h3>
                 <p className="text-[14px] leading-[1.7]" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, color: 'rgba(234,230,219,0.5)' }}>
@@ -205,7 +205,7 @@ export default function Contact() {
                 </p>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="flex flex-col gap-5" style={{ fontFamily: 'DM Sans' }} noValidate>
+              <form onSubmit={handleSubmit} className="flex flex-col gap-6" style={{ fontFamily: 'DM Sans' }} noValidate>
                 <div className="absolute left-[-9999px] top-auto w-px h-px overflow-hidden" aria-hidden="true">
                   <label htmlFor="website">{getContentValue('contact_form', 'honeypot_label', 'Website')}</label>
                   <input

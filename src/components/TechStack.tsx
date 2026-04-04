@@ -38,14 +38,14 @@ export default function TechStack() {
     <section className="section-pad relative overflow-hidden">
       <div className="absolute inset-0 grid-pattern opacity-15 pointer-events-none" />
 
-      <div className="max-w-[1360px] mx-auto px-6 relative z-10">
+      <div className="site-container relative z-10">
         {/* Header */}
         <div className="flex items-center gap-4 mb-4">
           <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#E8132A', display: 'inline-block' }} />
           <span className="section-ref">{labelParts[0] || '09'} / {labelParts[1] || 'Capabilities'}</span>
         </div>
 
-        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-14">
+        <div className="mb-16 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
           <motion.h2
             initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }} transition={{ duration: 0.6, ease }}
@@ -56,7 +56,7 @@ export default function TechStack() {
           <motion.p
             initial={{ opacity: 0 }} whileInView={{ opacity: 1 }}
             viewport={{ once: true }} transition={{ duration: 0.55, delay: 0.1 }}
-            className="text-[13px] max-w-[340px] leading-[1.8]"
+            className="reading-track max-w-[340px] text-[13px] leading-[1.8]"
             style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, color: 'rgba(234,230,219,0.45)' }}
           >
             {getContentValue('techstack', 'subtitle', 'The stack is chosen around delivery speed, maintainability, and how much control your team needs after launch.')}
@@ -65,7 +65,7 @@ export default function TechStack() {
 
         <div className="rule-line-full mb-8" />
 
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 md:gap-6">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-8">
           {categories.map((cat, i) => (
             <motion.div
               key={cat.name}
@@ -97,7 +97,7 @@ export default function TechStack() {
                   {cat.name}
                 </h3>
 
-                <p className="text-[13px] leading-[1.75] mb-5" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, color: 'rgba(234,230,219,0.45)' }}>
+                <p className="mb-6 text-[13px] leading-[1.75]" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, color: 'rgba(234,230,219,0.45)' }}>
                   {cat.desc}
                 </p>
 

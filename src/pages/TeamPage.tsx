@@ -30,20 +30,20 @@ export default function TeamPage() {
       <Team />
 
       <section className="px-6 section-pad">
-        <div className="corner-marks mx-auto max-w-[900px] border border-[rgba(232,19,42,0.2)] bg-[rgba(9,22,40,0.76)] px-8 py-10 text-center md:px-12 md:py-14">
+        <div className="corner-marks mx-auto max-w-[900px] border border-[rgba(232,19,42,0.2)] bg-[rgba(9,22,40,0.76)] px-8 py-8 text-center md:px-12 md:py-12">
           <h2
             className="mb-4 text-text-primary"
             style={{ fontFamily: "'Playfair Display', serif", fontWeight: 800, fontSize: 'clamp(30px, 4vw, 56px)', lineHeight: 0.9, letterSpacing: '-0.03em' }}
           >
             {getContentValue('team_page', 'cta_title', 'Need the right mix of design and engineering?')}
           </h2>
-          <p className="mx-auto mb-8 max-w-[58ch] text-[15px] leading-[1.8] text-[rgba(234,230,219,0.56)]" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}>
+          <p className="reading-track mx-auto mb-8 max-w-[58ch] text-[15px] leading-[1.8] text-[rgba(234,230,219,0.56)]" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}>
             {getContentValue('team_page', 'cta_description', 'Tell us the shape of the project and we will pull in the people who should own it.')}
           </p>
 
           <Link
             to="/contact"
-            className="shimmer-btn inline-flex items-center gap-2 border border-accent bg-accent px-8 py-3.5 text-[11px] uppercase tracking-[0.18em] text-text-primary transition-all duration-300 hover:shadow-[0_0_40px_rgba(232,19,42,0.28)]"
+            className="shimmer-btn inline-flex items-center gap-2 border border-accent bg-accent px-8 py-4 text-[11px] uppercase tracking-[0.18em] text-text-primary transition-all duration-300 hover:shadow-[0_0_40px_rgba(232,19,42,0.28)]"
             style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 600 }}
           >
             {getContentValue('team_page', 'cta_button', 'Talk to the team')}

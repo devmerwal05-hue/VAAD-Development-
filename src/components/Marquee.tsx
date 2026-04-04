@@ -21,7 +21,7 @@ export default function Marquee() {
 
       <div className="marquee-track flex gap-0">
         {doubled.map((item, i) => (
-          <span key={i} className="flex items-center gap-5 shrink-0 pr-5">
+          <span key={i} className="flex shrink-0 items-center gap-6 pr-6">
             <span
               className="text-[10px] tracking-[0.22em] uppercase whitespace-nowrap"
               style={{

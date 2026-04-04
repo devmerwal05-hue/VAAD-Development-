@@ -37,7 +37,7 @@ export default function FAQ() {
         <motion.h2
           initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }} transition={{ duration: 0.6, ease }}
-          className="mb-14"
+          className="mb-16"
           style={{ fontFamily: "'Playfair Display', serif", fontWeight: 900, fontSize: 'clamp(36px, 5vw, 68px)', letterSpacing: '-0.03em', lineHeight: 0.9, color: '#EAE6DB' }}
         >
           {getContentValue('faq', 'title', 'Common questions')}
@@ -61,9 +61,9 @@ export default function FAQ() {
                 aria-expanded={open === i}
                 aria-controls={`faq-panel-${i}`}
                 id={`faq-trigger-${i}`}
-                className="group flex w-full items-center justify-between px-5 py-6 text-left"
+                className="group flex w-full items-center justify-between px-6 py-8 text-left"
               >
-                <div className="flex items-start gap-5 min-w-0 flex-1">
+                <div className="flex min-w-0 flex-1 items-start gap-6">
                   <span
                     className="shrink-0 mt-1"
                     style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, letterSpacing: '0.22em', color: open === i ? '#E8132A' : 'rgba(234,230,219,0.2)', textTransform: 'uppercase' }}
@@ -103,7 +103,7 @@ export default function FAQ() {
                     className="overflow-hidden"
                   >
                     <p
-                      className="pb-6 pl-16 pr-5 text-[15px] leading-[1.8]"
+                      className="pb-6 pl-16 pr-6 text-[15px] leading-[1.8]"
                       style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, color: 'rgba(234,230,219,0.5)' }}
                     >
                       {faq.a}
