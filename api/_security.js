@@ -214,7 +214,12 @@ export function setCorsHeaders(req, res) {
 export function verifyAdminPassword(password) {
   if (typeof password !== 'string') return false;
   const expected = getEnv('ADMIN_PASSWORD') || '2025';
-  return password === expected;
+
+  // Use timing-safe comparison to prevent password timing attacks
+  const providedHash = crypto.createHash('sha256').update(password).digest();
+  const expectedHash = crypto.createHash('sha256').update(expected).digest();
+
+  return crypto.timingSafeEqual(providedHash, expectedHash);
 }
 
 export function startAdminSession(req, res) {
