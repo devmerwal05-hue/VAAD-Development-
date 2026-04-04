@@ -56,7 +56,7 @@ export default function Services() {
         {/* Rule */}
         <div className="rule-line-full mb-10" />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-0">
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 md:gap-6">
           {services.map((service, index) => (
             <motion.div
               key={service.title}
@@ -64,11 +64,7 @@ export default function Services() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.15 }}
               transition={{ duration: 0.55, ease, delay: index * 0.07 }}
-              className="group relative p-8 md:p-10 border-b border-r border-[rgba(232,19,42,0.1)]"
-              style={{
-                borderRight: index % 2 === 0 ? '1px solid rgba(232,19,42,0.1)' : undefined,
-                borderBottom: index < services.length - 2 || services.length <= 2 ? '1px solid rgba(232,19,42,0.1)' : undefined,
-              }}
+              className="group relative border border-[rgba(232,19,42,0.18)] bg-[rgba(9,22,40,0.62)] p-8 md:p-10"
             >
               {/* Hover fill */}
               <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" style={{ background: 'rgba(232,19,42,0.03)' }} />

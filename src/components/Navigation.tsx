@@ -71,29 +71,21 @@ export default function Navigation() {
           </NavLink>
 
           {/* Desktop nav */}
-          <div className="hidden md:flex items-center gap-0">
+          <div className="hidden md:flex items-center gap-2">
             {navLinks.map((link) => (
               <NavLink
                 key={link.href}
                 to={link.href}
                 className={({ isActive }) =>
-                  `relative px-4 py-2 text-[11px] tracking-[0.18em] uppercase transition-colors duration-200 ${
-                    isActive ? 'text-[#EAE6DB]' : 'text-[rgba(234,230,219,0.45)] hover:text-[#EAE6DB]'
+                  `relative px-4 py-2.5 text-[11px] tracking-[0.18em] uppercase border transition-all duration-200 ${
+                    isActive
+                      ? 'text-[#EAE6DB] border-[rgba(232,19,42,0.45)] bg-[rgba(232,19,42,0.12)]'
+                      : 'text-[rgba(234,230,219,0.52)] border-[rgba(232,19,42,0.15)] hover:text-[#EAE6DB] hover:border-[rgba(232,19,42,0.42)] hover:bg-[rgba(232,19,42,0.06)]'
                   }`
                 }
                 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 500 }}
               >
-                {({ isActive }) => (
-                  <>
-                    {link.label}
-                    {isActive && (
-                      <span
-                        aria-hidden="true"
-                        className="absolute bottom-0 left-1/2 -translate-x-1/2 w-4 h-[1px] bg-[#E8132A]"
-                      />
-                    )}
-                  </>
-                )}
+                {link.label}
               </NavLink>
             ))}
           </div>

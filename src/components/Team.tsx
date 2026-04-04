@@ -61,7 +61,7 @@ export default function Team() {
         <div className="rule-line-full mb-10" />
 
         {/* Member grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-0">
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 md:gap-6">
           {members.map((member, i) => (
             <m.article
               key={`${member.name}-${i}`}
@@ -69,10 +69,7 @@ export default function Team() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.2 }}
               transition={{ duration: 0.55, ease, delay: i * 0.07 }}
-              className="group relative"
-              style={{
-                borderRight: i < members.length - 1 ? '1px solid rgba(232,19,42,0.1)' : undefined,
-              }}
+              className="group relative border border-[rgba(232,19,42,0.18)] bg-[rgba(9,22,40,0.62)]"
             >
               {/* Hover fill */}
               <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" style={{ background: 'rgba(232,19,42,0.03)' }} />

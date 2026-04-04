@@ -83,7 +83,7 @@ export default function Stats() {
 
         <div className="rule-line-full mb-10" />
 
-        <div className={`grid grid-cols-1 ${statCount <= 2 ? 'sm:grid-cols-2' : 'sm:grid-cols-2 lg:grid-cols-4'} gap-0`}>
+        <div className={`grid grid-cols-1 ${statCount <= 2 ? 'sm:grid-cols-2' : 'sm:grid-cols-2 lg:grid-cols-4'} gap-5 md:gap-6`}>
           {stats.map((stat, i) => (
             <motion.div
               key={stat.label}
@@ -91,11 +91,7 @@ export default function Stats() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.2 }}
               transition={{ duration: 0.55, ease, delay: i * 0.08 }}
-              className="group relative px-8 py-10"
-              style={{
-                borderRight: i < stats.length - 1 ? '1px solid rgba(232,19,42,0.1)' : undefined,
-                borderBottom: '1px solid rgba(232,19,42,0.1)',
-              }}
+              className="group relative border border-[rgba(232,19,42,0.18)] bg-[rgba(9,22,40,0.62)] px-8 py-10"
             >
               {/* Hover redlayer */}
               <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" style={{ background: 'rgba(232,19,42,0.03)' }} />

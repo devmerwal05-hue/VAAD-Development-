@@ -33,7 +33,7 @@ export default function WorkPage() {
       />
 
       <section className="py-8 md:py-14">
-        <div className="mx-auto flex max-w-[1360px] flex-col px-6">
+        <div className="mx-auto flex max-w-[1360px] flex-col gap-8 px-6 md:gap-10">
           {projects.map((project, index) => (
             <motion.article
               key={`${project.name}-${index}`}
@@ -41,7 +41,7 @@ export default function WorkPage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.1 }}
               transition={{ duration: 0.72 }}
-              className="group relative grid grid-cols-1 border-b border-[rgba(232,19,42,0.14)] lg:grid-cols-[1fr_0.95fr]"
+              className="group relative grid grid-cols-1 border border-[rgba(232,19,42,0.2)] bg-[rgba(9,22,40,0.62)] lg:grid-cols-[1fr_0.95fr]"
             >
               <div className={`relative min-h-[280px] overflow-hidden border-b border-[rgba(232,19,42,0.12)] lg:min-h-[340px] lg:border-b-0 ${index % 2 === 1 ? 'lg:order-2' : ''}`}>
                 <div

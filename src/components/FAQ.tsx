@@ -43,9 +43,9 @@ export default function FAQ() {
           {getContentValue('faq', 'title', 'Common questions')}
         </motion.h2>
 
-        <div className="rule-line-full mb-2" />
+        <div className="rule-line-full mb-8" />
 
-        <div className="flex flex-col">
+        <div className="flex flex-col gap-4">
           {faqs.map((faq, i) => (
             <motion.div
               key={faq.q}
@@ -53,7 +53,7 @@ export default function FAQ() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.3 }}
               transition={{ duration: 0.4, ease, delay: i * 0.07 }}
-              style={{ borderBottom: '1px solid rgba(232,19,42,0.1)' }}
+              className="border border-[rgba(232,19,42,0.2)] bg-[rgba(9,22,40,0.62)]"
             >
               <button
                 type="button"
@@ -61,7 +61,7 @@ export default function FAQ() {
                 aria-expanded={open === i}
                 aria-controls={`faq-panel-${i}`}
                 id={`faq-trigger-${i}`}
-                className="w-full flex items-center justify-between text-left py-6 group"
+                className="group flex w-full items-center justify-between px-5 py-6 text-left"
               >
                 <div className="flex items-start gap-5 min-w-0 flex-1">
                   <span
@@ -103,7 +103,7 @@ export default function FAQ() {
                     className="overflow-hidden"
                   >
                     <p
-                      className="text-[15px] leading-[1.8] pl-11 pb-6"
+                      className="pb-6 pl-16 pr-5 text-[15px] leading-[1.8]"
                       style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, color: 'rgba(234,230,219,0.5)' }}
                     >
                       {faq.a}

@@ -59,7 +59,7 @@ export default function Pricing() {
 
         <div className="rule-line-full mb-10" />
 
-        <div className={`grid grid-cols-1 ${planCount <= 2 ? 'sm:grid-cols-2' : 'lg:grid-cols-3'} gap-0`}>
+        <div className={`grid grid-cols-1 ${planCount <= 2 ? 'sm:grid-cols-2' : 'lg:grid-cols-3'} gap-5 md:gap-6`}>
           {plans.map((plan, i) => (
             <motion.div
               key={plan.name}
@@ -70,7 +70,6 @@ export default function Pricing() {
               className="group relative flex flex-col"
               style={{
                 border: plan.highlighted ? '1px solid rgba(232,19,42,0.35)' : '1px solid rgba(232,19,42,0.1)',
-                marginLeft: i > 0 ? -1 : 0,
                 background: plan.highlighted ? 'rgba(232,19,42,0.05)' : 'transparent',
               }}
             >

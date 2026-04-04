@@ -135,12 +135,13 @@ export default function Contact() {
         <SectionLabel number={labelParts[0] || '08'} label={labelParts[1] || 'Contact'} />
         <SectionTitle>{getContentValue('contact', 'title', 'Tell us what needs to ship')}</SectionTitle>
 
-        <div className="grid grid-cols-1 lg:grid-cols-[42%_58%] gap-12 lg:gap-16">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[42%_58%] lg:gap-10">
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-10%' }}
             transition={{ duration: 0.7, ease }}
+            className="corner-marks border border-[rgba(232,19,42,0.2)] bg-[rgba(9,22,40,0.68)] p-6 md:p-8"
           >
             <h3
               className="text-[28px] md:text-[32px] text-text-primary mb-5 break-words [text-wrap:balance]"
@@ -187,6 +188,7 @@ export default function Contact() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-10%' }}
             transition={{ duration: 0.7, ease, delay: 0.1 }}
+            className="border border-[rgba(232,19,42,0.2)] bg-[rgba(9,22,40,0.68)] p-5 md:p-7"
           >
             {submitted ? (
               <div className="p-12 text-center" style={{ border: '1px solid rgba(232,19,42,0.25)', background: 'rgba(9,22,40,0.8)' }}>
@@ -203,7 +205,7 @@ export default function Contact() {
                 </p>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="flex flex-col gap-4" style={{ fontFamily: 'DM Sans' }} noValidate>
+              <form onSubmit={handleSubmit} className="flex flex-col gap-5" style={{ fontFamily: 'DM Sans' }} noValidate>
                 <div className="absolute left-[-9999px] top-auto w-px h-px overflow-hidden" aria-hidden="true">
                   <label htmlFor="website">{getContentValue('contact_form', 'honeypot_label', 'Website')}</label>
                   <input

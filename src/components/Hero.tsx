@@ -40,10 +40,10 @@ export default function Hero() {
       {/* Horizontal rules */}
       <div className="absolute top-[50%] left-0 right-0 h-[1px] opacity-10 pointer-events-none" style={{ background: 'rgba(232,19,42,0.6)' }} />
 
-      <div className="relative z-10 max-w-[1360px] mx-auto grid grid-cols-1 xl:grid-cols-[1.1fr_0.9fr] gap-10 xl:gap-12 items-center">
+      <div className="relative z-10 max-w-[1360px] mx-auto grid grid-cols-1 xl:grid-cols-[1.1fr_0.9fr] gap-12 xl:gap-16 items-center">
 
         {/* ── LEFT — Editorial copy ── */}
-        <div>
+        <div className="corner-marks border border-[rgba(232,19,42,0.2)] bg-[rgba(9,22,40,0.7)] px-6 py-7 md:px-8 md:py-9">
           {/* Specimen label */}
           <motion.div
             initial={{ opacity: 0, y: 12 }}
@@ -127,13 +127,12 @@ export default function Hero() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease, delay: 0.55 }}
-            className="grid grid-cols-3 gap-0 mt-12 border border-[rgba(232,19,42,0.14)]"
+            className="mt-12 grid grid-cols-1 gap-3 sm:grid-cols-3"
           >
             {stats.map((stat, i) => (
               <div
                 key={i}
-                className="px-4 py-4 flex flex-col gap-2"
-                style={{ borderRight: i < 2 ? '1px solid rgba(232,19,42,0.14)' : undefined }}
+                className="flex flex-col gap-2 border border-[rgba(232,19,42,0.18)] bg-[rgba(6,12,32,0.5)] px-4 py-4"
               >
                 <p
                   className="text-[#EAE6DB]"

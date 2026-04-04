@@ -48,7 +48,7 @@ export default function Process() {
         <div className="rule-line-full mb-10" />
 
         {/* Steps — horizontal timeline */}
-        <div className={`grid grid-cols-1 ${stepCount <= 2 ? 'md:grid-cols-2' : stepCount === 3 ? 'md:grid-cols-3' : 'md:grid-cols-4'} gap-0`}>
+        <div className={`grid grid-cols-1 ${stepCount <= 2 ? 'md:grid-cols-2' : stepCount === 3 ? 'md:grid-cols-3' : 'md:grid-cols-4'} gap-5 md:gap-6`}>
           {steps.map((step, i) => (
             <motion.div
               key={step.number}
@@ -56,10 +56,7 @@ export default function Process() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.2 }}
               transition={{ duration: 0.5, ease, delay: i * 0.1 }}
-              className="group relative px-8 py-10"
-              style={{
-                borderRight: i < steps.length - 1 ? '1px solid rgba(232,19,42,0.1)' : undefined,
-              }}
+              className="group relative border border-[rgba(232,19,42,0.18)] bg-[rgba(9,22,40,0.62)] px-8 py-10"
             >
               {/* Hover fill */}
               <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" style={{ background: 'rgba(232,19,42,0.03)' }} />

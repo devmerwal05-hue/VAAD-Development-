@@ -33,15 +33,14 @@ export default function Portfolio() {
           {getContentValue('portfolio', 'title', 'Selected work')}
         </motion.h2>
 
-        <div className="rule-line-full mb-10" />
+        <div className="rule-line-full mb-8" />
 
         {/* Projects */}
-        <div className="flex flex-col gap-0">
+        <div className="flex flex-col gap-6 md:gap-8">
           {projects.map((project, i) => {
             const inner = (
               <div
-                className="group grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-0 border-b border-[rgba(232,19,42,0.1)] py-0 relative"
-                style={{ borderBottom: '1px solid rgba(232,19,42,0.1)' }}
+                className="group relative grid grid-cols-1 gap-0 border border-[rgba(232,19,42,0.18)] bg-[rgba(9,22,40,0.62)] lg:grid-cols-[1fr_400px]"
               >
                 {/* Hover background */}
                 <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" style={{ background: 'rgba(232,19,42,0.02)' }} />

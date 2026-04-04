@@ -63,9 +63,9 @@ export default function TechStack() {
           </motion.p>
         </div>
 
-        <div className="rule-line-full mb-0" />
+        <div className="rule-line-full mb-8" />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-0">
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 md:gap-6">
           {categories.map((cat, i) => (
             <motion.div
               key={cat.name}
@@ -73,11 +73,7 @@ export default function TechStack() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-5%' }}
               transition={{ duration: 0.6, ease, delay: i * 0.06 }}
-              className="group relative px-8 py-8"
-              style={{
-                borderRight: i % 2 === 0 ? '1px solid rgba(232,19,42,0.1)' : undefined,
-                borderBottom: '1px solid rgba(232,19,42,0.1)',
-              }}
+              className="group relative border border-[rgba(232,19,42,0.18)] bg-[rgba(9,22,40,0.62)] px-8 py-8"
             >
               {/* Hover */}
               <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" style={{ background: 'rgba(232,19,42,0.03)' }} />

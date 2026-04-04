@@ -16,7 +16,7 @@ export default function PageHero({
   titleHighlight,
 }: PageHeroProps) {
   return (
-    <section className="relative overflow-hidden px-6 pb-12 pt-[calc(72px+2.75rem)] md:pb-16 md:pt-[calc(72px+4rem)]">
+    <section className="relative overflow-hidden px-6 pb-14 pt-[calc(72px+2.75rem)] md:pb-20 md:pt-[calc(72px+4rem)]">
       <div className="absolute inset-0 grid-pattern opacity-20 pointer-events-none" />
 
       <div className="absolute inset-0 pointer-events-none">
@@ -31,8 +31,13 @@ export default function PageHero({
       </div>
 
       <div className="relative z-10 mx-auto max-w-[1360px]">
-        <div className="grid grid-cols-1 items-end gap-10 lg:grid-cols-[1.15fr_0.85fr] lg:gap-16">
-          <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, ease }}>
+        <div className="grid grid-cols-1 items-end gap-12 lg:grid-cols-[1.15fr_0.85fr] lg:gap-20">
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, ease }}
+            className="corner-marks border border-[rgba(232,19,42,0.22)] bg-[rgba(9,22,40,0.72)] px-6 py-7 md:px-8 md:py-9 lg:px-10"
+          >
             <div className="mb-7 flex items-center gap-3">
               <span className="dot-red" />
               <span className="section-ref">{eyebrow}</span>
@@ -40,7 +45,7 @@ export default function PageHero({
             </div>
 
             <h1
-              className="max-w-[17ch] text-text-primary"
+              className="max-w-[18ch] text-text-primary"
               style={{
                 fontFamily: "'Playfair Display', serif",
                 fontWeight: 900,
@@ -69,7 +74,7 @@ export default function PageHero({
             transition={{ duration: 0.75, ease, delay: 0.06 }}
             className="hidden lg:block"
           >
-            <div className="corner-marks border border-[rgba(232,19,42,0.2)] bg-[rgba(9,22,40,0.78)] p-6">
+            <div className="corner-marks border border-[rgba(232,19,42,0.2)] bg-[rgba(9,22,40,0.78)] p-7">
               <div className="mb-5 flex items-center justify-between">
                 <span className="annotation-label">00 / 01</span>
                 <span className="annotation-label">01</span>
