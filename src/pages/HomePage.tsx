@@ -10,7 +10,6 @@ import Team from '../components/Team';
 import Pricing from '../components/Pricing';
 import FAQ from '../components/FAQ';
 import Contact from '../components/Contact';
-import ContentStatusBanner from '../components/ContentStatusBanner';
 import Footer from '../components/Footer';
 import { usePageMetadata } from '../hooks/usePageMetadata';
 import { useContent } from '../lib/useContent';
@@ -37,7 +36,6 @@ export default function HomePage() {
         {getContentValue('ui', 'skip_to_content', 'Skip to content')}
       </a>
       <Navigation />
-      <ContentStatusBanner />
       <main id="page-content">
         <Hero />
         <Marquee />

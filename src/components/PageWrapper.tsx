@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react';
 import Navigation from './Navigation';
 import Footer from './Footer';
-import ContentStatusBanner from './ContentStatusBanner';
 import { useContent } from '../lib/useContent';
 
 export default function PageWrapper({ children }: { children: ReactNode }) {
@@ -16,7 +15,6 @@ export default function PageWrapper({ children }: { children: ReactNode }) {
         {getContentValue('ui', 'skip_to_content', 'Skip to content')}
       </a>
       <Navigation />
-      <ContentStatusBanner />
       <div id="page-content" className="pt-[72px]">
         {children}
       </div>
