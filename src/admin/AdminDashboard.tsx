@@ -52,6 +52,7 @@ interface ContentItem {
   section: string;
   key: string;
   value: string;
+  updated_at?: string;
 }
 
 interface Submission {
@@ -64,6 +65,21 @@ interface Submission {
   project_type: string;
   budget_range: string;
   status: "new" | "reviewed" | "archived";
+  created_at: string;
+}
+
+interface AdminAuditEntry {
+  id: number;
+  action: string;
+  actor_user_id: string | null;
+  actor_email: string | null;
+  actor_role: string | null;
+  actor_aal: string | null;
+  request_path: string | null;
+  request_method: string | null;
+  ip_address: string | null;
+  user_agent: string | null;
+  details: Record<string, unknown> | null;
   created_at: string;
 }
 
@@ -104,6 +120,7 @@ type ActiveTab = "submissions" | string;
 // ─────────────────────────────────────────────────────────────────────────────
 
 const SUBMISSIONS_TAB = "submissions";
+const AUDIT_TAB = "audit";
 
 const SECTION_ORDER = [
   "nav", "hero", "marquee", "services", "techstack", "stats",
@@ -249,16 +266,98 @@ function getErrorMessage(e: unknown): string {
   return "An unknown error occurred.";
 }
 
+const CONTENT_KEY_PATTERN = /^[a-z0-9_]+$/;
+const URL_SCHEME_PATTERN = /^(https?:\/\/|\/|mailto:|tel:)/i;
+
+function normalizeFieldKey(input: string) {
+  return input.trim().toLowerCase().replace(/\s+/g, "_");
+}
+
+function validateAdminContentInput(section: string, key: string, value: string): string | null {
+  if (!section || !key) return "Section and key are required.";
+  if (!CONTENT_KEY_PATTERN.test(key)) {
+    return "Field key can only contain letters, numbers, and underscores.";
+  }
+
+  if (value.length > 10000) {
+    return "Content is too long. Keep values under 10,000 characters.";
+  }
+
+  const isGallery = key.includes("gallery");
+  if (isGallery) {
+    const items = value.split(",").map((item) => item.trim()).filter(Boolean);
+    const invalid = items.find((item) => !URL_SCHEME_PATTERN.test(item));
+    if (invalid) {
+      return "Gallery values must be comma-separated URLs or site-relative paths.";
+    }
+  }
+
+  const isUrl = /(?:^|_)(?:url|href|image)(?:$|_)/i.test(key);
+  if (isUrl && value.trim() && !URL_SCHEME_PATTERN.test(value.trim())) {
+    return "URLs must start with https://, http://, /, mailto:, or tel:.";
+  }
+
+  const expectsBoolean = /(?:enabled|visible|hidden|active|disabled)$/i.test(key);
+  if (expectsBoolean && value.trim()) {
+    const normalized = value.trim().toLowerCase();
+    if (normalized !== "true" && normalized !== "false") {
+      return "Boolean fields must be true or false.";
+    }
+  }
+
+  const expectsInteger = /(?:count|total|size|index)$/i.test(key);
+  if (expectsInteger && value.trim()) {
+    const n = safeInt(value.trim());
+    if (n === undefined || !Number.isFinite(n) || n < 0) {
+      return "Numeric fields must contain a non-negative integer.";
+    }
+  }
+
+  if (section === "team" && /_initials$/i.test(key) && value.trim().length > 2) {
+    return "Team initials should be 2 characters max.";
+  }
+
+  return null;
+}
+
+function getConflictCurrent(details: unknown): ContentItem | null {
+  if (!details || typeof details !== "object") return null;
+  if (!("current" in details)) return null;
+
+  const current = (details as { current?: unknown }).current;
+  if (!current || typeof current !== "object") return null;
+  const maybe = current as Partial<ContentItem>;
+  if (
+    typeof maybe.id !== "number"
+    || typeof maybe.section !== "string"
+    || typeof maybe.key !== "string"
+    || typeof maybe.value !== "string"
+  ) {
+    return null;
+  }
+
+  return {
+    id: maybe.id,
+    section: maybe.section,
+    key: maybe.key,
+    value: maybe.value,
+    updated_at: typeof maybe.updated_at === "string" ? maybe.updated_at : undefined,
+  };
+}
+
 class ApiRequestError extends Error {
   status: number;
 
   mfaRequired: boolean;
 
-  constructor(message: string, status: number, mfaRequired = false) {
+  details?: unknown;
+
+  constructor(message: string, status: number, mfaRequired = false, details?: unknown) {
     super(message);
     this.name = "ApiRequestError";
     this.status = status;
     this.mfaRequired = mfaRequired;
+    this.details = details;
   }
 }
 
@@ -330,7 +429,7 @@ async function apiFetch<T = unknown>(
         && "mfa_required" in body
         && (body as { mfa_required?: unknown }).mfa_required === true,
       );
-      throw new ApiRequestError(errorFromBody || `Request failed (${status})`, status, mfaRequired);
+      throw new ApiRequestError(errorFromBody || `Request failed (${status})`, status, mfaRequired, body || undefined);
     }
 
     return body as T;
@@ -388,6 +487,17 @@ function SavedBadge() {
       </svg>
       Saved
     </motion.span>
+  );
+}
+
+function EditorSkeleton() {
+  return (
+    <div className="animate-pulse flex flex-col gap-3">
+      <div className="h-9 rounded-xl bg-white/7" />
+      <div className="h-32 rounded-2xl bg-white/5" />
+      <div className="h-28 rounded-2xl bg-white/5" />
+      <div className="h-28 rounded-2xl bg-white/5" />
+    </div>
   );
 }
 
@@ -626,12 +736,14 @@ const FieldEditor = React.memo(function FieldEditor({
   const [localValue, setLocalValue] = useState(baseValue);
   const [saving, setSaving] = useState(false);
   const [justSaved, setJustSaved] = useState(false);
+  const [saveError, setSaveError] = useState("");
 
   // FIX #6: track whether value actually changed before saving
   const isDirty = localValue !== baseValue;
 
   useEffect(() => {
     setCreatedItem(null);
+    setSaveError("");
   }, [entry.section, entry.key]);
 
   useEffect(() => {
@@ -640,6 +752,20 @@ const FieldEditor = React.memo(function FieldEditor({
 
   const save = useCallback(async (val: string) => {
     if (val === baseValue) return; // FIX #6: skip if unchanged
+    const validationError = validateAdminContentInput(entry.section, entry.key, val);
+    if (validationError) {
+      setSaveError(validationError);
+      onLog?.({
+        method: "VALIDATE",
+        url: `${entry.section}.${entry.key}`,
+        status: 400,
+        ms: 0,
+        error: validationError,
+      });
+      return;
+    }
+
+    setSaveError("");
     setSaving(true);
     try {
       const updated = await onUpsert(entry.section, entry.key, val);
@@ -647,11 +773,19 @@ const FieldEditor = React.memo(function FieldEditor({
       setJustSaved(true);
       setTimeout(() => setJustSaved(false), 2000);
     } catch (e) {
-      console.error(e);
+      const message = getErrorMessage(e);
+      setSaveError(message);
+      onLog?.({
+        method: "SAVE",
+        url: `${entry.section}.${entry.key}`,
+        status: e instanceof ApiRequestError ? e.status : 500,
+        ms: 0,
+        error: message,
+      });
     } finally {
       setSaving(false);
     }
-  }, [baseValue, entry.key, entry.section, onUpsert]);
+  }, [baseValue, entry.key, entry.section, onLog, onUpsert]);
 
   const explicitType = entry.definition?.type;
   const isImage = explicitType === 'image' || (entry.key.includes("image") && !entry.key.includes("gallery"));
@@ -757,6 +891,10 @@ const FieldEditor = React.memo(function FieldEditor({
           <DndGallery items={galleryItems} onReorder={handleGalleryReorder} onRemove={handleGalleryRemove} />
         </React.Suspense>
       )}
+
+      {saveError && (
+        <p className="text-[11px] text-red-400">{saveError}</p>
+      )}
     </div>
   );
 });
@@ -780,22 +918,56 @@ function CollectionCard({
   const [localValues, setLocalValues] = useState<Record<string, string>>(item.values);
   const [saving, setSaving] = useState<Set<string>>(new Set());
   const [saved, setSaved] = useState<Set<string>>(new Set());
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
-  useEffect(() => { setLocalValues(item.values); }, [item.values]);
+  useEffect(() => {
+    setLocalValues(item.values);
+    setFieldErrors({});
+  }, [item.values]);
 
   const saveField = useCallback(async (fieldKey: string, val: string) => {
     const contentItem = item.fields[fieldKey];
     if (!contentItem) return;
     if (val === contentItem.value) return;
+
+    const normalizedKey = `${COLLECTION_META[section].prefix}_${item.index}_${fieldKey}`;
+    const validationError = validateAdminContentInput(section, normalizedKey, val);
+    if (validationError) {
+      setFieldErrors((prev) => ({ ...prev, [fieldKey]: validationError }));
+      onLog?.({
+        method: "VALIDATE",
+        url: `${section}.${normalizedKey}`,
+        status: 400,
+        ms: 0,
+        error: validationError,
+      });
+      return;
+    }
+
+    setFieldErrors((prev) => {
+      if (!prev[fieldKey]) return prev;
+      return { ...prev, [fieldKey]: "" };
+    });
+
     setSaving(prev => new Set(prev).add(fieldKey));
     try {
       await onFieldSave(contentItem, val);
       setSaved(prev => { const s = new Set(prev).add(fieldKey); return s; });
       setTimeout(() => setSaved(prev => { const s = new Set(prev); s.delete(fieldKey); return s; }), 2000);
+    } catch (e) {
+      const message = getErrorMessage(e);
+      setFieldErrors((prev) => ({ ...prev, [fieldKey]: message }));
+      onLog?.({
+        method: "SAVE",
+        url: `${section}.${normalizedKey}`,
+        status: e instanceof ApiRequestError ? e.status : 500,
+        ms: 0,
+        error: message,
+      });
     } finally {
       setSaving(prev => { const s = new Set(prev); s.delete(fieldKey); return s; });
     }
-  }, [item.fields, onFieldSave]);
+  }, [item.fields, item.index, onFieldSave, onLog, section]);
 
   const prefix = COLLECTION_META[section].prefix;
 
@@ -887,6 +1059,9 @@ function CollectionCard({
                   className={`w-full bg-white/3 text-[13px] px-3 py-2 rounded-xl border outline-none transition-colors ${isDirty ? "border-accent/35" : "border-white/8 focus:border-accent/25"} ${fd.type === "url" ? "text-cyan-400 font-mono text-[12px]" : "text-white"}`}
                   placeholder="Type here…"
                   style={{ fontFamily: fd.type === "url" ? "JetBrains Mono, monospace" : "inherit" }} />
+              )}
+              {fieldErrors[fd.key] && (
+                <p className="text-[10px] text-red-400">{fieldErrors[fd.key]}</p>
               )}
             </div>
           );
@@ -1054,6 +1229,111 @@ const SubmissionsPanel = React.memo(function SubmissionsPanel({
           </AnimatePresence>
         </div>
       ))}
+    </div>
+  );
+});
+
+const AuditPanel = React.memo(function AuditPanel({
+  entries,
+  loading,
+}: {
+  entries: AdminAuditEntry[];
+  loading: boolean;
+}) {
+  const [query, setQuery] = useState('');
+  const deferredQuery = useDeferredValue(query);
+
+  const filteredEntries = useMemo(() => {
+    const q = deferredQuery.trim().toLowerCase();
+    if (!q) return entries;
+
+    return entries.filter((entry) => {
+      const text = [
+        entry.action,
+        entry.actor_email || '',
+        entry.actor_user_id || '',
+        entry.actor_role || '',
+        entry.request_method || '',
+        entry.request_path || '',
+      ].join(' ').toLowerCase();
+
+      return text.includes(q);
+    });
+  }, [deferredQuery, entries]);
+
+  if (loading && entries.length === 0) {
+    return (
+      <div className="flex items-center justify-center py-20 text-white/35 text-[13px] gap-2">
+        <Spinner size={16} />
+        Loading audit logs…
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="relative">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+          className="absolute left-2.5 top-1/2 -translate-y-1/2 text-white/25 pointer-events-none">
+          <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
+        </svg>
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Filter by action, actor, route…"
+          className="w-full bg-white/4 text-white/80 text-[12px] pl-7 pr-3 py-2 rounded-xl border border-white/8 outline-none focus:border-accent/30 placeholder:text-white/20"
+        />
+      </div>
+
+      {filteredEntries.length === 0 ? (
+        <p className="text-center py-10 text-[13px] text-white/25">No audit events found.</p>
+      ) : (
+        filteredEntries.map((entry) => {
+          const actor = entry.actor_email || entry.actor_user_id || 'Unknown actor';
+          const role = entry.actor_role || 'unknown role';
+          const method = entry.request_method || 'N/A';
+          const path = entry.request_path || 'N/A';
+          const detailsText = (() => {
+            if (!entry.details || typeof entry.details !== 'object') return null;
+            try {
+              return JSON.stringify(entry.details, null, 2);
+            } catch {
+              return null;
+            }
+          })();
+
+          return (
+            <div key={entry.id} className="bg-white/[0.03] rounded-2xl border border-white/6 p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-[13px] font-medium text-white truncate">{entry.action}</p>
+                  <p className="text-[11px] text-white/45 mt-0.5 truncate">{actor} • {role}</p>
+                </div>
+                <span className="text-[11px] text-white/35 shrink-0">
+                  {new Date(entry.created_at).toLocaleString()}
+                </span>
+              </div>
+
+              <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
+                <p className="text-white/35">Method: <span className="text-white/70 font-mono">{method}</span></p>
+                <p className="text-white/35 truncate">Path: <span className="text-white/70 font-mono">{path}</span></p>
+              </div>
+
+              {detailsText && (
+                <details className="mt-3 group">
+                  <summary className="cursor-pointer text-[11px] text-white/50 hover:text-white/75 transition-colors select-none">
+                    View details
+                  </summary>
+                  <pre className="mt-2 p-3 rounded-xl bg-black/30 border border-white/8 text-[11px] text-white/65 overflow-auto">
+                    {detailsText}
+                  </pre>
+                </details>
+              )}
+            </div>
+          );
+        })
+      )}
     </div>
   );
 });
@@ -1245,7 +1525,7 @@ function PreviewPane({
         </div>
         <div className="flex items-center gap-1">
           <span className="text-[10px] text-white/25 font-mono hidden sm:block">
-            {activeSection !== SUBMISSIONS_TAB ? (iframeSrc.replace(window.location.origin, "")) : ""}
+            {activeSection !== SUBMISSIONS_TAB && activeSection !== AUDIT_TAB ? (iframeSrc.replace(window.location.origin, "")) : ""}
           </span>
           <a href="/" target="_blank" rel="noreferrer"
             className="p-1.5 rounded-lg text-white/30 hover:text-white/60 transition-colors ml-1"
@@ -1275,7 +1555,7 @@ function PreviewPane({
             )}
             <iframe
               ref={iframeRef}
-              src={activeSection === SUBMISSIONS_TAB ? "/" : iframeSrc}
+              src={activeSection === SUBMISSIONS_TAB || activeSection === AUDIT_TAB ? "/" : iframeSrc}
               onLoad={handleLoad}
               onError={() => setIframeError(true)}
               title="Site preview"
@@ -1295,11 +1575,12 @@ function PreviewPane({
 // ─────────────────────────────────────────────────────────────────────────────
 
 const SectionSidebar = React.memo(function SectionSidebar({
-  groups, activeSection, submissions, onSelectSection, searchQuery, onSearchChange,
+  groups, activeSection, submissions, auditCount, onSelectSection, searchQuery, onSearchChange,
 }: {
   groups: SidebarGroup[];
   activeSection: string;
   submissions: Submission[];
+  auditCount: number;
   onSelectSection: (s: string) => void;
   searchQuery: string;
   onSearchChange: (q: string) => void;
@@ -1373,6 +1654,18 @@ const SectionSidebar = React.memo(function SectionSidebar({
           )}
         </button>
 
+        <button type="button" onClick={() => onSelectSection(AUDIT_TAB)}
+          className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left transition-colors mb-1
+            ${activeSection === AUDIT_TAB ? "bg-accent/15 text-accent" : "text-white/50 hover:text-white/80 hover:bg-white/4"}`}>
+          <div className="flex items-center gap-2.5">
+            <span className="text-[14px]">🕘</span>
+            <span className="text-[13px]">Audit log</span>
+          </div>
+          {auditCount > 0 && (
+            <span className="px-1.5 py-0.5 rounded-full bg-white/10 text-white/70 text-[10px] font-medium">{auditCount}</span>
+          )}
+        </button>
+
         <div className="border-t border-white/5 my-2" />
 
         {/* Content sections (grouped) */}
@@ -1424,6 +1717,7 @@ export default function AdminDashboard() {
   // Data
   const [content, setContent] = useState<ContentItem[]>([]);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
+  const [auditEntries, setAuditEntries] = useState<AdminAuditEntry[]>([]);
 
   // UI state
   const [loading, setLoading] = useState(false);
@@ -1517,7 +1811,7 @@ export default function AdminDashboard() {
 
   // Fields for the current section
   const sectionFieldEntries = useMemo<SectionFieldEntry[]>(() => {
-    if (activeSection === SUBMISSIONS_TAB) return [];
+    if (activeSection === SUBMISSIONS_TAB || activeSection === AUDIT_TAB) return [];
 
     let fields = content.filter(c => c.section === activeSection);
 
@@ -1629,12 +1923,32 @@ export default function AdminDashboard() {
 
   // ── API helpers ──────────────────────────────────────────────────────────
 
+  const syncConflictItem = useCallback((error: unknown) => {
+    if (!(error instanceof ApiRequestError) || error.status !== 409) return;
+    const current = getConflictCurrent(error.details);
+    if (!current) return;
+
+    setContent((prev) => {
+      const ix = prev.findIndex((item) => item.id === current.id);
+      if (ix < 0) return prev;
+      const next = [...prev];
+      next[ix] = current;
+      return next;
+    });
+  }, []);
+
   const apiFetchLogged = useCallback(async <T = unknown>(url: string, opts?: RequestInit) => {
     const nextOptions = withCsrfHeader(opts, csrfToken);
 
     try {
       return await apiFetch<T>(url, nextOptions, addLog, setCsrfToken);
     } catch (error) {
+      syncConflictItem(error);
+
+      if (error instanceof ApiRequestError && error.status === 409) {
+        setError(error.message || "This field changed in another session. Refresh and retry.");
+      }
+
       if (
         error instanceof ApiRequestError
         && [401, 403].includes(error.status)
@@ -1643,24 +1957,31 @@ export default function AdminDashboard() {
         setAuthenticated(false);
         setContent([]);
         setSubmissions([]);
+        setAuditEntries([]);
       }
       throw error;
     }
-  }, [addLog, csrfToken]);
+  }, [addLog, csrfToken, syncConflictItem]);
 
   async function fetchContent() {
     return apiFetchLogged<ContentItem[]>(`/api/content?ts=${Date.now()}`);
   }
 
+  async function fetchAuditLogs() {
+    return apiFetchLogged<AdminAuditEntry[]>('/api/admin/audit?limit=100');
+  }
+
   async function loadAll() {
     setLoading(true); setError("");
     try {
-      const [subs, ct] = await Promise.all([
+      const [subs, ct, audit] = await Promise.all([
         apiFetchLogged<Submission[]>("/api/contact"),
         fetchContent(),
+        fetchAuditLogs(),
       ]);
       setSubmissions(subs);
       setContent(ct);
+      setAuditEntries(audit);
     } catch (e) {
       setError(getErrorMessage(e));
     } finally {
@@ -1739,7 +2060,16 @@ export default function AdminDashboard() {
   }, [addLog]);
 
   async function login(e: React.FormEvent) {
-    e.preventDefault(); setLoading(true); setError("");
+    e.preventDefault();
+    setError("");
+
+    const trimmedPassword = password.trim();
+    if (!trimmedPassword) {
+      setError("Enter the admin password to continue.");
+      return;
+    }
+
+    setLoading(true);
 
     try {
       let token = csrfToken;
@@ -1751,7 +2081,7 @@ export default function AdminDashboard() {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ password }),
+          body: JSON.stringify({ password: trimmedPassword }),
         },
         token,
       );
@@ -1772,7 +2102,7 @@ export default function AdminDashboard() {
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ password }),
+              body: JSON.stringify({ password: trimmedPassword }),
             },
             refreshedToken,
           ),
@@ -1804,16 +2134,26 @@ export default function AdminDashboard() {
       setPassword("");
       setContent([]);
       setSubmissions([]);
+      setAuditEntries([]);
     } finally { setLoading(false); }
   }
 
   // Content CRUD
   async function ensureField(section: string, key: string, value: string): Promise<ContentItem> {
+    const validationError = validateAdminContentInput(section, key, value);
+    if (validationError) {
+      throw new Error(validationError);
+    }
+
     const existing = lookupContent(contentMap, section, key);
     if (existing) {
       const updated = await apiFetchLogged<ContentItem>("/api/content", {
         method: "PUT", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: existing.id, value }),
+        body: JSON.stringify({
+          id: existing.id,
+          value,
+          expected_updated_at: existing.updated_at || null,
+        }),
       });
       setContent(prev => prev.map(c => c.id === existing.id ? updated : c));
       return updated;
@@ -1935,9 +2275,11 @@ export default function AdminDashboard() {
   }
 
   async function deleteField(id: number) {
+    const existing = content.find((item) => item.id === id);
+
     await apiFetchLogged("/api/content", {
       method: "DELETE", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id }),
+      body: JSON.stringify({ id, expected_updated_at: existing?.updated_at || null }),
     });
     setContent(prev => prev.filter(c => c.id !== id));
   }
@@ -2042,9 +2384,18 @@ export default function AdminDashboard() {
 
   // Field save (for collection cards)
   const handleFieldSave = useCallback(async (item: ContentItem, value: string) => {
+    const validationError = validateAdminContentInput(item.section, item.key, value);
+    if (validationError) {
+      throw new Error(validationError);
+    }
+
     const updated = await apiFetchLogged<ContentItem>("/api/content", {
       method: "PUT", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: item.id, value }),
+      body: JSON.stringify({
+        id: item.id,
+        value,
+        expected_updated_at: item.updated_at || null,
+      }),
     });
     setContent(prev => prev.map(c => c.id === item.id ? updated : c));
   }, [apiFetchLogged]);
@@ -2054,9 +2405,28 @@ export default function AdminDashboard() {
   const [newValue, setNewValue] = useState("");
 
   async function createField() {
-    if (!newKey.trim() || activeSection === SUBMISSIONS_TAB) return;
+    if (activeSection === SUBMISSIONS_TAB || activeSection === AUDIT_TAB) return;
+
+    const normalizedKey = normalizeFieldKey(newKey);
+    if (!normalizedKey) {
+      setError("Field key is required.");
+      return;
+    }
+
+    if (lookupContent(contentMap, activeSection, normalizedKey)) {
+      setError("This key already exists in the selected section.");
+      return;
+    }
+
+    const validationError = validateAdminContentInput(activeSection, normalizedKey, newValue);
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
     try {
-      await ensureField(activeSection, newKey.trim(), newValue);
+      setError("");
+      await ensureField(activeSection, normalizedKey, newValue);
       setNewKey(""); setNewValue("");
     } catch (e) { setError(getErrorMessage(e)); }
   }
@@ -2129,7 +2499,7 @@ export default function AdminDashboard() {
   const enableFieldVirtualization = activeSection !== SUBMISSIONS_TAB && sectionFieldEntries.length >= 200;
   const collectionItems = isCollection ? getCollectionItems(activeSection as CollectionSection) : [];
   const missingDefaultsCount = (() => {
-    if (activeSection === SUBMISSIONS_TAB) return 0;
+    if (activeSection === SUBMISSIONS_TAB || activeSection === AUDIT_TAB) return 0;
     const definition = homeSectionDefinitions[activeSection];
     if (!definition) return 0;
     let missing = 0;
@@ -2140,6 +2510,7 @@ export default function AdminDashboard() {
   })();
 
   const showSeedDefaults = activeSection !== SUBMISSIONS_TAB
+    && activeSection !== AUDIT_TAB
     && !!homeSectionDefinitions[activeSection]
     && (missingDefaultsCount > 0 || (isCollection && collectionItems.length === 0));
 
@@ -2229,6 +2600,12 @@ export default function AdminDashboard() {
         </div>
       </header>
 
+      {isMobileViewport && (
+        <div className="px-4 py-2 text-[11px] text-amber-300/85 bg-amber-500/8 border-b border-amber-500/15">
+          Mobile layout is enabled. Live preview is hidden to keep editing stable on small screens.
+        </div>
+      )}
+
       {/* ── MAIN BODY ────────────────────────────────────────────────── */}
       <div className="flex flex-1 overflow-hidden flex-col md:flex-row">
         {/* Sidebar */}
@@ -2237,6 +2614,7 @@ export default function AdminDashboard() {
             groups={sidebarGroups}
             activeSection={activeSection}
             submissions={submissions}
+            auditCount={auditEntries.length}
             onSelectSection={handleSelectSection}
             searchQuery={sectionSearch}
             onSearchChange={setSectionSearch}
@@ -2249,15 +2627,22 @@ export default function AdminDashboard() {
           <div className="flex items-center justify-between px-4 py-3 border-b border-white/6 shrink-0">
             <div>
               <h2 className="text-[15px] font-bold text-white" style={{ fontFamily: "Syne, sans-serif" }}>
-                {activeSection === SUBMISSIONS_TAB ? "Submissions" : SECTION_LABELS[activeSection] || humanKey(activeSection)}
+                {activeSection === SUBMISSIONS_TAB
+                  ? "Submissions"
+                  : activeSection === AUDIT_TAB
+                    ? "Audit Log"
+                    : SECTION_LABELS[activeSection] || humanKey(activeSection)}
               </h2>
-              {activeSection !== SUBMISSIONS_TAB && (
+              {activeSection !== SUBMISSIONS_TAB && activeSection !== AUDIT_TAB && (
                 <p className="text-[11px] text-white/30">
                   {isCollection ? `${collectionItems.length} items` : `${sectionFieldEntries.length} fields`}
                 </p>
               )}
+              {activeSection === AUDIT_TAB && (
+                <p className="text-[11px] text-white/30">{auditEntries.length} entries</p>
+              )}
             </div>
-            {activeSection !== SUBMISSIONS_TAB && (
+            {activeSection !== SUBMISSIONS_TAB && activeSection !== AUDIT_TAB && (
               <div className="flex items-center gap-1.5">
                 {showSeedDefaults && (
                   <SeedDefaultsButton
@@ -2293,12 +2678,16 @@ export default function AdminDashboard() {
 
           {/* Scrollable content */}
           <div className="flex-1 overflow-y-auto px-3 py-3">
-            {activeSection === SUBMISSIONS_TAB ? (
+            {loading && activeSection !== SUBMISSIONS_TAB && activeSection !== AUDIT_TAB && sectionFieldEntries.length === 0 && collectionItems.length === 0 ? (
+              <EditorSkeleton />
+            ) : activeSection === SUBMISSIONS_TAB ? (
               <SubmissionsPanel
                 submissions={submissions}
                 onStatusChange={setSubmissionStatus}
                 onDelete={handleSubmissionDeleteRequest}
               />
+            ) : activeSection === AUDIT_TAB ? (
+              <AuditPanel entries={auditEntries} loading={loading} />
             ) : isCollection ? (
               <div className="flex flex-col gap-3">
                 {sectionFieldEntries.length > 0 && (
@@ -2373,6 +2762,7 @@ export default function AdminDashboard() {
                   <p className="text-[11px] text-white/30 mb-2 uppercase tracking-wider">New field</p>
                   <div className="flex gap-2">
                     <input type="text" value={newKey} onChange={e => setNewKey(e.target.value)}
+                      onBlur={e => setNewKey(normalizeFieldKey(e.target.value))}
                       placeholder="field_key"
                       className="w-[140px] bg-white/3 text-white text-[12px] px-2.5 py-2 rounded-lg border border-white/8 outline-none focus:border-accent/30 font-mono" />
                     <input type="text" value={newValue} onChange={e => setNewValue(e.target.value)}

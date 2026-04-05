@@ -1,11 +1,12 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { lazy, Suspense, useState, useCallback } from 'react';
+import { lazy, Suspense, useState, useCallback, type ReactNode } from 'react';
 import { ContentProvider } from './lib/ContentContext';
 import ErrorBoundary from './components/ErrorBoundary';
 import IntroSplash from './components/IntroSplash';
 import HomePage from './pages/HomePage';
 import AdminDashboard from './pages/AdminDashboard';
 import RouteEffects from './components/RouteEffects';
+import PublicSiteGuard from './components/PublicSiteGuard';
 
 const WorkPage = lazy(() => import('./pages/WorkPage'));
 const ServicesPage = lazy(() => import('./pages/ServicesPage'));
@@ -24,6 +25,10 @@ function PageLoader() {
       </div>
     </div>
   );
+}
+
+function withRouteBoundary(element: ReactNode) {
+  return <ErrorBoundary scope="route">{element}</ErrorBoundary>;
 }
 
 export default function App() {
@@ -54,19 +59,21 @@ export default function App() {
         {!isAdminPath && !introComplete && <IntroSplash onComplete={handleIntroComplete} />}
         <BrowserRouter>
           <RouteEffects />
-          <Suspense fallback={<PageLoader />}>
-            <Routes>
-              <Route path="/" element={<HomePage />} />
-              <Route path="/work" element={<WorkPage />} />
-              <Route path="/services" element={<ServicesPage />} />
-              <Route path="/process" element={<ProcessPage />} />
-              <Route path="/team" element={<TeamPage />} />
-              <Route path="/pricing" element={<PricingPage />} />
-              <Route path="/contact" element={<ContactPage />} />
-              <Route path="/admin" element={<AdminDashboard />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Suspense>
+          <PublicSiteGuard>
+            <Suspense fallback={<PageLoader />}>
+              <Routes>
+                <Route path="/" element={withRouteBoundary(<HomePage />)} />
+                <Route path="/work" element={withRouteBoundary(<WorkPage />)} />
+                <Route path="/services" element={withRouteBoundary(<ServicesPage />)} />
+                <Route path="/process" element={withRouteBoundary(<ProcessPage />)} />
+                <Route path="/team" element={withRouteBoundary(<TeamPage />)} />
+                <Route path="/pricing" element={withRouteBoundary(<PricingPage />)} />
+                <Route path="/contact" element={withRouteBoundary(<ContactPage />)} />
+                <Route path="/admin" element={withRouteBoundary(<AdminDashboard />)} />
+                <Route path="*" element={withRouteBoundary(<NotFound />)} />
+              </Routes>
+            </Suspense>
+          </PublicSiteGuard>
         </BrowserRouter>
       </ContentProvider>
     </ErrorBoundary>

@@ -21,8 +21,30 @@ create table if not exists public.contact_submissions_v2 (
   created_at timestamptz not null default timezone('utc', now())
 );
 
+create table if not exists public.admin_audit_logs (
+  id bigint generated always as identity primary key,
+  action text not null,
+  actor_user_id text,
+  actor_email text,
+  actor_role text,
+  actor_aal text,
+  ip_address text,
+  request_path text,
+  request_method text,
+  user_agent text,
+  details jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default timezone('utc', now())
+);
+
 alter table public.site_content enable row level security;
 alter table public.contact_submissions_v2 enable row level security;
+alter table public.admin_audit_logs enable row level security;
+
+create index if not exists admin_audit_logs_created_at_idx
+  on public.admin_audit_logs (created_at desc);
+
+create index if not exists admin_audit_logs_action_idx
+  on public.admin_audit_logs (action);
 
 drop policy if exists "Public can read site content" on public.site_content;
 create policy "Public can read site content"

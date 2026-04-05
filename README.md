@@ -55,8 +55,43 @@ Optional (frontend-only): You can run `npm run dev` to start Vite on `http://127
 - `GET /api/admin/session` issues/checks a signed admin cookie session and returns a CSRF token.
 - `POST /api/admin/session` validates the configured admin password and starts a signed `HttpOnly` session.
 - `DELETE /api/admin/session` clears the session and rotates CSRF state.
+- `GET /api/admin/audit?limit=50` returns recent admin actions for operational review.
+- `POST /api/client-log` ingests deduplicated browser warn/error telemetry for runtime diagnostics.
 - Mutating admin API routes require `X-CSRF-Token` and the `HttpOnly` session cookie.
 - Admin mutations are written to `public.admin_audit_logs` with actor, action, and request metadata.
+
+## Resilience behavior
+
+- Public routes stay available if CMS fetches fail.
+- The content provider retries failed fetches, then falls back to safe defaults or cached content.
+- Route-level and app-level React error boundaries prevent single-component crashes from taking down the full site.
+- Admin write operations include optimistic concurrency checks (`expected_updated_at`) to surface edit conflicts clearly.
+
+## Debugging tips and common pitfalls
+
+- Check browser console entries prefixed with `[VAAD:*]` for structured client diagnostics.
+- Client warn/error events are also forwarded to `/api/client-log`; inspect Vercel Runtime Logs for `[client_log]` entries.
+- If admin login loops or fails, verify:
+  - `ADMIN_PASSWORD`
+  - `ADMIN_SESSION_SECRET`
+  - `SITE_URL`
+  - `ALLOWED_ORIGINS`
+- If API routes return HTML instead of JSON, run through Vercel runtime (`vercel dev`) instead of Vite-only dev mode.
+- If audit entries do not persist, re-run [supabase/schema.sql](supabase/schema.sql) and confirm `public.admin_audit_logs` exists.
+- Conflict errors (`409`) mean another session updated the same field; refresh content and retry.
+
+## Monitoring setup (Vercel + Supabase)
+
+- Vercel:
+  - Use Runtime Logs to inspect function errors and latency for `/api/content`, `/api/contact`, `/api/admin/*`.
+  - Enable Web Analytics + Speed Insights for route-level performance regressions.
+  - Add alerting on elevated function error rate and p95 duration.
+- Supabase:
+  - Use Logs > Postgres for failed queries and timeouts.
+  - Track table growth and index usage for `site_content`, `contact_submissions_v2`, and `admin_audit_logs`.
+  - Set alerts for connection saturation and abnormal write spikes.
+- Recommended habit:
+  - Correlate incident windows across Vercel Runtime Logs and Supabase query logs before applying fixes.
 
 ## Deploying to Vercel
 

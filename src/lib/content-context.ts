@@ -15,6 +15,9 @@ export interface ContentContextType {
   getContentValue: ContentGetter;
   loading: boolean;
   error: string | null;
+  isFallbackMode: boolean;
+  lastLoadedAt: number | null;
+  retryContentLoad: () => void;
   projectCount: number;
   teamCount: number;
 }
@@ -24,6 +27,9 @@ export const ContentContext = createContext<ContentContextType>({
   getContentValue: (_section, _key, fallback = '') => fallback,
   loading: true,
   error: null,
+  isFallbackMode: false,
+  lastLoadedAt: null,
+  retryContentLoad: () => {},
   projectCount: 0,
   teamCount: 0,
 });
