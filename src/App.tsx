@@ -35,7 +35,7 @@ export default function App() {
   const normalizedPath = typeof window !== 'undefined'
     ? window.location.pathname.toLowerCase()
     : '';
-  const isAdminPath = normalizedPath === '/admin' || normalizedPath.startsWith('/admin/');
+  const isAdminPath = normalizedPath.startsWith('/admin');
 
   // Show intro only on first visit per session
   const [introComplete, setIntroComplete] = useState(() => {
@@ -57,6 +57,11 @@ export default function App() {
   }, []);
 
   if (isAdminPath) {
+    if (typeof window !== 'undefined' && normalizedPath !== '/admin' && !normalizedPath.startsWith('/admin/')) {
+      window.location.replace('/admin');
+      return null;
+    }
+
     return (
       <ErrorBoundary>
         <ContentProvider>
