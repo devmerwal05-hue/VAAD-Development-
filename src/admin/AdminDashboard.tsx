@@ -121,6 +121,7 @@ type ActiveTab = "submissions" | string;
 
 const SUBMISSIONS_TAB = "submissions";
 const AUDIT_TAB = "audit";
+const ADMIN_LOAD_TIMEOUT_MS = 8000;
 
 const SECTION_ORDER = [
   "nav", "hero", "marquee", "services", "techstack", "stats",
@@ -1963,30 +1964,69 @@ export default function AdminDashboard() {
     }
   }, [addLog, csrfToken, syncConflictItem]);
 
+  const apiFetchLoggedWithTimeout = useCallback(async <T = unknown>(url: string, opts?: RequestInit, timeoutMs = ADMIN_LOAD_TIMEOUT_MS) => {
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs);
+
+    try {
+      return await apiFetchLogged<T>(url, {
+        ...(opts || {}),
+        signal: controller.signal,
+      });
+    } catch (error) {
+      if ((error as { name?: string }).name === 'AbortError') {
+        throw new Error(`Request timed out: ${url}`);
+      }
+      throw error;
+    } finally {
+      window.clearTimeout(timeoutId);
+    }
+  }, [apiFetchLogged]);
+
   async function fetchContent() {
-    return apiFetchLogged<ContentItem[]>(`/api/content?ts=${Date.now()}`);
+    return apiFetchLoggedWithTimeout<ContentItem[]>(`/api/content?ts=${Date.now()}`);
   }
 
   async function fetchAuditLogs() {
-    return apiFetchLogged<AdminAuditEntry[]>('/api/admin/audit?limit=100');
+    return apiFetchLoggedWithTimeout<AdminAuditEntry[]>('/api/admin/audit?limit=100');
   }
 
   async function loadAll() {
     setLoading(true); setError("");
-    try {
-      const [subs, ct, audit] = await Promise.all([
-        apiFetchLogged<Submission[]>("/api/contact"),
-        fetchContent(),
-        fetchAuditLogs(),
-      ]);
-      setSubmissions(subs);
-      setContent(ct);
-      setAuditEntries(audit);
-    } catch (e) {
-      setError(getErrorMessage(e));
-    } finally {
-      setLoading(false);
+
+    const results = await Promise.allSettled([
+      apiFetchLoggedWithTimeout<Submission[]>("/api/contact"),
+      fetchContent(),
+      fetchAuditLogs(),
+    ]);
+
+    const [subsResult, contentResult, auditResult] = results;
+    const errorMessages: string[] = [];
+
+    if (subsResult.status === 'fulfilled') {
+      setSubmissions(subsResult.value);
+    } else {
+      errorMessages.push(`submissions: ${getErrorMessage(subsResult.reason)}`);
     }
+
+    if (contentResult.status === 'fulfilled') {
+      setContent(contentResult.value);
+    } else {
+      errorMessages.push(`content: ${getErrorMessage(contentResult.reason)}`);
+    }
+
+    if (auditResult.status === 'fulfilled') {
+      setAuditEntries(auditResult.value);
+    } else {
+      setAuditEntries([]);
+      errorMessages.push(`audit: ${getErrorMessage(auditResult.reason)}`);
+    }
+
+    if (errorMessages.length > 0) {
+      setError(`Some admin data failed to load (${errorMessages.join(' | ')}).`);
+    }
+
+    setLoading(false);
   }
 
   const retrySessionProbe = useCallback(() => {
@@ -2017,7 +2057,7 @@ export default function AdminDashboard() {
 
         if (sess.authenticated) {
           setAuthenticated(true);
-          await loadAll();
+          void loadAll();
         }
       } catch (probeError) {
         if (cancelled) return;
@@ -2113,7 +2153,7 @@ export default function AdminDashboard() {
 
       setAuthenticated(true);
       setPassword("");
-      await loadAll();
+      void loadAll();
     } catch (err) {
       const message = getErrorMessage(err);
       if (/failed to fetch/i.test(message) || /networkerror/i.test(message)) {
