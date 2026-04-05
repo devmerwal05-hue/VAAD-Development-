@@ -163,12 +163,6 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     return getIndexedContentCount(content, 'portfolio', 'project');
   }, [content, contentMap]);
 
-  const teamCount = useMemo(() => {
-    const storedCount = Number.parseInt(contentMap.get('team::member_count') || '', 10);
-    if (!Number.isNaN(storedCount)) return Math.max(0, storedCount);
-    return getIndexedContentCount(content, 'team', 'member');
-  }, [content, contentMap]);
-
   return (
     <ContentContext.Provider
       value={{
@@ -180,7 +174,6 @@ export function ContentProvider({ children }: { children: ReactNode }) {
         lastLoadedAt,
         retryContentLoad,
         projectCount,
-        teamCount,
       }}
     >
       {children}

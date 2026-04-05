@@ -6,7 +6,6 @@ import Stats from '../components/Stats';
 import TechStack from '../components/TechStack';
 import Process from '../components/Process';
 import Portfolio from '../components/Portfolio';
-import Team from '../components/Team';
 import Pricing from '../components/Pricing';
 import FAQ from '../components/FAQ';
 import Contact from '../components/Contact';
@@ -40,7 +39,6 @@ export default function HomePage() {
         <Stats />
         <Process />
         <Portfolio />
-        <Team />
         <Pricing />
         <FAQ />
         <Contact />

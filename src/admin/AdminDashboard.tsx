@@ -1,29 +1,3 @@
-/**
- * VAAD Development – Redesigned WYSIWYG Admin Panel
- * Implementation lives in src/admin/AdminDashboard.tsx
- *
- * What's new vs the old admin:
- *  - Three-panel layout: sidebar | field editor | live preview iframe
- *  - WYSIWYG iframe with same-origin script injection (section highlight + scroll-to)
- *  - Device viewport switcher (desktop / tablet / mobile)
- *  - Autosave-on-blur with per-field saving spinner & "unsaved" dot in sidebar
- *  - Debug log panel (toggle from top bar) – shows every API call & response time
- *  - Keyboard shortcuts: ⌘K / Ctrl+K to focus search, ⌘S / Ctrl+S to save current field
- *  - Gallery images support drag-to-reorder within each project card
- *  - Submissions: email-thread style expansion + copy-email button
- *  - Full TypeScript types throughout
- *
- * BUG FIXES included (see ## BUG FIXES section at bottom of file for details):
- *  1. Collection item new-field race condition (ae() vs Y() mismatch)
- *  2. O(n) section lookup replaced with Map-based index
- *  3. drag-and-drop interfering with text inputs – now uses handle-only drag
- *  4. Missing auth header propagation on upload endpoint
- *  5. Stale closure in `re()` reorder function when called rapidly
- *  6. `onBlur` save fires even when value hasn't changed (wasted API calls)
- *  7. `plan_count` / `faq_count` stored as NaN when cleared
- *  8. No error boundary around iframe – crash-loops the admin on CSP block
- */
-
 import React, {
   useState,
   useEffect,
@@ -38,7 +12,6 @@ import {
   homeSectionDefinitions,
   type AdminFieldDefinition,
   portfolioDefaults,
-  teamDefaults,
 } from "../lib/homeContent";
 
 const DndGallery = React.lazy(() => import("./DndGallery"));
@@ -56,7 +29,7 @@ interface ContentItem {
 }
 
 interface Submission {
-  id: number;
+  id: number | string;
   name: string;
   email: string;
   company?: string;
@@ -127,18 +100,24 @@ const ADMIN_LOAD_TIMEOUT_MS = 8000;
 
 const SECTION_ORDER = [
   "nav", "hero", "marquee", "services", "techstack", "stats",
-  "process", "portfolio", "team", "pricing", "faq", "contact", "footer",
+  "process", "portfolio", "pricing", "faq", "contact", "footer",
   "ui", "seo", "contact_form", "intro_splash", "not_found", "error_boundary",
-  "work_page", "services_page", "process_page", "team_page", "pricing_page", "contact_page",
+  "work_page", "services_page", "process_page", "pricing_page", "contact_page",
 ];
+
+const DEPRECATED_SECTIONS = new Set(["team", "team_page"]);
+const DEPRECATED_SECTION_KEYS: Record<string, Set<string>> = {
+  nav: new Set(["link_4", "link_4_href"]),
+  seo: new Set(["team_title", "team_description"]),
+};
 
 const SECTION_LABELS: Record<string, string> = {
   nav: "Navigation", hero: "Hero", marquee: "Marquee", services: "Services",
   techstack: "Tech Stack", stats: "Stats", process: "Process",
-  portfolio: "Work / Projects", team: "Team", pricing: "Pricing", faq: "FAQ",
+  portfolio: "Work / Projects", pricing: "Pricing", faq: "FAQ",
   contact: "Contact", footer: "Footer", work_page: "Work Page",
   services_page: "Services Page", process_page: "Process Page",
-  team_page: "Team Page", pricing_page: "Pricing Page", contact_page: "Contact Page",
+  pricing_page: "Pricing Page", contact_page: "Contact Page",
   ui: "UI",
   seo: "SEO",
   contact_form: "Contact Form",
@@ -149,9 +128,9 @@ const SECTION_LABELS: Record<string, string> = {
 
 const SECTION_ICONS: Record<string, string> = {
   nav: "⚓", hero: "✦", marquee: "▶▶", services: "◈", techstack: "⬡",
-  stats: "▦", process: "◉", portfolio: "◻", team: "◯", pricing: "◇",
+  stats: "▦", process: "◉", portfolio: "◻", pricing: "◇",
   faq: "?", contact: "✉", footer: "▁", work_page: "☰", services_page: "☰",
-  process_page: "☰", team_page: "☰", pricing_page: "☰", contact_page: "☰",
+  process_page: "☰", pricing_page: "☰", contact_page: "☰",
   ui: "⚙",
   seo: "🔎",
   contact_form: "✎",
@@ -164,7 +143,7 @@ const SECTION_ICONS: Record<string, string> = {
 const SECTION_HASH: Record<string, string> = {
   nav: "nav", hero: "hero", marquee: "marquee", services: "services",
   techstack: "techstack", stats: "stats", process: "process",
-  portfolio: "portfolio", team: "team", pricing: "pricing",
+  portfolio: "portfolio", pricing: "pricing",
   faq: "faq", contact: "contact", footer: "footer",
   contact_form: "contact",
 };
@@ -172,16 +151,15 @@ const SECTION_HASH: Record<string, string> = {
 // Page-level sections that correspond to routes
 const PAGE_SECTIONS: Record<string, string> = {
   work_page: "/work", services_page: "/services", process_page: "/process",
-  team_page: "/team", pricing_page: "/pricing", contact_page: "/contact",
+  pricing_page: "/pricing", contact_page: "/contact",
   not_found: "/404",
 };
 
-const COLLECTION_SECTIONS = ["portfolio", "team"] as const;
+const COLLECTION_SECTIONS = ["portfolio"] as const;
 type CollectionSection = (typeof COLLECTION_SECTIONS)[number];
 
 const COLLECTION_META: Record<CollectionSection, { prefix: string; countKey: string; primaryField: string; itemLabel: string }> = {
   portfolio: { prefix: "project", countKey: "project_count", primaryField: "name", itemLabel: "Project" },
-  team: { prefix: "member", countKey: "member_count", primaryField: "name", itemLabel: "Member" },
 };
 
 const PORTFOLIO_FIELDS: CollectionFieldDef[] = [
@@ -192,14 +170,6 @@ const PORTFOLIO_FIELDS: CollectionFieldDef[] = [
   { key: "url", label: "URL", type: "url" },
   { key: "image", label: "Cover image", type: "image" },
   { key: "gallery", label: "Gallery", type: "gallery" },
-];
-
-const TEAM_FIELDS: CollectionFieldDef[] = [
-  { key: "name", label: "Name", type: "text" },
-  { key: "initials", label: "Initials", type: "text" },
-  { key: "role", label: "Role", type: "text" },
-  { key: "desc", label: "Description", type: "textarea" },
-  { key: "image", label: "Photo", type: "image" },
 ];
 
 const DEVICE_WIDTHS: Record<DeviceMode, string> = {
@@ -268,6 +238,22 @@ function getErrorMessage(e: unknown): string {
   return "An unknown error occurred.";
 }
 
+function normalizeSubmissionId(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    const normalized = Math.trunc(value);
+    return normalized > 0 ? normalized : null;
+  }
+
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed || !/^\d+$/.test(trimmed)) return null;
+    const parsed = Number.parseInt(trimmed, 10);
+    if (Number.isFinite(parsed) && parsed > 0) return parsed;
+  }
+
+  return null;
+}
+
 const CONTENT_KEY_PATTERN = /^[a-z0-9_]+$/;
 const URL_SCHEME_PATTERN = /^(https?:\/\/|\/|mailto:|tel:)/i;
 
@@ -313,10 +299,6 @@ function validateAdminContentInput(section: string, key: string, value: string):
     if (n === undefined || !Number.isFinite(n) || n < 0) {
       return "Numeric fields must contain a non-negative integer.";
     }
-  }
-
-  if (section === "team" && /_initials$/i.test(key) && value.trim().length > 2) {
-    return "Team initials should be 2 characters max.";
   }
 
   return null;
@@ -662,6 +644,97 @@ function ImageUploader({
   const [showUrl, setShowUrl] = useState(false);
   const [urlInput, setUrlInput] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
+  const dropRef = useRef<HTMLDivElement>(null);
+
+  const normalizeImageUrl = useCallback((raw: string) => {
+    const value = raw.trim();
+    if (!value) return { error: "Enter an image URL or a site-relative path." };
+
+    if (value.startsWith("/")) {
+      return { value };
+    }
+
+    if (/^https?:\/\//i.test(value)) {
+      try {
+        const parsed = new URL(value);
+        if (parsed.protocol === "http:" || parsed.protocol === "https:") return { value };
+      } catch {
+        return { error: "Use a valid image URL." };
+      }
+    }
+
+    // Support local dev hosts without scheme, e.g. localhost:3000/path
+    if (/^(localhost|127\.0\.0\.1|(?:\d{1,3}\.){3}\d{1,3})(?::\d+)?(?:\/.*)?$/i.test(value)) {
+      return { value: `http://${value}` };
+    }
+
+    // Support pasting bare domains like cdn.example.com/image.png
+    if (/^[a-z0-9.-]+\.[a-z]{2,}(?:\/.*)?$/i.test(value)) {
+      return { value: `https://${value}` };
+    }
+
+    return { error: "Use a full URL (https://...) or a site path starting with /." };
+  }, []);
+
+  const extractUrlCandidate = useCallback((raw: string) => {
+    const trimmed = raw.trim();
+    if (!trimmed) return "";
+
+    const stripEdgeWrappers = (value: string) => {
+      const edgeChars = new Set(["<", ">", "[", "]", "(", ")", "'", '"', "`"]);
+      let next = value.trim();
+
+      while (next && edgeChars.has(next[0])) {
+        next = next.slice(1).trimStart();
+      }
+
+      while (next && edgeChars.has(next[next.length - 1])) {
+        next = next.slice(0, -1).trimEnd();
+      }
+
+      return next;
+    };
+
+    const pickUrlLike = (value: string) => {
+      const direct = stripEdgeWrappers(value);
+      if (!direct) return "";
+
+      if (/^(https?:\/\/|\/|localhost|127\.0\.0\.1|(?:\d{1,3}\.){3}\d{1,3}|[a-z0-9.-]+\.[a-z]{2,})/i.test(direct)) {
+        return direct;
+      }
+
+      const embedded = direct.match(/(https?:\/\/[^\s)"'>]+|\/[\w\-./%?=&#+:~]+|(?:localhost|127\.0\.0\.1|(?:\d{1,3}\.){3}\d{1,3})(?::\d+)?(?:\/[^\s)"'>]*)?|[a-z0-9.-]+\.[a-z]{2,}(?:\/[^\s)"'>]*)?)/i)?.[1] || "";
+      return stripEdgeWrappers(embedded);
+    };
+
+    const firstLine = trimmed
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .find((line) => line.length > 0 && !line.startsWith("#")) || "";
+
+    const markdownTarget = firstLine.match(/\(([^)\s]+)\)/)?.[1] || "";
+    const cssUrlTarget = firstLine.match(/^url\((.+)\)$/i)?.[1] || "";
+
+    const candidates = [markdownTarget, cssUrlTarget, firstLine, trimmed]
+      .map((candidate) => pickUrlLike(candidate))
+      .filter(Boolean);
+
+    return candidates[0] || "";
+  }, []);
+
+  const applyUrlInput = useCallback(() => {
+    const candidate = extractUrlCandidate(urlInput) || urlInput;
+    const result = normalizeImageUrl(candidate);
+    if (!result.value) {
+      setError(result.error || "Invalid image URL.");
+      return;
+    }
+
+    setError("");
+    onChange(result.value);
+    setUrlInput("");
+    setShowUrl(false);
+  }, [extractUrlCandidate, normalizeImageUrl, onChange, urlInput]);
 
   const upload = useCallback(async (file: File) => {
     if (!file.type.startsWith("image/")) { setError("Only image files are supported."); return; }
@@ -687,11 +760,44 @@ function ImageUploader({
     }
   }, [onChange, onLog]);
 
-  // Clipboard paste support
+  const handleDataTransferInput = useCallback(async (dataTransfer: DataTransfer) => {
+    const f = dataTransfer.files[0];
+    if (f?.type.startsWith("image/")) {
+      await upload(f);
+      return;
+    }
+
+    const droppedRaw = dataTransfer.getData("text/uri-list")
+      || dataTransfer.getData("text/plain")
+      || dataTransfer.getData("text");
+    const droppedText = extractUrlCandidate(droppedRaw);
+    if (!droppedText) {
+      if (/^file:\/\//i.test(droppedRaw.trim())) {
+        setError("Drop the image file directly instead of its local file path.");
+      }
+      return;
+    }
+
+    const result = normalizeImageUrl(droppedText);
+    if (result.value) {
+      setError("");
+      onChange(result.value);
+    } else {
+      setError(result.error || "Invalid image URL.");
+    }
+  }, [extractUrlCandidate, normalizeImageUrl, onChange, upload]);
+
+  // Clipboard paste support (scoped to the uploader)
   useEffect(() => {
     const handler = async (e: ClipboardEvent) => {
+      const activeInsideDropzone = dropRef.current?.contains(document.activeElement);
+      const hovered = dropRef.current?.matches(":hover");
+      const shouldHandle = Boolean(activeInsideDropzone || hovered || showUrl);
+      if (!shouldHandle) return;
+
       const items = e.clipboardData?.items;
       if (!items) return;
+
       for (const item of Array.from(items)) {
         if (item.type.startsWith("image/")) {
           e.preventDefault();
@@ -700,16 +806,61 @@ function ImageUploader({
           return;
         }
       }
+
+      const uriListText = e.clipboardData?.getData("text/uri-list") || "";
+      const plainText = e.clipboardData?.getData("text/plain") || e.clipboardData?.getData("text") || "";
+      const pastedText = extractUrlCandidate(uriListText || plainText);
+      if (!pastedText) {
+        const raw = (uriListText || plainText).trim();
+        if (/^file:\/\//i.test(raw)) {
+          setError("Drop or paste the actual image file instead of a local file path.");
+        }
+        return;
+      }
+
+      e.preventDefault();
+      if (showUrl) {
+        setUrlInput(pastedText);
+        return;
+      }
+
+      const result = normalizeImageUrl(pastedText);
+      if (result.value) {
+        setError("");
+        onChange(result.value);
+      } else {
+        setError(result.error || "Invalid image URL.");
+      }
     };
     document.addEventListener("paste", handler);
     return () => document.removeEventListener("paste", handler);
-  }, [upload]);
+  }, [extractUrlCandidate, normalizeImageUrl, onChange, showUrl, upload]);
 
   return (
-    <div className="flex flex-col gap-2">
+    <div ref={dropRef} className="flex flex-col gap-2">
       {value && (
-        <div className="relative group inline-flex rounded-xl overflow-hidden border border-white/8">
-          <img src={value} alt="Upload preview" className={compact ? "h-14 w-auto object-cover" : "h-28 w-auto max-w-full object-cover"} loading="lazy" />
+        <div
+          className="relative group inline-flex rounded-xl overflow-hidden border border-white/8"
+          onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+          onDragLeave={() => setDragging(false)}
+          onDrop={async (e) => {
+            e.preventDefault();
+            setDragging(false);
+            await handleDataTransferInput(e.dataTransfer);
+          }}
+        >
+          <img
+            src={value}
+            alt="Upload preview"
+            className={compact ? "h-14 w-auto object-cover" : "h-28 w-auto max-w-full object-cover"}
+            loading="lazy"
+            onLoad={() => {
+              setError("");
+            }}
+            onError={() => {
+              setError("The selected image URL could not be loaded.");
+            }}
+          />
           <button type="button" onClick={() => onChange("")}
             className="absolute top-1.5 right-1.5 p-1 rounded-md bg-black/70 text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
             aria-label="Remove image">
@@ -724,11 +875,9 @@ function ImageUploader({
         onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
         onDragLeave={() => setDragging(false)}
         onDrop={async (e) => {
-          e.preventDefault(); setDragging(false);
-          const f = e.dataTransfer.files[0];
-          if (f?.type.startsWith("image/")) { await upload(f); return; }
-          const url = e.dataTransfer.getData("text");
-          if (url.startsWith("http") || url.startsWith("/")) onChange(url);
+          e.preventDefault();
+          setDragging(false);
+          await handleDataTransferInput(e.dataTransfer);
         }}
         onClick={() => { if (!uploading) inputRef.current?.click(); }}
         onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); inputRef.current?.click(); } }}
@@ -766,11 +915,11 @@ function ImageUploader({
       {showUrl && (
         <div className="flex gap-2">
           <input type="text" value={urlInput} onChange={(e) => setUrlInput(e.target.value)}
-            onKeyDown={(e) => { if (e.key === "Enter") { onChange(urlInput.trim()); setUrlInput(""); setShowUrl(false); } }}
+            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); applyUrlInput(); } }}
             placeholder="https://… or /images/…"
             className="flex-1 bg-white/3 text-white/80 text-[13px] px-3 py-2 rounded-lg border border-white/8 outline-none focus:border-accent/40 font-mono" />
           <button type="button"
-            onClick={() => { onChange(urlInput.trim()); setUrlInput(""); setShowUrl(false); }}
+            onClick={applyUrlInput}
             className="px-3 py-2 rounded-lg bg-accent/20 text-accent text-[12px] hover:bg-accent/30 transition-colors">
             Set
           </button>
@@ -971,7 +1120,7 @@ const FieldEditor = React.memo(function FieldEditor({
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// COLLECTION ITEM CARD  (portfolio / team)
+// COLLECTION ITEM CARD
 // ─────────────────────────────────────────────────────────────────────────────
 
 function CollectionCard({
@@ -986,7 +1135,7 @@ function CollectionCard({
   onLog?: (e: Partial<ApiLogEntry>) => void;
   dragHandleProps?: React.HTMLAttributes<HTMLDivElement>;
 }) {
-  const coreFieldDefs = section === "portfolio" ? PORTFOLIO_FIELDS : TEAM_FIELDS;
+  const coreFieldDefs = PORTFOLIO_FIELDS;
   const [runtimeFields, setRuntimeFields] = useState<Record<string, ContentItem>>({});
   const [localValues, setLocalValues] = useState<Record<string, string>>(item.values);
   const [saving, setSaving] = useState<Set<string>>(new Set());
@@ -1065,15 +1214,6 @@ function CollectionCard({
 
   const prefix = COLLECTION_META[section].prefix;
 
-  const getRecommendedMax = (fieldKey: string) => {
-    if (section === 'team') {
-      if (fieldKey === 'initials') return 2;
-      if (fieldKey === 'name') return 24;
-      if (fieldKey === 'role') return 28;
-    }
-    return null;
-  };
-
   return (
     <div className="bg-white/[0.03] rounded-2xl border border-white/6 overflow-hidden">
       <div className="flex items-center justify-between px-4 py-3 border-b border-white/5">
@@ -1105,8 +1245,6 @@ function CollectionCard({
           const isSaving = saving.has(fd.key);
           const isDone = saved.has(fd.key);
           const isDirty = val !== (mergedFields[fd.key]?.value ?? "");
-          const recommendedMax = getRecommendedMax(fd.key);
-          const isOverRecommended = recommendedMax ? val.length > recommendedMax : false;
           return (
             <div key={fd.key} className={`flex flex-col gap-2 ${fd.type === "textarea" || fd.type === "image" ? "xl:col-span-2" : ""}`}>
               <div className="flex items-center justify-between">
@@ -1120,16 +1258,6 @@ function CollectionCard({
                   )}
                 </AnimatePresence>
               </div>
-              {recommendedMax && (
-                <div className="flex items-center justify-between text-[10px]">
-                  <span className={`${isOverRecommended ? 'text-amber-300/80' : 'text-white/25'}`}>
-                    Recommended ≤ {recommendedMax} chars
-                  </span>
-                  <span className={`${isOverRecommended ? 'text-amber-300/80' : 'text-white/25'} font-mono`}>
-                    {val.length}/{recommendedMax}
-                  </span>
-                </div>
-              )}
               {fd.type === "image" ? (
                 <ImageUploader value={val} compact
                   onChange={(v) => { setLocalValues(p => ({ ...p, [fd.key]: v })); saveField(fd.key, v); }}
@@ -1142,13 +1270,7 @@ function CollectionCard({
                   placeholder="Type here…" />
               ) : (
                 <input type={fd.type === "url" ? "url" : "text"} value={val}
-                  onChange={(e) => {
-                    const nextRaw = e.target.value;
-                    const next = section === 'team' && fd.key === 'initials'
-                      ? nextRaw.replace(/\s+/g, '').slice(0, 2).toUpperCase()
-                      : nextRaw;
-                    setLocalValues(p => ({ ...p, [fd.key]: next }));
-                  }}
+                  onChange={(e) => setLocalValues(p => ({ ...p, [fd.key]: e.target.value }))}
                   onBlur={() => saveField(fd.key, val)}
                   className={`w-full bg-white/3 text-[13px] px-3 py-2 rounded-xl border outline-none transition-colors ${isDirty ? "border-accent/35" : "border-white/8 focus:border-accent/25"} ${fd.type === "url" ? "text-cyan-400 font-mono text-[12px]" : "text-white"}`}
                   placeholder="Type here…"
@@ -1204,18 +1326,46 @@ const SubmissionsPanel = React.memo(function SubmissionsPanel({
   submissions, onStatusChange, onDelete,
 }: {
   submissions: Submission[];
-  onStatusChange: (id: number, status: Submission["status"]) => void;
+  onStatusChange: (id: number, status: Submission["status"]) => Promise<void>;
   onDelete: (id: number, name: string) => void;
 }) {
   const [expandedKey, setExpandedKey] = useState<string | null>(null);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const [pendingStatusIds, setPendingStatusIds] = useState<Set<number>>(new Set());
 
-  const getSubmissionKey = useCallback((sub: Submission) => String(sub.id), []);
+  const getCopyStateKey = useCallback((sub: Submission) => {
+    const normalizedId = normalizeSubmissionId(sub.id);
+    if (normalizedId !== null) return `id:${normalizedId}`;
+    const email = String(sub.email || "").toLowerCase().trim();
+    if (email) return `email:${email}`;
+    return "copied";
+  }, []);
+
+  const getSubmissionRowKey = useCallback((sub: Submission, index: number) => {
+    const normalizedId = normalizeSubmissionId(sub.id);
+    if (normalizedId !== null) return `id:${normalizedId}`;
+
+    const idPart = String(sub.id || "").trim();
+    if (idPart) return `raw:${idPart}:${index}`;
+
+    const emailPart = String(sub.email || "unknown").toLowerCase().trim();
+    const datePart = String(sub.created_at || "unknown").trim();
+    return `fallback:${emailPart}:${datePart}:${index}`;
+  }, []);
 
   const getSubmissionId = useCallback((sub: Submission) => {
-    const parsed = Number.parseInt(String(sub.id), 10);
-    return Number.isFinite(parsed) ? parsed : null;
+    return normalizeSubmissionId(sub.id);
   }, []);
+
+  const availableRowKeys = useMemo(
+    () => new Set(submissions.map((submission, index) => getSubmissionRowKey(submission, index))),
+    [getSubmissionRowKey, submissions],
+  );
+
+  const availableCopyKeys = useMemo(
+    () => new Set(submissions.map((submission) => getCopyStateKey(submission))),
+    [getCopyStateKey, submissions],
+  );
 
   const formatReceivedDate = useCallback((raw: string) => {
     const parsed = new Date(raw);
@@ -1224,10 +1374,13 @@ const SubmissionsPanel = React.memo(function SubmissionsPanel({
   }, []);
 
   const copyEmail = (sub: Submission) => {
-    navigator.clipboard.writeText(sub.email);
-    const key = getSubmissionKey(sub);
-    setCopiedKey(key);
-    setTimeout(() => setCopiedKey(null), 2000);
+    const key = getCopyStateKey(sub);
+    void navigator.clipboard.writeText(sub.email).then(() => {
+      setCopiedKey(key);
+      setTimeout(() => setCopiedKey(null), 2000);
+    }).catch(() => {
+      // Clipboard may be blocked by browser policy or insecure context.
+    });
   };
 
   const statusColors: Record<string, string> = {
@@ -1249,14 +1402,20 @@ const SubmissionsPanel = React.memo(function SubmissionsPanel({
 
   return (
     <div className="flex flex-col gap-2">
-      {submissions.map(sub => (
-        <div key={getSubmissionKey(sub)} className="bg-white/[0.03] rounded-2xl border border-white/6 overflow-hidden">
+      {submissions.map((sub, index) => {
+        const rowKey = getSubmissionRowKey(sub, index);
+        const expandable = expandedKey !== null && availableRowKeys.has(expandedKey) && expandedKey === rowKey;
+        const submissionId = getSubmissionId(sub);
+        const statusPending = submissionId !== null && pendingStatusIds.has(submissionId);
+
+        return (
+        <div key={rowKey} className="bg-white/[0.03] rounded-2xl border border-white/6 overflow-hidden">
           <div className="w-full px-4 py-3.5 flex items-center gap-2">
             <button
               type="button"
+              aria-expanded={expandable}
               onClick={() => {
-                const key = getSubmissionKey(sub);
-                setExpandedKey((prev) => (prev === key ? null : key));
+                setExpandedKey((prev) => (prev === rowKey ? null : rowKey));
               }}
               className="flex-1 min-w-0 flex items-center justify-between gap-3 text-left hover:bg-white/2 transition-colors rounded-xl px-1.5 py-1"
             >
@@ -1272,18 +1431,24 @@ const SubmissionsPanel = React.memo(function SubmissionsPanel({
                 <span className="px-2 py-0.5 rounded-full text-[11px] bg-white/5 text-white/40 border border-white/8">
                   {PROJECT_TYPE_LABELS[sub.project_type] || sub.project_type}
                 </span>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={`text-white/25 transition-transform ${expandedKey === getSubmissionKey(sub) ? "rotate-180" : ""}`}>
+                <span className="px-2 py-0.5 rounded-full text-[11px] bg-white/5 text-white/60 border border-white/10 min-w-[52px] text-center">
+                  {expandable ? "Close" : "Open"}
+                </span>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={`text-white/25 transition-transform ${expandable ? "rotate-180" : ""}`}>
                   <polyline points="6 9 12 15 18 9" />
                 </svg>
               </div>
             </button>
             <button
               type="button"
+              disabled={submissionId === null || statusPending}
               onClick={() => {
-                const id = getSubmissionId(sub);
-                if (id !== null) onDelete(id, sub.name);
+                if (submissionId !== null) {
+                  if (expandable) setExpandedKey(null);
+                  onDelete(submissionId, sub.name);
+                }
               }}
-              className="px-2.5 py-1.5 rounded-lg border border-red-500/20 text-[11px] text-red-400/80 hover:border-red-500/40 hover:text-red-400 transition-all shrink-0"
+              className="px-2.5 py-1.5 rounded-lg border border-red-500/20 text-[11px] text-red-400/80 hover:border-red-500/40 hover:text-red-400 transition-all shrink-0 disabled:opacity-40"
               title="Delete submission"
             >
               Delete
@@ -1291,7 +1456,7 @@ const SubmissionsPanel = React.memo(function SubmissionsPanel({
           </div>
 
           <AnimatePresence>
-            {expandedKey === getSubmissionKey(sub) && (
+            {expandable && (
               <motion.div
                 initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }}
@@ -1325,37 +1490,68 @@ const SubmissionsPanel = React.memo(function SubmissionsPanel({
                 <div className="px-4 pb-4 flex flex-wrap gap-2">
                   <button type="button" onClick={() => copyEmail(sub)}
                     className="px-3 py-1.5 rounded-lg border border-white/10 text-[12px] text-white/50 hover:text-white hover:border-white/20 flex items-center gap-1.5 transition-all">
-                    {copiedKey === getSubmissionKey(sub) ? (
+                    {copiedKey !== null && availableCopyKeys.has(copiedKey) && copiedKey === getCopyStateKey(sub) ? (
                       <><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12" /></svg> Copied</>
                     ) : (
                       <><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg> Copy email</>
                     )}
                   </button>
                   {sub.status !== "reviewed" && (
-                    <button type="button" onClick={() => {
-                      const id = getSubmissionId(sub);
-                      if (id !== null) onStatusChange(id, "reviewed");
+                    <button type="button" onClick={async () => {
+                      if (submissionId === null) return;
+                      setPendingStatusIds((prev) => {
+                        const next = new Set(prev);
+                        next.add(submissionId);
+                        return next;
+                      });
+                      try {
+                        await onStatusChange(submissionId, "reviewed");
+                      } finally {
+                        setPendingStatusIds((prev) => {
+                          const next = new Set(prev);
+                          next.delete(submissionId);
+                          return next;
+                        });
+                      }
                     }}
-                      className="px-3 py-1.5 rounded-lg border border-emerald-500/25 text-[12px] text-emerald-400 hover:border-emerald-500/40 flex items-center gap-1.5 transition-all">
+                      disabled={submissionId === null || statusPending}
+                      className="px-3 py-1.5 rounded-lg border border-emerald-500/25 text-[12px] text-emerald-400 hover:border-emerald-500/40 flex items-center gap-1.5 transition-all disabled:opacity-40">
                       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12" /></svg>
-                      Mark reviewed
+                      {statusPending ? "Saving..." : "Mark reviewed"}
                     </button>
                   )}
                   {sub.status !== "archived" && (
-                    <button type="button" onClick={() => {
-                      const id = getSubmissionId(sub);
-                      if (id !== null) onStatusChange(id, "archived");
+                    <button type="button" onClick={async () => {
+                      if (submissionId === null) return;
+                      setPendingStatusIds((prev) => {
+                        const next = new Set(prev);
+                        next.add(submissionId);
+                        return next;
+                      });
+                      try {
+                        await onStatusChange(submissionId, "archived");
+                      } finally {
+                        setPendingStatusIds((prev) => {
+                          const next = new Set(prev);
+                          next.delete(submissionId);
+                          return next;
+                        });
+                      }
                     }}
-                      className="px-3 py-1.5 rounded-lg border border-white/10 text-[12px] text-white/40 hover:border-white/20 hover:text-white/60 flex items-center gap-1.5 transition-all">
+                      disabled={submissionId === null || statusPending}
+                      className="px-3 py-1.5 rounded-lg border border-white/10 text-[12px] text-white/40 hover:border-white/20 hover:text-white/60 flex items-center gap-1.5 transition-all disabled:opacity-40">
                       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect width="20" height="5" x="2" y="3" rx="1" /><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8" /><path d="M10 12h4" /></svg>
-                      Archive
+                      {statusPending ? "Saving..." : "Archive"}
                     </button>
                   )}
                   <button type="button" onClick={() => {
-                    const id = getSubmissionId(sub);
-                    if (id !== null) onDelete(id, sub.name);
+                    if (submissionId !== null) {
+                      setExpandedKey(null);
+                      onDelete(submissionId, sub.name);
+                    }
                   }}
-                    className="px-3 py-1.5 rounded-lg border border-red-500/20 text-[12px] text-red-400/80 hover:border-red-500/40 hover:text-red-400 flex items-center gap-1.5 transition-all ml-auto">
+                    disabled={submissionId === null || statusPending}
+                    className="px-3 py-1.5 rounded-lg border border-red-500/20 text-[12px] text-red-400/80 hover:border-red-500/40 hover:text-red-400 flex items-center gap-1.5 transition-all ml-auto disabled:opacity-40">
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /></svg>
                     Delete
                   </button>
@@ -1364,7 +1560,8 @@ const SubmissionsPanel = React.memo(function SubmissionsPanel({
             )}
           </AnimatePresence>
         </div>
-      ))}
+      );
+      })}
     </div>
   );
 });
@@ -1874,6 +2071,7 @@ export default function AdminDashboard() {
   const [showDebug, setShowDebug] = useState(false);
   const [seeding, setSeeding] = useState(false);
   const [syncPreview, setSyncPreview] = useState(true);
+  const suppressPreviewSyncUntilRef = useRef(0);
 
   // Responsive: disable inline preview on small screens.
   const [isMobileViewport, setIsMobileViewport] = useState(() => {
@@ -1913,7 +2111,9 @@ export default function AdminDashboard() {
 
   // Sections list
   const allSections = useMemo(() => {
-    const extra = [...new Set(content.map(c => c.section))].filter(s => !SECTION_ORDER.includes(s)).sort();
+    const extra = [...new Set(content.map(c => c.section))]
+      .filter((s) => !SECTION_ORDER.includes(s) && !DEPRECATED_SECTIONS.has(s))
+      .sort();
     return [...SECTION_ORDER, ...extra];
   }, [content]);
 
@@ -1929,7 +2129,7 @@ export default function AdminDashboard() {
   const sidebarGroups = useMemo((): SidebarGroup[] => {
     const site = new Set([
       'nav', 'hero', 'marquee', 'services', 'techstack', 'stats', 'process',
-      'portfolio', 'team', 'pricing', 'faq', 'contact', 'footer',
+      'portfolio', 'pricing', 'faq', 'contact', 'footer',
     ]);
     const pages = new Set(Object.keys(PAGE_SECTIONS));
     const global = new Set(['ui', 'seo', 'contact_form', 'intro_splash', 'error_boundary']);
@@ -1959,10 +2159,13 @@ export default function AdminDashboard() {
     if (activeSection === SUBMISSIONS_TAB || activeSection === AUDIT_TAB) return [];
 
     let fields = content.filter(c => c.section === activeSection);
+    const deprecatedKeys = DEPRECATED_SECTION_KEYS[activeSection];
+    if (deprecatedKeys) {
+      fields = fields.filter((c) => !deprecatedKeys.has(c.key));
+    }
 
     // Filter out collection sub-keys from meta field lists
     if (activeSection === "portfolio") fields = fields.filter(c => !/^project_\d+_/.test(c.key) && c.key !== "project_count");
-    if (activeSection === "team") fields = fields.filter(c => !/^member_\d+_/.test(c.key) && c.key !== "member_count");
 
     const definition = homeSectionDefinitions[activeSection];
     const defs = definition?.fields ?? [];
@@ -2011,9 +2214,11 @@ export default function AdminDashboard() {
 
   const handlePreviewNavigate = useCallback((info: { pathname: string; hash: string }) => {
     if (!syncPreview) return;
+    if (Date.now() < suppressPreviewSyncUntilRef.current) return;
     const next = inferSectionFromPreviewLocation(info.pathname, info.hash);
     if (!next) return;
     setActiveSection((prev) => {
+      if (prev === SUBMISSIONS_TAB || prev === AUDIT_TAB) return prev;
       if (prev === next) return prev;
       return next;
     });
@@ -2021,6 +2226,7 @@ export default function AdminDashboard() {
   }, [syncPreview]);
 
   const handleSelectSection = useCallback((section: string) => {
+    suppressPreviewSyncUntilRef.current = Date.now() + 750;
     setActiveSection(section as ActiveTab);
     setFieldSearch("");
   }, []);
@@ -2033,11 +2239,11 @@ export default function AdminDashboard() {
     setConfirm({ kind: "submission", id, label });
   }, []);
 
-  // Collection items for portfolio/team
+  // Collection items for portfolio
   function getCollectionItems(section: CollectionSection): CollectionItem[] {
     const meta = COLLECTION_META[section];
     const countItem = lookupContent(contentMap, section, meta.countKey);
-    const fieldDefs = section === "portfolio" ? PORTFOLIO_FIELDS : TEAM_FIELDS;
+    const fieldDefs = PORTFOLIO_FIELDS;
 
     // Find max index in DB
     const existingIndices: number[] = [];
@@ -2164,7 +2370,13 @@ export default function AdminDashboard() {
     const errorMessages: string[] = [];
 
     if (subsResult.status === 'fulfilled') {
-      setSubmissions(subsResult.value);
+      setSubmissions(
+        subsResult.value.map((submission) => {
+          const normalizedId = normalizeSubmissionId(submission.id);
+          if (normalizedId === null) return submission;
+          return { ...submission, id: normalizedId };
+        }),
+      );
     } else {
       errorMessages.push(`submissions: ${getErrorMessage(subsResult.reason)}`);
     }
@@ -2459,22 +2671,6 @@ export default function AdminDashboard() {
         }
       }
 
-      if (section === "team") {
-        const existing = getCollectionItems("team");
-        if (existing.length === 0) {
-          for (let i = 0; i < teamDefaults.length; i++) {
-            const idx = i + 1;
-            const member = teamDefaults[i];
-            seedItems.push({ section, key: `member_${idx}_name`, value: member.name });
-            seedItems.push({ section, key: `member_${idx}_initials`, value: member.initials });
-            seedItems.push({ section, key: `member_${idx}_role`, value: member.role });
-            seedItems.push({ section, key: `member_${idx}_desc`, value: member.description });
-            seedItems.push({ section, key: `member_${idx}_image`, value: member.image });
-          }
-          seedItems.push({ section, key: "member_count", value: String(teamDefaults.length) });
-        }
-      }
-
       await bulkUpsertContent(seedItems, "insert_missing");
     } catch (e) {
       setError(getErrorMessage(e));
@@ -2496,7 +2692,7 @@ export default function AdminDashboard() {
   // FIX #1 & #5: Unified, atomic collection reorder/save
   async function saveCollectionItems(section: CollectionSection, items: CollectionItem[]) {
     const meta = COLLECTION_META[section];
-    const knownFieldDefs = section === "portfolio" ? PORTFOLIO_FIELDS : TEAM_FIELDS;
+    const knownFieldDefs = PORTFOLIO_FIELDS;
     const knownFieldKeys = knownFieldDefs.map((field) => field.key);
     const allFieldKeys = new Set<string>(knownFieldKeys);
 
@@ -2577,11 +2773,18 @@ export default function AdminDashboard() {
 
   // Submissions
   const setSubmissionStatus = useCallback(async (id: number, status: Submission["status"]) => {
-    const updated = await apiFetchLogged<Submission>("/api/contact", {
-      method: "PUT", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, status }),
-    });
-    setSubmissions(prev => prev.map(s => s.id === id ? updated : s));
+    try {
+      const updated = await apiFetchLogged<Submission>("/api/contact", {
+        method: "PUT", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, status }),
+      });
+      setSubmissions((prev) => prev.map((submission) => (
+        normalizeSubmissionId(submission.id) === id ? { ...submission, ...updated } : submission
+      )));
+      setError("");
+    } catch (e) {
+      setError(getErrorMessage(e));
+    }
   }, [apiFetchLogged]);
 
   async function deleteSubmission(id: number) {
@@ -2589,7 +2792,7 @@ export default function AdminDashboard() {
       method: "DELETE", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id }),
     });
-    setSubmissions(prev => prev.filter(s => s.id !== id));
+    setSubmissions((prev) => prev.filter((submission) => normalizeSubmissionId(submission.id) !== id));
   }
 
   // Confirm action handler
@@ -2876,7 +3079,7 @@ export default function AdminDashboard() {
                   <button type="button" onClick={() => addCollectionItem(activeSection as CollectionSection)} disabled={loading}
                     className="px-3 py-1.5 rounded-lg border border-accent/25 text-accent text-[12px] flex items-center gap-1.5 hover:border-accent/40 transition-all disabled:opacity-50">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
-                    Add {activeSection === "portfolio" ? "project" : "member"}
+                    Add project
                   </button>
                 )}
                 {activeSection === 'work_page' && (
@@ -2935,7 +3138,7 @@ export default function AdminDashboard() {
                     No items yet.
                     {showSeedDefaults
                       ? ' Click "Seed defaults" to populate this section.'
-                      : ` Click "Add ${activeSection === "portfolio" ? "project" : "member"}" to start.`}
+                      : ' Click "Add project" to start.'}
                   </div>
                 ) : (
                   collectionItems.map(item => (
@@ -3047,59 +3250,3 @@ export default function AdminDashboard() {
     </div>
   );
 }
-
-/*
- * ─────────────────────────────────────────────────────────────────────────────
- * ## BUG FIXES SUMMARY
- * ─────────────────────────────────────────────────────────────────────────────
- *
- * FIX #1 – Collection item save race condition
- *   OLD: `re()` iterates and calls `ae()` per field, but `ae()` calls `pe()`
- *        which looks up `N` (content state) that hasn't been updated yet by
- *        previous iterations → wrong ids, duplicate creates.
- *   NEW: `saveCollectionItems()` uses `ensureField()` which takes a fresh
- *        `lookupContent(contentMap, ...)` call every time, and the contentMap
- *        is derived from state via useMemo so it's always up-to-date.
- *        We await each field sequentially to avoid concurrent writes.
- *
- * FIX #2 – O(n²) content lookup
- *   OLD: `pe()` scanned the entire `N` array for every field rendered.
- *        With 200+ fields, every render was O(n²).
- *   NEW: `buildContentMap()` creates a `Map<"section::key", ContentItem>`.
- *        `lookupContent()` is O(1). Map rebuilds only when `content` changes.
- *
- * FIX #3 – Drag-and-drop vs text input conflict
- *   OLD: `draggable` was on the entire card `<div>` – dragging started when
- *        users tried to select text in input fields.
- *   NEW: `draggable` only on the grip handle icon via `dragHandleProps`.
- *        Inputs are unaffected.
- *
- * FIX #4 – Missing credentials on fetch
- *   OLD: `fetch(url, options)` – no `credentials: "include"`, so the session
- *        cookie was not sent to `/api/upload` in some browser configs.
- *   NEW: `apiFetch()` always adds `credentials: "include"` as a base default.
- *
- * FIX #5 – Stale closure in `re()` reorder
- *   OLD: `re()` captured `N` (content state) in closure. If called twice fast
- *        (double-drop), second call saw stale N → phantom items.
- *   NEW: `reorderCollectionItems()` reads `getCollectionItems()` (which reads
- *        current `contentMap`) fresh on every call.
- *
- * FIX #6 – Wasted save calls on unchanged fields
- *   OLD: `onBlur` fired `M()` (save) even when value hadn't changed, causing
- *        unnecessary PUT requests and "Saving…" flickers on every focus-out.
- *   NEW: `save()` bails early with `if (val === item.value) return;`
- *
- * FIX #7 – NaN stored as plan_count / faq_count
- *   OLD: `Number(n("pricing","plan_count",""))` returned NaN when field empty,
- *        and NaN was then passed to `Array.from({length: NaN})` → crash.
- *   NEW: `safeInt()` returns `undefined` (not NaN) when string is empty or
- *        non-numeric. Collection count falls back to DB-detected max index.
- *
- * FIX #8 – Missing error boundary around iframe
- *   OLD: No error handling on the iframe – if CSP blocked the preview URL,
- *        the admin would crash-loop with an unhandled error.
- *   NEW: `onError` handler on `<iframe>` sets `iframeError = true`, showing
- *        a friendly "Preview failed" message with a retry button.
- * ─────────────────────────────────────────────────────────────────────────────
- */

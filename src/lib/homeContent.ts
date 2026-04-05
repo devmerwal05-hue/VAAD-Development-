@@ -36,14 +36,6 @@ export interface PortfolioFallbackItem {
   url: string;
 }
 
-export interface TeamFallbackItem {
-  description: string;
-  image: string;
-  initials: string;
-  name: string;
-  role: string;
-}
-
 export const heroDefaults = {
   eyebrow: 'Web Design + Web App Delivery',
   headline_line1: 'Small teams need fast systems',
@@ -175,37 +167,6 @@ export const portfolioDefaults: readonly PortfolioFallbackItem[] = [
   },
 ] as const;
 
-export const teamDefaults: readonly TeamFallbackItem[] = [
-  {
-    name: 'Aarav',
-    initials: 'AA',
-    role: 'Strategy + Product',
-    description: 'Keeps scope, priorities, and delivery decisions grounded in the client goal rather than feature drift.',
-    image: '',
-  },
-  {
-    name: 'Mira',
-    initials: 'MI',
-    role: 'Design Systems',
-    description: 'Shapes visual systems that stay distinctive without becoming difficult to maintain.',
-    image: '',
-  },
-  {
-    name: 'Kabir',
-    initials: 'KA',
-    role: 'Frontend Engineering',
-    description: 'Builds the interfaces, state flow, and client behavior that users actually interact with.',
-    image: '',
-  },
-  {
-    name: 'Anya',
-    initials: 'AN',
-    role: 'Launch Ops',
-    description: 'Owns deployment hygiene, QA passes, and the details that turn a build into a reliable release.',
-    image: '',
-  },
-] as const;
-
 export const pricingDefaults = [
   {
     name: 'Starter site',
@@ -275,8 +236,6 @@ const navFields: AdminFieldDefinition[] = [
   { key: 'link_2_href', label: 'Link 2 URL', fallback: '/services', type: 'url' },
   { key: 'link_3', label: 'Link 3 label', fallback: 'Process' },
   { key: 'link_3_href', label: 'Link 3 URL', fallback: '/process', type: 'url' },
-  { key: 'link_4', label: 'Link 4 label', fallback: 'Team' },
-  { key: 'link_4_href', label: 'Link 4 URL', fallback: '/team', type: 'url' },
   { key: 'link_5', label: 'Link 5 label', fallback: 'Pricing' },
   { key: 'link_5_href', label: 'Link 5 URL', fallback: '/pricing', type: 'url' },
   { key: 'link_6', label: 'Link 6 label', fallback: 'Contact' },
@@ -366,12 +325,6 @@ const portfolioMetaFields: AdminFieldDefinition[] = [
   { key: 'label', label: 'Section label', fallback: '04 / Work' },
   { key: 'title', label: 'Section title', fallback: 'Selected work' },
   { key: 'footer_text', label: 'Footer text', fallback: 'Detailed breakdowns are available during discovery for projects that match your workflow, audience, and launch window.', type: 'textarea' },
-];
-
-const teamMetaFields: AdminFieldDefinition[] = [
-  { key: 'label', label: 'Section label', fallback: '05 / Team' },
-  { key: 'title', label: 'Section title', fallback: 'The people behind the work' },
-  { key: 'subtitle', label: 'Section subtitle', fallback: 'A compact team that scopes, designs, builds, and launches without handoff fog.', type: 'textarea' },
 ];
 
 const pricingFields: AdminFieldDefinition[] = [
@@ -471,16 +424,6 @@ const processPageFields: AdminFieldDefinition[] = [
   { key: 'cta_button', label: 'CTA button label', fallback: 'Request a project plan' },
 ];
 
-const teamPageFields: AdminFieldDefinition[] = [
-  { key: 'eyebrow', label: 'Hero eyebrow', fallback: 'The Team' },
-  { key: 'title_before', label: 'Hero title before highlight', fallback: 'Small crew, direct accountability,' },
-  { key: 'title_highlight', label: 'Hero highlighted title', fallback: 'no relay race' },
-  { key: 'description', label: 'Hero description', fallback: 'The same people who scope the work stay close to implementation. That cuts down handoff loss, surprises, and vague ownership.', type: 'textarea' },
-  { key: 'cta_title', label: 'CTA title', fallback: 'Need the right mix of design and engineering?' },
-  { key: 'cta_description', label: 'CTA description', fallback: 'Tell us the shape of the project and we will pull in the people who should own it.', type: 'textarea' },
-  { key: 'cta_button', label: 'CTA button label', fallback: 'Talk to the team' },
-];
-
 const pricingPageFields: AdminFieldDefinition[] = [
   { key: 'eyebrow', label: 'Hero eyebrow', fallback: 'Pricing' },
   { key: 'title_before', label: 'Hero title before highlight', fallback: 'Pricing framed around delivery, not' },
@@ -525,8 +468,6 @@ const seoFields: AdminFieldDefinition[] = [
   { key: 'services_description', label: 'Services page meta description', fallback: 'Website builds, product interfaces, internal tools, and launch support from VAAD Development.', type: 'textarea' },
   { key: 'process_title', label: 'Process page meta title', fallback: 'VAAD Development | Process' },
   { key: 'process_description', label: 'Process page meta description', fallback: 'How VAAD Development scopes, designs, builds, and launches projects without losing visibility or momentum.', type: 'textarea' },
-  { key: 'team_title', label: 'Team page meta title', fallback: 'VAAD Development | Team' },
-  { key: 'team_description', label: 'Team page meta description', fallback: 'Meet the small delivery team behind VAAD Development and how the work is split across design, engineering, and project delivery.', type: 'textarea' },
   { key: 'pricing_title', label: 'Pricing page meta title', fallback: 'VAAD Development | Pricing' },
   { key: 'pricing_description', label: 'Pricing page meta description', fallback: 'Project pricing, delivery ranges, and what is included in a typical VAAD Development engagement.', type: 'textarea' },
   { key: 'contact_title', label: 'Contact page meta title', fallback: 'VAAD Development | Contact' },
@@ -624,11 +565,6 @@ export const homeSectionDefinitions: Record<string, AdminSectionDefinition> = {
     description: 'Portfolio section heading and footer text. Individual projects are managed below.',
     fields: portfolioMetaFields,
   },
-  team: {
-    title: 'Team',
-    description: 'Team section heading and repeatable member cards.',
-    fields: teamMetaFields,
-  },
   pricing: {
     title: 'Pricing',
     description: 'Pricing cards and CTA copy.',
@@ -694,11 +630,6 @@ export const homeSectionDefinitions: Record<string, AdminSectionDefinition> = {
     description: 'Hero and CTA copy for the process page.',
     fields: processPageFields,
   },
-  team_page: {
-    title: 'Team Page',
-    description: 'Hero and CTA copy for the public team page.',
-    fields: teamPageFields,
-  },
   pricing_page: {
     title: 'Pricing Page',
     description: 'Hero copy for the pricing page.',
@@ -735,29 +666,6 @@ export const portfolioCollectionDefinition: RepeatableCollectionDefinition<Portf
     gallery: [],
   },
   itemLabel: 'Project',
-  primaryField: 'name',
-};
-
-export const teamCollectionDefinition: RepeatableCollectionDefinition<TeamFallbackItem> = {
-  description: 'Team cards on the homepage and team page. Add as many members as you need and reorder them.',
-  defaultCount: teamDefaults.length,
-  emptyTitle: 'No team members yet.',
-  fieldOrder: ['name', 'initials', 'role', 'desc', 'image'],
-  fields: [
-    { key: 'name', label: 'Member name', fallback: '' },
-    { key: 'initials', label: 'Fallback initials', fallback: '' },
-    { key: 'role', label: 'Member role', fallback: '' },
-    { key: 'desc', label: 'Member description', fallback: '', type: 'textarea' },
-    { key: 'image', label: 'Member image', fallback: '', type: 'image' },
-  ],
-  getFallback: (index) => teamDefaults[index] || {
-    name: `Person ${index + 1}`,
-    initials: `P${index + 1}`,
-    role: '',
-    description: '',
-    image: '',
-  },
-  itemLabel: 'Team member',
   primaryField: 'name',
 };
 

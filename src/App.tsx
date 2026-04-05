@@ -12,7 +12,6 @@ import { useContent } from './lib/useContent';
 const WorkPage = lazy(() => import('./pages/WorkPage'));
 const ServicesPage = lazy(() => import('./pages/ServicesPage'));
 const ProcessPage = lazy(() => import('./pages/ProcessPage'));
-const TeamPage = lazy(() => import('./pages/TeamPage'));
 const PricingPage = lazy(() => import('./pages/PricingPage'));
 const ContactPage = lazy(() => import('./pages/ContactPage'));
 const NotFound = lazy(() => import('./components/NotFound'));
@@ -87,7 +86,6 @@ export default function App() {
                 <Route path="/work" element={withRouteBoundary(<WorkPage />)} />
                 <Route path="/services" element={withRouteBoundary(<ServicesPage />)} />
                 <Route path="/process" element={withRouteBoundary(<ProcessPage />)} />
-                <Route path="/team" element={withRouteBoundary(<TeamPage />)} />
                 <Route path="/pricing" element={withRouteBoundary(<PricingPage />)} />
                 <Route path="/contact" element={withRouteBoundary(<ContactPage />)} />
                 <Route path="/admin/*" element={withRouteBoundary(<AdminDashboard />)} />

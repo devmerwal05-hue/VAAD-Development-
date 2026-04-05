@@ -19,7 +19,6 @@ export interface ContentContextType {
   lastLoadedAt: number | null;
   retryContentLoad: () => void;
   projectCount: number;
-  teamCount: number;
 }
 
 export const ContentContext = createContext<ContentContextType>({
@@ -31,5 +30,4 @@ export const ContentContext = createContext<ContentContextType>({
   lastLoadedAt: null,
   retryContentLoad: () => {},
   projectCount: 0,
-  teamCount: 0,
 });
