@@ -1207,13 +1207,27 @@ const SubmissionsPanel = React.memo(function SubmissionsPanel({
   onStatusChange: (id: number, status: Submission["status"]) => void;
   onDelete: (id: number, name: string) => void;
 }) {
-  const [expanded, setExpanded] = useState<number | null>(null);
-  const [copied, setCopied] = useState<number | null>(null);
+  const [expandedKey, setExpandedKey] = useState<string | null>(null);
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
+
+  const getSubmissionKey = useCallback((sub: Submission) => String(sub.id), []);
+
+  const getSubmissionId = useCallback((sub: Submission) => {
+    const parsed = Number.parseInt(String(sub.id), 10);
+    return Number.isFinite(parsed) ? parsed : null;
+  }, []);
+
+  const formatReceivedDate = useCallback((raw: string) => {
+    const parsed = new Date(raw);
+    if (Number.isNaN(parsed.getTime())) return 'Unknown';
+    return parsed.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  }, []);
 
   const copyEmail = (sub: Submission) => {
     navigator.clipboard.writeText(sub.email);
-    setCopied(sub.id);
-    setTimeout(() => setCopied(null), 2000);
+    const key = getSubmissionKey(sub);
+    setCopiedKey(key);
+    setTimeout(() => setCopiedKey(null), 2000);
   };
 
   const statusColors: Record<string, string> = {
@@ -1236,11 +1250,14 @@ const SubmissionsPanel = React.memo(function SubmissionsPanel({
   return (
     <div className="flex flex-col gap-2">
       {submissions.map(sub => (
-        <div key={sub.id} className="bg-white/[0.03] rounded-2xl border border-white/6 overflow-hidden">
+        <div key={getSubmissionKey(sub)} className="bg-white/[0.03] rounded-2xl border border-white/6 overflow-hidden">
           <div className="w-full px-4 py-3.5 flex items-center gap-2">
             <button
               type="button"
-              onClick={() => setExpanded(p => p === sub.id ? null : sub.id)}
+              onClick={() => {
+                const key = getSubmissionKey(sub);
+                setExpandedKey((prev) => (prev === key ? null : key));
+              }}
               className="flex-1 min-w-0 flex items-center justify-between gap-3 text-left hover:bg-white/2 transition-colors rounded-xl px-1.5 py-1"
             >
               <div className="flex items-center gap-3 min-w-0">
@@ -1255,14 +1272,17 @@ const SubmissionsPanel = React.memo(function SubmissionsPanel({
                 <span className="px-2 py-0.5 rounded-full text-[11px] bg-white/5 text-white/40 border border-white/8">
                   {PROJECT_TYPE_LABELS[sub.project_type] || sub.project_type}
                 </span>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={`text-white/25 transition-transform ${expanded === sub.id ? "rotate-180" : ""}`}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={`text-white/25 transition-transform ${expandedKey === getSubmissionKey(sub) ? "rotate-180" : ""}`}>
                   <polyline points="6 9 12 15 18 9" />
                 </svg>
               </div>
             </button>
             <button
               type="button"
-              onClick={() => onDelete(sub.id, sub.name)}
+              onClick={() => {
+                const id = getSubmissionId(sub);
+                if (id !== null) onDelete(id, sub.name);
+              }}
               className="px-2.5 py-1.5 rounded-lg border border-red-500/20 text-[11px] text-red-400/80 hover:border-red-500/40 hover:text-red-400 transition-all shrink-0"
               title="Delete submission"
             >
@@ -1271,7 +1291,7 @@ const SubmissionsPanel = React.memo(function SubmissionsPanel({
           </div>
 
           <AnimatePresence>
-            {expanded === sub.id && (
+            {expandedKey === getSubmissionKey(sub) && (
               <motion.div
                 initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }}
@@ -1295,7 +1315,7 @@ const SubmissionsPanel = React.memo(function SubmissionsPanel({
                   </div>
                   <div>
                     <p className="text-[10px] text-white/30 uppercase tracking-wider mb-1">Received</p>
-                    <p className="text-[13px] text-white">{new Date(sub.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</p>
+                    <p className="text-[13px] text-white">{formatReceivedDate(sub.created_at)}</p>
                   </div>
                   <div className="sm:col-span-2">
                     <p className="text-[10px] text-white/30 uppercase tracking-wider mb-1">Message</p>
@@ -1305,27 +1325,36 @@ const SubmissionsPanel = React.memo(function SubmissionsPanel({
                 <div className="px-4 pb-4 flex flex-wrap gap-2">
                   <button type="button" onClick={() => copyEmail(sub)}
                     className="px-3 py-1.5 rounded-lg border border-white/10 text-[12px] text-white/50 hover:text-white hover:border-white/20 flex items-center gap-1.5 transition-all">
-                    {copied === sub.id ? (
+                    {copiedKey === getSubmissionKey(sub) ? (
                       <><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12" /></svg> Copied</>
                     ) : (
                       <><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg> Copy email</>
                     )}
                   </button>
                   {sub.status !== "reviewed" && (
-                    <button type="button" onClick={() => onStatusChange(sub.id, "reviewed")}
+                    <button type="button" onClick={() => {
+                      const id = getSubmissionId(sub);
+                      if (id !== null) onStatusChange(id, "reviewed");
+                    }}
                       className="px-3 py-1.5 rounded-lg border border-emerald-500/25 text-[12px] text-emerald-400 hover:border-emerald-500/40 flex items-center gap-1.5 transition-all">
                       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12" /></svg>
                       Mark reviewed
                     </button>
                   )}
                   {sub.status !== "archived" && (
-                    <button type="button" onClick={() => onStatusChange(sub.id, "archived")}
+                    <button type="button" onClick={() => {
+                      const id = getSubmissionId(sub);
+                      if (id !== null) onStatusChange(id, "archived");
+                    }}
                       className="px-3 py-1.5 rounded-lg border border-white/10 text-[12px] text-white/40 hover:border-white/20 hover:text-white/60 flex items-center gap-1.5 transition-all">
                       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect width="20" height="5" x="2" y="3" rx="1" /><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8" /><path d="M10 12h4" /></svg>
                       Archive
                     </button>
                   )}
-                  <button type="button" onClick={() => onDelete(sub.id, sub.name)}
+                  <button type="button" onClick={() => {
+                    const id = getSubmissionId(sub);
+                    if (id !== null) onDelete(id, sub.name);
+                  }}
                     className="px-3 py-1.5 rounded-lg border border-red-500/20 text-[12px] text-red-400/80 hover:border-red-500/40 hover:text-red-400 flex items-center gap-1.5 transition-all ml-auto">
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /></svg>
                     Delete
