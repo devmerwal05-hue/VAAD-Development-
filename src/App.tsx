@@ -32,7 +32,10 @@ function withRouteBoundary(element: ReactNode) {
 }
 
 export default function App() {
-  const isAdminPath = typeof window !== 'undefined' && window.location.pathname.startsWith('/admin');
+  const normalizedPath = typeof window !== 'undefined'
+    ? window.location.pathname.toLowerCase()
+    : '';
+  const isAdminPath = normalizedPath === '/admin' || normalizedPath.startsWith('/admin/');
 
   // Show intro only on first visit per session
   const [introComplete, setIntroComplete] = useState(() => {
@@ -53,6 +56,16 @@ export default function App() {
     setIntroComplete(true);
   }, []);
 
+  if (isAdminPath) {
+    return (
+      <ErrorBoundary>
+        <ContentProvider>
+          {withRouteBoundary(<AdminDashboard />)}
+        </ContentProvider>
+      </ErrorBoundary>
+    );
+  }
+
   return (
     <ErrorBoundary>
       <ContentProvider>
@@ -69,7 +82,7 @@ export default function App() {
                 <Route path="/team" element={withRouteBoundary(<TeamPage />)} />
                 <Route path="/pricing" element={withRouteBoundary(<PricingPage />)} />
                 <Route path="/contact" element={withRouteBoundary(<ContactPage />)} />
-                <Route path="/admin" element={withRouteBoundary(<AdminDashboard />)} />
+                <Route path="/admin/*" element={withRouteBoundary(<AdminDashboard />)} />
                 <Route path="*" element={withRouteBoundary(<NotFound />)} />
               </Routes>
             </Suspense>
