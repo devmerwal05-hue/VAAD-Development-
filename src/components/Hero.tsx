@@ -132,7 +132,7 @@ export default function Hero() {
               <span className="text-[12px] text-text-tertiary">Home</span>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-[1.1fr_0.9fr]">
+            <div className="grid grid-cols-1">
               <div className="relative min-h-[320px]">
                 {featuredProject?.image ? (
                   <img src={featuredProject.image} alt={featuredProject.name} loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover opacity-80" />
@@ -147,25 +147,6 @@ export default function Hero() {
                   </h2>
                   <p className="text-[14px] text-text-secondary mt-3 max-w-[40ch]" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>
                     {getContentValue('hero', 'proof_description', 'Each release is scoped against launch pressure, content reality, and what your team can maintain after handoff.')}
-                  </p>
-                </div>
-              </div>
-
-              <div className="p-5 md:p-6 flex flex-col gap-4">
-                {stats.map((stat, index) => (
-                  <div key={`${stat.label}-${index}`} className="rounded-2xl border border-[rgba(255,255,255,0.06)] bg-[rgba(255,255,255,0.02)] p-4">
-                    <p className="text-[12px] uppercase tracking-[0.14em] text-text-tertiary" style={{ fontFamily: 'JetBrains Mono' }}>
-                      Panel {String(index + 1).padStart(2, '0')}
-                    </p>
-                    <p className="text-[26px] text-text-primary mt-3" style={{ fontFamily: 'Syne', fontWeight: 800 }}>
-                      {stat.value}
-                    </p>
-                    <p className="text-[13px] text-text-secondary mt-2">{stat.label}</p>
-                  </div>
-                ))}
-                <div className="rounded-2xl border border-[rgba(124,111,247,0.16)] bg-[rgba(124,111,247,0.08)] p-4">
-                  <p className="text-[12px] text-accent-light leading-[1.7]" style={{ fontFamily: 'DM Sans', fontWeight: 400 }}>
-                    {getContentValue('hero', 'proof_note', 'The homepage pulls from the same editable content system used by the admin panel.')}
                   </p>
                 </div>
               </div>
