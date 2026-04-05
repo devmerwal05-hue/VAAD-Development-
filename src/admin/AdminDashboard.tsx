@@ -2065,10 +2065,6 @@ export default function AdminDashboard() {
           void loadAll();
           return;
         }
-
-        if (!sessionProbeTimedOutRef.current) {
-          setChecking(false);
-        }
       } catch (probeError) {
         if (cancelled) return;
         setAuthenticated(false);
@@ -2084,16 +2080,9 @@ export default function AdminDashboard() {
               : "Admin API is not reachable from this domain right now. Retry, then verify deployment env vars if it persists."
           );
         }
-
-        if (!sessionProbeTimedOutRef.current) {
-          setChecking(false);
-        }
       } finally {
         if (!cancelled) {
           window.clearTimeout(timeoutId);
-          if (!sessionProbeTimedOutRef.current) {
-            setChecking(false);
-          }
         }
       }
     })();
