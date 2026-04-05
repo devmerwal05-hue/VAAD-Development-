@@ -2490,9 +2490,9 @@ export default function AdminDashboard() {
 
   if (!authenticated) {
     return (
-      <div className="min-h-screen bg-[#06060C] flex items-center justify-center px-4">
+      <div className="relative min-h-screen bg-[#06060C] flex items-center justify-center px-4" style={{ zIndex: 10010 }}>
         <motion.div
-          initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
+          initial={false}
           className="w-full max-w-[400px] bg-white/[0.04] border border-white/8 rounded-2xl p-8">
           <div className="flex items-center gap-3 mb-8">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent/60 to-accent flex items-center justify-center">
@@ -2566,7 +2566,7 @@ export default function AdminDashboard() {
   const upsertField = (section: string, key: string, value: string) => ensureField(section, key, value);
 
   return (
-    <div className="h-screen overflow-hidden bg-[#06060C] flex flex-col" style={{ fontFamily: "DM Sans, sans-serif" }}>
+    <div className="relative h-screen overflow-hidden bg-[#06060C] flex flex-col" style={{ fontFamily: "DM Sans, sans-serif", zIndex: 10010 }}>
       <ConfirmModal
         open={!!confirm}
         title={confirm?.kind === "submission" ? "Delete submission?" : confirm?.kind === "collection_item" ? `Delete ${confirm?.label}?` : "Delete content field?"}
