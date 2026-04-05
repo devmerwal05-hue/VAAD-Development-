@@ -4,6 +4,7 @@ import { ContentProvider } from './lib/ContentContext';
 import ErrorBoundary from './components/ErrorBoundary';
 import IntroSplash from './components/IntroSplash';
 import HomePage from './pages/HomePage';
+import AdminDashboard from './pages/AdminDashboard';
 import RouteEffects from './components/RouteEffects';
 
 const WorkPage = lazy(() => import('./pages/WorkPage'));
@@ -12,7 +13,6 @@ const ProcessPage = lazy(() => import('./pages/ProcessPage'));
 const TeamPage = lazy(() => import('./pages/TeamPage'));
 const PricingPage = lazy(() => import('./pages/PricingPage'));
 const ContactPage = lazy(() => import('./pages/ContactPage'));
-const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 const NotFound = lazy(() => import('./components/NotFound'));
 
 function PageLoader() {
@@ -27,20 +27,31 @@ function PageLoader() {
 }
 
 export default function App() {
+  const isAdminPath = typeof window !== 'undefined' && window.location.pathname.startsWith('/admin');
+
   // Show intro only on first visit per session
   const [introComplete, setIntroComplete] = useState(() => {
-    return sessionStorage.getItem('vaad_intro_seen') === '1';
+    if (isAdminPath) return true;
+    try {
+      return sessionStorage.getItem('vaad_intro_seen') === '1';
+    } catch {
+      return true;
+    }
   });
 
   const handleIntroComplete = useCallback(() => {
-    sessionStorage.setItem('vaad_intro_seen', '1');
+    try {
+      sessionStorage.setItem('vaad_intro_seen', '1');
+    } catch {
+      // Ignore storage failures and continue without blocking app usage.
+    }
     setIntroComplete(true);
   }, []);
 
   return (
     <ErrorBoundary>
       <ContentProvider>
-        {!introComplete && <IntroSplash onComplete={handleIntroComplete} />}
+        {!isAdminPath && !introComplete && <IntroSplash onComplete={handleIntroComplete} />}
         <BrowserRouter>
           <RouteEffects />
           <Suspense fallback={<PageLoader />}>
