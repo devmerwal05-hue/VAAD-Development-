@@ -2480,8 +2480,35 @@ export default function AdminDashboard() {
 
   if (checking) {
     return (
-      <div className="min-h-screen bg-[#06060C] flex items-center justify-center text-white/30 text-[13px]">
-        <Spinner size={20} />
+      <div className="min-h-screen bg-[#06060C] flex items-center justify-center px-4">
+        <div className="w-full max-w-[420px] bg-white/[0.04] border border-white/8 rounded-2xl p-7 text-center">
+          <div className="flex items-center justify-center mb-3 text-white/60">
+            <Spinner size={20} />
+          </div>
+          <h1 className="text-[18px] font-bold text-white mb-2" style={{ fontFamily: "Syne, sans-serif" }}>
+            Connecting to admin
+          </h1>
+          <p className="text-[12px] text-white/45 mb-4">
+            Checking your session and API connectivity.
+          </p>
+          {error && <p className="text-[12px] text-red-400 mb-3">{error}</p>}
+          <div className="flex flex-col gap-2">
+            <button
+              type="button"
+              onClick={() => setChecking(false)}
+              className="w-full py-2.5 rounded-xl text-[13px] text-white bg-accent/25 border border-accent/35 hover:bg-accent/35 transition-colors"
+            >
+              Open sign-in now
+            </button>
+            <button
+              type="button"
+              onClick={retrySessionProbe}
+              className="w-full py-2.5 rounded-xl text-[13px] text-white/80 border border-white/12 hover:border-white/20 hover:text-white transition-colors"
+            >
+              Retry connection check
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
