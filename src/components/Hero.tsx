@@ -65,10 +65,10 @@ export default function Hero() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.72, ease, delay: 0.12 }}
             className="text-text-primary"
-            style={{ fontFamily: 'Syne', fontWeight: 800, lineHeight: 0.96, letterSpacing: '-0.045em', fontSize: 'clamp(42px, 7.4vw, 114px)' }}
+            style={{ fontFamily: 'Syne', fontWeight: 800, lineHeight: 1.03, letterSpacing: '-0.03em', fontSize: 'clamp(42px, 7.2vw, 108px)' }}
           >
             <span className="block">{line1}</span>
-            <span className="block gradient-text-enhanced md:whitespace-nowrap">{line2}</span>
+            <span className="block gradient-text-enhanced">{line2}</span>
           </motion.h1>
 
           <motion.p

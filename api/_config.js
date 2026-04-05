@@ -15,11 +15,26 @@ export function getAdminRole() {
   return getEnv('SUPABASE_ADMIN_ROLE') || 'admin';
 }
 
+function normalizeEnvSecret(value) {
+  if (typeof value !== 'string') return '';
+
+  const trimmed = value.trim();
+  if (!trimmed) return '';
+
+  const first = trimmed[0];
+  const last = trimmed[trimmed.length - 1];
+  if ((first === '"' || first === "'") && first === last && trimmed.length >= 2) {
+    return trimmed.slice(1, -1).trim();
+  }
+
+  return trimmed;
+}
+
 export function getAdminPassword() {
-  const candidates = ['ADMIN_PASSWORD', 'ADMIN_PASS', 'ADMIN_PANEL_PASSWORD'];
+  const candidates = ['ADMIN_PASSWORD', 'ADMIN_PASS', 'ADMIN_PANEL_PASSWORD', 'VITE_ADMIN_PASSWORD'];
   for (const key of candidates) {
-    const value = getEnv(key);
-    if (typeof value === 'string' && value.trim()) {
+    const value = normalizeEnvSecret(getEnv(key));
+    if (value) {
       return value;
     }
   }

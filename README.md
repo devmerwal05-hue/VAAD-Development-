@@ -24,7 +24,7 @@ This repo includes version hints in `.nvmrc` and `.node-version`.
    - `SUPABASE_UPLOADS_BUCKET`
   - `SUPABASE_ADMIN_ROLE` (default: `admin`)
   - `ADMIN_PASSWORD` (required; set a strong value)
-    - Backward-compatible aliases are also supported: `ADMIN_PASS`, `ADMIN_PANEL_PASSWORD`
+    - Backward-compatible aliases are also supported: `ADMIN_PASS`, `ADMIN_PANEL_PASSWORD`, `VITE_ADMIN_PASSWORD`
   - `ADMIN_SESSION_MAX_AGE_SECONDS` (default: `28800`)
    - `ADMIN_SESSION_SECRET`
    - `SITE_URL`

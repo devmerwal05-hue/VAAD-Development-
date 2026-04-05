@@ -9,7 +9,7 @@ export default function SectionTitle({ children }: { children: ReactNode }) {
       viewport={{ once: true, amount: 0.3 }}
       transition={{ duration: 0.5 }}
       className="mb-12 text-text-primary"
-      style={{ fontFamily: 'Syne', fontWeight: 800, fontSize: 'clamp(36px, 5vw, 68px)', lineHeight: 0.95, letterSpacing: '-0.04em' }}
+      style={{ fontFamily: 'Syne', fontWeight: 800, fontSize: 'clamp(36px, 5vw, 68px)', lineHeight: 1.04, letterSpacing: '-0.02em' }}
     >
       {children}
     </motion.h2>
