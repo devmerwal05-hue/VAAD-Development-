@@ -35,11 +35,14 @@ export default async function handler(req, res) {
       .order('created_at', { ascending: false })
       .limit(limit);
 
-    if (error) throw error;
+    if (error) {
+      console.warn('Admin audit API fallback:', getErrorMessage(error));
+      return res.status(200).json([]);
+    }
 
     return res.status(200).json(data || []);
   } catch (error) {
     console.error('Admin audit API error:', error);
-    return res.status(500).json({ error: getErrorMessage(error) });
+    return res.status(200).json([]);
   }
 }
