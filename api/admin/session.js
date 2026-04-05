@@ -17,7 +17,8 @@ function safePasswordCompare(input, expected) {
 }
 
 export default async function handler(req, res) {
-  if (!applySecurity(req, res, { scope: 'auth' })) return;
+  const scope = req.method === 'POST' ? 'admin_login' : 'auth';
+  if (!applySecurity(req, res, { scope })) return;
 
   if (req.method === 'GET') {
     const auth = await verifyAdminSession(req, res, { respondOnError: false });

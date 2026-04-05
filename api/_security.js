@@ -12,13 +12,20 @@ import {
 } from './_supabase.js';
 
 const rateLimitStore = new Map();
-const RATE_LIMIT_WINDOW_MS = 60 * 1000;
+const DEFAULT_RATE_LIMIT_WINDOW_MS = 60 * 1000;
 const RATE_LIMIT_LIMITS = {
   public: 120,
   contact: 20,
   admin: 240,
   auth: 30,
   upload: 40,
+  admin_login: 8,
+  submission: 8,
+};
+
+const RATE_LIMIT_WINDOWS_MS = {
+  admin_login: 15 * 60 * 1000,
+  submission: 10 * 60 * 1000,
 };
 
 const ADMIN_SESSION_COOKIE = 'vaad_admin_session';
@@ -47,12 +54,13 @@ function setRateLimitHeaders(res, limit, count, resetAt) {
 
 export function rateLimit(req, res, scope = 'public') {
   const limit = RATE_LIMIT_LIMITS[scope] ?? RATE_LIMIT_LIMITS.public;
+  const windowMs = RATE_LIMIT_WINDOWS_MS[scope] ?? DEFAULT_RATE_LIMIT_WINDOW_MS;
   const key = getRateLimitKey(req, scope);
   const now = Date.now();
 
   let entry = rateLimitStore.get(key);
   if (!entry || now > entry.resetAt) {
-    entry = { count: 0, resetAt: now + RATE_LIMIT_WINDOW_MS };
+    entry = { count: 0, resetAt: now + windowMs };
     rateLimitStore.set(key, entry);
   }
 
@@ -667,7 +675,7 @@ export async function logAdminAction(req, authContext, action, details = {}) {
 
 function shouldVerifyCsrf(scope, method) {
   if (!['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) return false;
-  return scope === 'auth' || scope === 'admin' || scope === 'upload';
+  return scope === 'auth' || scope === 'admin' || scope === 'upload' || scope === 'admin_login';
 }
 
 export function applySecurity(req, res, { scope = 'public', maxBodySize = 50000 } = {}) {
@@ -680,7 +688,7 @@ export function applySecurity(req, res, { scope = 'public', maxBodySize = 50000 
   if (!validateContentType(req, res)) return false;
 
   // Ensure a CSRF cookie is available for admin/auth scopes.
-  if (scope === 'auth' || scope === 'admin' || scope === 'upload') {
+  if (scope === 'auth' || scope === 'admin' || scope === 'upload' || scope === 'admin_login') {
     ensureCsrfToken(req, res);
   }
 

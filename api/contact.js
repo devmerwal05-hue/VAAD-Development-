@@ -10,8 +10,22 @@ import {
   verifyAdminSession,
 } from './_security.js';
 
+function normalizeNumericId(value) {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    const parsed = Math.trunc(value);
+    return parsed > 0 ? parsed : null;
+  }
+
+  if (typeof value === 'string' && value.trim()) {
+    const parsed = Number.parseInt(value.trim(), 10);
+    if (Number.isFinite(parsed) && parsed > 0) return parsed;
+  }
+
+  return null;
+}
+
 export default async function handler(req, res) {
-  const scope = req.method === 'POST' ? 'contact' : 'admin';
+  const scope = req.method === 'POST' ? 'submission' : 'admin';
   if (!applySecurity(req, res, { scope })) return;
 
   try {
@@ -117,21 +131,22 @@ export default async function handler(req, res) {
       const body = getRequestBody(req, res);
       if (!body) return;
       const { id, status } = body;
-      if (typeof id !== 'number' || !CONTACT_STATUS.includes(status)) {
+      const normalizedId = normalizeNumericId(id);
+      if (!normalizedId || !CONTACT_STATUS.includes(status)) {
         return res.status(400).json({ error: 'Invalid status value' });
       }
 
       const { data, error } = await getSupabaseAdmin()
         .from('contact_submissions_v2')
         .update({ status })
-        .eq('id', id)
+        .eq('id', normalizedId)
         .select()
         .single();
 
       if (error) throw error;
 
       await logAdminAction(req, auth, 'contact.status.update', {
-        id,
+        id: normalizedId,
         status,
       });
 
@@ -145,18 +160,19 @@ export default async function handler(req, res) {
       const body = getRequestBody(req, res);
       if (!body) return;
       const { id } = body;
-      if (typeof id !== 'number') {
+      const normalizedId = normalizeNumericId(id);
+      if (!normalizedId) {
         return res.status(400).json({ error: 'Valid numeric id is required' });
       }
 
       const { error } = await getSupabaseAdmin()
         .from('contact_submissions_v2')
         .delete()
-        .eq('id', id);
+        .eq('id', normalizedId);
 
       if (error) throw error;
 
-      await logAdminAction(req, auth, 'contact.delete', { id });
+      await logAdminAction(req, auth, 'contact.delete', { id: normalizedId });
 
       return res.status(200).json({ ok: true });
     }
