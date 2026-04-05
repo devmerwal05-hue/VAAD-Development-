@@ -2044,6 +2044,7 @@ export default function AdminDashboard() {
       if (cancelled) return;
       sessionProbeTimedOutRef.current = true;
       setError("Admin session check timed out. Try signing in, or click Retry connection.");
+      setChecking(false);
     }, 8000);
 
     (async () => {
@@ -2065,6 +2066,8 @@ export default function AdminDashboard() {
           void loadAll();
           return;
         }
+
+        setChecking(false);
       } catch (probeError) {
         if (cancelled) return;
         setAuthenticated(false);
@@ -2080,6 +2083,8 @@ export default function AdminDashboard() {
               : "Admin API is not reachable from this domain right now. Retry, then verify deployment env vars if it persists."
           );
         }
+
+        setChecking(false);
       } finally {
         if (!cancelled) {
           window.clearTimeout(timeoutId);
@@ -2483,41 +2488,6 @@ export default function AdminDashboard() {
   // RENDER: loading / login
   // ─────────────────────────────────────────────────────────────────────────
 
-  if (checking) {
-    return (
-      <div className="min-h-screen bg-[#06060C] flex items-center justify-center px-4">
-        <div className="w-full max-w-[420px] bg-white/[0.04] border border-white/8 rounded-2xl p-7 text-center">
-          <div className="flex items-center justify-center mb-3 text-white/60">
-            <Spinner size={20} />
-          </div>
-          <h1 className="text-[18px] font-bold text-white mb-2" style={{ fontFamily: "Syne, sans-serif" }}>
-            Connecting to admin
-          </h1>
-          <p className="text-[12px] text-white/45 mb-4">
-            Checking your session and API connectivity.
-          </p>
-          {error && <p className="text-[12px] text-red-400 mb-3">{error}</p>}
-          <div className="flex flex-col gap-2">
-            <button
-              type="button"
-              onClick={() => setChecking(false)}
-              className="w-full py-2.5 rounded-xl text-[13px] text-white bg-accent/25 border border-accent/35 hover:bg-accent/35 transition-colors"
-            >
-              Open sign-in now
-            </button>
-            <button
-              type="button"
-              onClick={retrySessionProbe}
-              className="w-full py-2.5 rounded-xl text-[13px] text-white/80 border border-white/12 hover:border-white/20 hover:text-white transition-colors"
-            >
-              Retry connection check
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   if (!authenticated) {
     return (
       <div className="min-h-screen bg-[#06060C] flex items-center justify-center px-4">
@@ -2543,6 +2513,13 @@ export default function AdminDashboard() {
               placeholder="Admin password"
               className="w-full bg-white/4 text-white text-[14px] px-4 py-3 rounded-xl border border-white/10 outline-none focus:border-accent/50 placeholder:text-white/25"
             />
+
+            {checking && (
+              <div className="flex items-center gap-2 text-[12px] text-white/50">
+                <Spinner size={12} />
+                Checking existing admin session...
+              </div>
+            )}
 
             {error && <p className="text-[12px] text-red-400">{error}</p>}
             <button type="submit" disabled={loading}
