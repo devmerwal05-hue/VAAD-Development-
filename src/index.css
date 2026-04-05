@@ -65,6 +65,10 @@ body::after {
   z-index: 1;
 }
 
+body.admin-mode::after {
+  display: none;
+}
+
 /* Grid pattern — CSS only */
 .grid-pattern {
   background-image:

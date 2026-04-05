@@ -1708,6 +1708,14 @@ const SectionSidebar = React.memo(function SectionSidebar({
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function AdminDashboard() {
+  useEffect(() => {
+    if (typeof document === 'undefined') return undefined;
+    document.body.classList.add('admin-mode');
+    return () => {
+      document.body.classList.remove('admin-mode');
+    };
+  }, []);
+
   // Auth state
   const [password, setPassword] = useState("");
   const [csrfToken, setCsrfToken] = useState("");
