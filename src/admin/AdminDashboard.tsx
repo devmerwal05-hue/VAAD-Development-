@@ -1686,18 +1686,60 @@ export default function AdminDashboard() {
     })();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const fetchFreshCsrfToken = useCallback(async () => {
+    const sess = await apiFetch<{
+      authenticated: boolean;
+      csrfToken?: string;
+    }>("/api/admin/session", undefined, addLog, setCsrfToken);
+
+    const token = typeof sess?.csrfToken === "string" ? sess.csrfToken : "";
+    if (token) setCsrfToken(token);
+    return token;
+  }, [addLog]);
+
   async function login(e: React.FormEvent) {
     e.preventDefault(); setLoading(true); setError("");
 
     try {
-      if (!csrfToken) {
-        await apiFetchLogged<{ csrfToken?: string }>("/api/admin/session");
+      let token = csrfToken;
+      if (!token) {
+        token = await fetchFreshCsrfToken();
       }
 
-      await apiFetchLogged("/api/admin/session", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password }),
-      });
+      const loginRequest: RequestInit = withCsrfHeader(
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ password }),
+        },
+        token,
+      );
+
+      try {
+        await apiFetch("/api/admin/session", loginRequest, addLog, setCsrfToken);
+      } catch (error) {
+        const isCsrfError = error instanceof ApiRequestError
+          && error.status === 403
+          && /csrf/i.test(error.message || "");
+
+        if (!isCsrfError) throw error;
+
+        const refreshedToken = await fetchFreshCsrfToken();
+        await apiFetch(
+          "/api/admin/session",
+          withCsrfHeader(
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ password }),
+            },
+            refreshedToken,
+          ),
+          addLog,
+          setCsrfToken,
+        );
+      }
+
       setAuthenticated(true);
       setPassword("");
       await loadAll();

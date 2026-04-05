@@ -16,7 +16,14 @@ export function getAdminRole() {
 }
 
 export function getAdminPassword() {
-  return getEnv('ADMIN_PASSWORD') || '';
+  const candidates = ['ADMIN_PASSWORD', 'ADMIN_PASS', 'ADMIN_PANEL_PASSWORD'];
+  for (const key of candidates) {
+    const value = getEnv(key);
+    if (typeof value === 'string' && value.trim()) {
+      return value;
+    }
+  }
+  return '';
 }
 
 export function shouldRequireAdminMfa() {
