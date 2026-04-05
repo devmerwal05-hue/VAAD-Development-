@@ -1,4 +1,5 @@
 import { applySecurity, getErrorMessage, verifyAdminSession } from '../_security.js';
+import { hasSupabaseConfig } from '../_config.js';
 import { getSupabaseAdmin } from '../_supabase.js';
 
 function parseLimit(rawValue) {
@@ -21,6 +22,10 @@ export default async function handler(req, res) {
   try {
     const auth = await verifyAdminSession(req, res);
     if (!auth) return;
+
+    if (!hasSupabaseConfig()) {
+      return res.status(200).json([]);
+    }
 
     const limit = parseLimit(req.query?.limit);
 
