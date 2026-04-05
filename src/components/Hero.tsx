@@ -1,243 +1,182 @@
-import { useEffect, useRef, useState } from 'react';
-import { animate, motion, useInView } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Sparkles } from 'lucide-react';
+import { buildPortfolioProjects } from '../lib/portfolio';
 import { useContent } from '../lib/useContent';
 
 const ease: [number, number, number, number] = [0.16, 0.77, 0.47, 0.97];
 
-function CountUpMetric({ value }: { value: string }) {
-  const nodeRef = useRef<HTMLSpanElement | null>(null);
-  const inView = useInView(nodeRef, { once: true, amount: 0.8 });
-  const [displayValue, setDisplayValue] = useState('0');
-  const isNumeric = /^\d+(\.\d+)?$/.test(value.trim());
-
-  useEffect(() => {
-    if (!isNumeric || !inView) return undefined;
-
-    const decimals = value.includes('.') ? value.split('.')[1].length : 0;
-    const target = Number(value);
-
-    const controls = animate(0, target, {
-      duration: 0.95,
-      ease: [0.16, 0.77, 0.47, 0.97],
-      onUpdate(latest) {
-        setDisplayValue(latest.toFixed(decimals).replace(/\.0+$/, ''));
-      },
-    });
-
-    return () => controls.stop();
-  }, [inView, isNumeric, value]);
-
-  if (!isNumeric) {
-    return <span ref={nodeRef}>{value}</span>;
-  }
-
-  return <span ref={nodeRef}>{displayValue}</span>;
-}
-
 export default function Hero() {
-  const { getContentValue } = useContent();
-
+  const { content, getContentValue, projectCount } = useContent();
+  const hasStoredCount = content.some((item) => item.section === 'portfolio' && item.key === 'project_count');
+  const featuredProject = buildPortfolioProjects(getContentValue, projectCount, !hasStoredCount)[0];
   const line1 = getContentValue('hero', 'headline_line1', 'Small teams need fast systems');
-  const line2 = getContentValue('hero', 'headline_line2', 'not vague agency timelines.');
-  const subheadline = getContentValue(
-    'hero',
-    'subheadline',
-    'Conversion-focused websites and operational web apps for teams that need a tight scope, a fast build window, and a handoff they can actually maintain.'
-  );
+  const line2 = getContentValue('hero', 'headline_line2', 'not timeline guesswork.');
 
-  const stats = [
-    { value: getContentValue('hero', 'stat_1_number', '5'), label: getContentValue('hero', 'stat_1_label', 'Senior builders') },
-    { value: getContentValue('hero', 'stat_2_number', '1-3'), label: getContentValue('hero', 'stat_2_label', 'Week delivery') },
-    { value: getContentValue('hero', 'stat_3_number', 'Always'), label: getContentValue('hero', 'stat_3_label', 'Post-launch iteration') },
+  const statDefaults = [
+    { value: '5', label: 'Senior builders' },
+    { value: '1-3', label: 'Week delivery' },
+    { value: 'Always', label: 'Post-launch iteration' },
   ];
+  
+  const storedStatCount = Number(getContentValue('hero', 'stat_count', ''));
+  const statCount = (!isNaN(storedStatCount) && storedStatCount > 0) ? storedStatCount : statDefaults.length;
 
-  const systemSpecs = [
-    { label: getContentValue('hero', 'spec_1_label', 'Delivery mode'), value: getContentValue('hero', 'spec_1_value', 'Embedded sprint') },
-    { label: getContentValue('hero', 'spec_2_label', 'Iteration cycle'), value: getContentValue('hero', 'spec_2_value', '48-hour checkpoints') },
-    { label: getContentValue('hero', 'spec_3_label', 'Stack bias'), value: getContentValue('hero', 'spec_3_value', 'React + TypeScript + Supabase') },
-    { label: getContentValue('hero', 'spec_4_label', 'Launch profile'), value: getContentValue('hero', 'spec_4_value', 'Content-ready + measurable') },
-  ];
-
-  const coreServiceTitle = getContentValue('hero', 'info_1_title', 'Core Service');
-  const coreServiceText = getContentValue('hero', 'info_1_text', 'Clear scoping, focused execution, and handoff-ready delivery in one loop.');
-  const coreServiceImage = getContentValue('hero', 'info_1_image', '');
-  const technicalSpecsTitle = getContentValue('hero', 'info_2_title', 'Technical Specs');
-  const technicalSpecsImage = getContentValue('hero', 'info_2_image', '');
-  const metricsTitle = getContentValue('hero', 'info_3_title', 'Delivery Metrics');
-  const metricsImage = getContentValue('hero', 'info_3_image', '');
-
-  const splitWords = (line: string) => line.split(/\s+/).filter(Boolean);
-  const lineOneWords = splitWords(line1);
-  const lineTwoWords = splitWords(line2);
+  const stats = Array.from({ length: statCount }, (_, index) => ({
+    value: getContentValue('hero', `stat_${index + 1}_number`, statDefaults[index]?.value || ''),
+    label: getContentValue('hero', `stat_${index + 1}_label`, statDefaults[index]?.label || ''),
+  })).filter(s => s.value);
 
   return (
-    <section className="section-pad swiss-section relative overflow-hidden py-20 md:py-24">
+    <section className="relative min-h-[100svh] overflow-hidden px-5 pt-28 pb-16 md:pt-36 md:pb-24">
       <div className="absolute inset-0 grid-pattern opacity-20" />
-      <div className="hero-mesh" />
-      <div className="hero-particle-lines" />
-      <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_50%_15%,rgba(95,160,255,0.12),transparent_58%)]" />
-      <span className="swiss-meta swiss-meta--tl">{getContentValue('hero', 'meta_left', 'hero.layout // 12-col')}</span>
-      <span className="swiss-meta swiss-meta--tr">{getContentValue('hero', 'meta_right', 'v3.1 // bento-grid')}</span>
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="hero-gradient-1 absolute inset-0" />
+        <div className="hero-gradient-2 absolute inset-0" />
+      </div>
+      
+      {/* Floating orbs */}
+      <div className="absolute top-20 left-[10%] w-[300px] h-[300px] rounded-full pointer-events-none opacity-30">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#7C6FF7] to-[#A855F7] rounded-full blur-[80px] float-orb" />
+      </div>
+      <div className="absolute bottom-20 right-[5%] w-[250px] h-[250px] rounded-full pointer-events-none opacity-20">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#22D3EE] to-[#7C6FF7] rounded-full blur-[60px] float-orb-slow" />
+      </div>
+      
+      <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 50% 20%, rgba(255,255,255,0.04), transparent 35%), radial-gradient(ellipse at center, transparent 18%, #06060C 78%)' }} />
 
-      <div className="relative z-10 site-container swiss-grid max-w-[1320px] gap-8 px-5 md:px-8 lg:gap-12 xl:px-10">
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.45, ease }}
-          className="swiss-full-col flex items-center justify-between overflow-hidden border-b border-white/10 pb-8"
-        >
-          <span className="archive-tag text-[rgba(198,213,239,0.9)]">{getContentValue('hero', 'eyebrow', 'Web Design + Web App Delivery')}</span>
-          <span className="archive-tag hidden md:block">{getContentValue('hero', 'proof_kicker', 'System specs')}</span>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease, delay: 0.05 }}
-          className="swiss-full-col mt-6 overflow-hidden lg:col-span-8 lg:col-start-3"
-        >
-          <div className="overflow-hidden">
-            <h1
-              className="display-hero text-center text-[#e6edfa]"
-              style={{
-                fontFamily: "'Playfair Display', serif",
-                fontWeight: 900,
-                fontSize: 'clamp(48px, 10vw, 136px)',
-                fontStyle: 'italic',
-              }}
-            >
-              <span className="block">
-                {lineOneWords.map((word, index) => (
-                  <motion.span
-                    key={`hero-line1-${word}-${index}`}
-                    initial={{ opacity: 0, y: 16 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.08 + index * 0.045, ease }}
-                    className="mr-[0.28em] inline-block"
-                  >
-                    {word}
-                  </motion.span>
-                ))}
-              </span>
-              <span className="block text-[rgba(239,244,255,0.95)]">
-                {lineTwoWords.map((word, index) => (
-                  <motion.span
-                    key={`hero-line2-${word}-${index}`}
-                    initial={{ opacity: 0, y: 16 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.24 + index * 0.045, ease }}
-                    className="mr-[0.28em] inline-block"
-                  >
-                    {word}
-                  </motion.span>
-                ))}
-              </span>
-            </h1>
-
-            <p
-              className="reading-track mx-auto mt-10 text-center text-[17px] leading-[1.9] text-[rgba(199,214,239,0.9)] md:text-[20px]"
-              style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}
-            >
-              {subheadline}
-            </p>
-
-            <div className="mt-11 flex flex-col items-center gap-4 sm:flex-row sm:justify-center sm:gap-5">
-              <Link
-                to="/contact"
-                className="shimmer-btn cta-btn inline-flex items-center justify-center gap-2.5 bg-accent px-9 py-4 text-[12px] uppercase tracking-[0.28em] text-[#050d22] transition-all duration-300 hover:brightness-110"
-                style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700 }}
-              >
-                {getContentValue('hero', 'cta_primary', 'Start a project')} <ArrowRight size={14} />
-              </Link>
-              <Link
-                to="/work"
-                className="cta-btn inline-flex items-center justify-center gap-2.5 border border-white/20 bg-black/30 px-9 py-4 text-[12px] uppercase tracking-[0.28em] text-[rgba(214,227,248,0.92)] transition-all duration-300 hover:border-white/35 hover:text-white"
-                style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700 }}
-              >
-                {getContentValue('hero', 'cta_secondary', 'See shipped work')}
-              </Link>
-            </div>
-          </div>
-        </motion.div>
-
-        <div className="swiss-full-col mt-12 grid grid-cols-1 gap-8 overflow-hidden lg:grid-cols-12 lg:gap-12">
-          <motion.article
-            initial={{ opacity: 0, y: 18 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.45, ease }}
-            className="bento-card scanline-hover overflow-hidden border border-white/10 bg-zinc-900/50 p-8 md:p-10 lg:col-span-8"
+      <div className="relative z-10 max-w-[1360px] mx-auto grid grid-cols-1 xl:grid-cols-[1.08fr_0.92fr] gap-8 xl:gap-10 items-center">
+        <div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.55, ease, delay: 0.05 }}
+            className="inline-flex items-center gap-2.5 mb-8 px-4 py-2 rounded-full glass border-shimmer"
+            style={{ background: 'rgba(124,111,247,0.08)' }}
           >
-            {coreServiceImage && (
-              <div className="mb-6 h-36 overflow-hidden border border-white/10 md:h-44">
-                <img src={coreServiceImage} alt={coreServiceTitle} loading="lazy" decoding="async" className="h-full w-full object-cover" />
+            <Sparkles size={13} className="text-accent-light animate-pulse" />
+            <span className="text-[10px] md:text-[11px] font-medium tracking-[0.14em] uppercase text-accent-light" style={{ fontFamily: 'DM Sans', fontWeight: 500 }}>
+              {getContentValue('hero', 'eyebrow', 'Web Design + Web App Delivery')}
+            </span>
+          </motion.div>
+
+          <motion.h1
+            initial={{ opacity: 0, y: 28 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.72, ease, delay: 0.12 }}
+            className="text-text-primary"
+            style={{ fontFamily: 'Syne', fontWeight: 800, lineHeight: 0.96, letterSpacing: '-0.045em', fontSize: 'clamp(42px, 7.4vw, 114px)' }}
+          >
+            <span className="block">{line1}</span>
+            <span className="block gradient-text-enhanced md:whitespace-nowrap">{line2}</span>
+          </motion.h1>
+
+          <motion.p
+            initial={{ opacity: 0, y: 22 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.62, ease, delay: 0.28 }}
+            className="text-[15px] md:text-[18px] text-text-secondary max-w-[620px] mt-7 leading-[1.8]"
+            style={{ fontFamily: 'DM Sans', fontWeight: 300 }}
+          >
+            {getContentValue('hero', 'subheadline', 'Conversion-focused websites and operational web apps for teams that need a tight scope, a fast build window, and a handoff they can actually maintain.')}
+          </motion.p>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.55, ease, delay: 0.4 }}
+            className="flex flex-col sm:flex-row gap-3 mt-8"
+          >
+            <Link to="/contact" className="shimmer-btn gradient-bg text-white px-7 md:px-8 py-4 rounded-2xl text-[14px] md:text-[15px] font-medium shadow-[0_8px_50px_rgba(124,111,247,0.28)] flex items-center gap-2.5 w-full sm:w-auto justify-center btn-glow" style={{ fontFamily: 'DM Sans', fontWeight: 500 }}>
+              {getContentValue('hero', 'cta_primary', 'Start a project')} <ArrowRight size={16} className="btn-arrow-icon" />
+            </Link>
+            <Link to="/work" className="text-text-primary px-7 md:px-8 py-4 rounded-2xl text-[14px] md:text-[15px] font-medium border border-[rgba(255,255,255,0.08)] hover:bg-[rgba(255,255,255,0.04)] transition-all duration-300 w-full sm:w-auto text-center btn-arrow" style={{ fontFamily: 'DM Sans', fontWeight: 500 }}>
+              {getContentValue('hero', 'cta_secondary', 'See shipped work')}
+            </Link>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 22 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease, delay: 0.5 }}
+            className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-10"
+          >
+            {stats.map((stat, index) => (
+              <div key={stat.label + index} className="rounded-2xl border border-[rgba(255,255,255,0.06)] bg-[rgba(10,10,20,0.72)] px-4 py-4 backdrop-blur-sm glass card-hover">
+                <p className="text-[24px] md:text-[30px] text-text-primary gradient-text-enhanced" style={{ fontFamily: 'Syne', fontWeight: 800 }}>{stat.value}</p>
+                <p className="text-[11px] uppercase tracking-[0.12em] text-text-tertiary mt-2">{stat.label}</p>
               </div>
-            )}
-            <p className="archive-tag mb-5">{coreServiceTitle}</p>
-            <p className="reading-track text-[17px] leading-[1.9] text-[rgba(220,232,251,0.92)] md:text-[19px]" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}>
-              {coreServiceText}
-            </p>
+            ))}
+          </motion.div>
+        </div>
 
-            <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-3 md:gap-5">
-              {stats.map((stat, i) => (
-                <div key={`${stat.label}-${i}`} className="bento-card min-h-[136px] overflow-hidden border border-white/10 bg-black/45 p-5 text-center">
-                  <p className="text-[34px] leading-none text-[#e8f0ff]" style={{ fontFamily: "'Playfair Display', serif", fontWeight: 800, fontStyle: 'italic' }}>
-                    <CountUpMetric value={stat.value} />
+        <motion.div
+          initial={{ opacity: 0, y: 26 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.72, ease, delay: 0.2 }}
+          className="relative"
+        >
+          <div className="absolute -top-10 -right-6 w-36 h-36 rounded-full bg-[rgba(236,72,153,0.12)] blur-3xl" />
+          <div className="absolute -bottom-8 -left-4 w-44 h-44 rounded-full bg-[rgba(34,211,238,0.1)] blur-3xl" />
+
+          <div className="relative rounded-[32px] border border-[rgba(255,255,255,0.08)] bg-[rgba(8,8,14,0.86)] backdrop-blur-md overflow-hidden">
+            <div className="px-5 py-4 border-b border-[rgba(255,255,255,0.06)] flex items-center justify-between gap-4">
+              <div>
+                <p className="text-[11px] uppercase tracking-[0.16em] text-accent-light" style={{ fontFamily: 'JetBrains Mono' }}>
+                  {getContentValue('hero', 'proof_kicker', 'Live delivery board')}
+                </p>
+                <p className="text-[13px] text-text-secondary mt-1">
+                  {getContentValue('hero', 'proof_title', 'Creative builds that still respect real deadlines.')}
+                </p>
+              </div>
+              <span className="text-[12px] text-text-tertiary">Home</span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-[1.1fr_0.9fr]">
+              <div className="relative min-h-[320px]">
+                {featuredProject?.image ? (
+                  <img src={featuredProject.image} alt={featuredProject.name} loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover opacity-80" />
+                ) : (
+                  <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(124,111,247,0.32), rgba(34,211,238,0.12), rgba(236,72,153,0.18))' }} />
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-[rgba(5,5,9,0.95)] via-[rgba(5,5,9,0.24)] to-transparent" />
+                <div className="absolute left-5 right-5 bottom-5">
+                  <p className="text-[11px] uppercase tracking-[0.14em] text-accent-light mb-2">{featuredProject?.tag || 'Featured release'}</p>
+                  <h2 className="text-[28px] md:text-[36px] text-text-primary" style={{ fontFamily: 'Syne', fontWeight: 800, lineHeight: 0.95, letterSpacing: '-0.04em' }}>
+                    {featuredProject?.name || 'Launch-ready systems'}
+                  </h2>
+                  <p className="text-[14px] text-text-secondary mt-3 max-w-[40ch]" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>
+                    {getContentValue('hero', 'proof_description', 'Each release is scoped against launch pressure, content reality, and what your team can maintain after handoff.')}
                   </p>
-                  <p className="mono-readable mt-3 text-[11px] uppercase text-[rgba(164,188,225,0.86)]">{stat.label}</p>
                 </div>
-              ))}
-            </div>
-          </motion.article>
+              </div>
 
-          <div className="grid grid-cols-1 gap-6 overflow-hidden lg:col-span-4">
-            <div className="overflow-hidden border border-white/20 bg-black/75">
-              {technicalSpecsImage ? (
-                <div className="relative h-24 overflow-hidden md:h-28">
-                  <img src={technicalSpecsImage} alt={technicalSpecsTitle} loading="lazy" decoding="async" className="h-full w-full object-cover" />
-                  <div className="absolute inset-0 bg-black/45" />
-                  <p className="archive-tag absolute bottom-2 left-3 text-[rgba(255,255,255,0.9)]">{technicalSpecsTitle}</p>
+              <div className="p-5 md:p-6 flex flex-col gap-4">
+                {stats.map((stat, index) => (
+                  <div key={`${stat.label}-${index}`} className="rounded-2xl border border-[rgba(255,255,255,0.06)] bg-[rgba(255,255,255,0.02)] p-4">
+                    <p className="text-[12px] uppercase tracking-[0.14em] text-text-tertiary" style={{ fontFamily: 'JetBrains Mono' }}>
+                      Panel {String(index + 1).padStart(2, '0')}
+                    </p>
+                    <p className="text-[26px] text-text-primary mt-3" style={{ fontFamily: 'Syne', fontWeight: 800 }}>
+                      {stat.value}
+                    </p>
+                    <p className="text-[13px] text-text-secondary mt-2">{stat.label}</p>
+                  </div>
+                ))}
+                <div className="rounded-2xl border border-[rgba(124,111,247,0.16)] bg-[rgba(124,111,247,0.08)] p-4">
+                  <p className="text-[12px] text-accent-light leading-[1.7]" style={{ fontFamily: 'DM Sans', fontWeight: 400 }}>
+                    {getContentValue('hero', 'proof_note', 'The homepage pulls from the same editable content system used by the admin panel.')}
+                  </p>
                 </div>
-              ) : (
-                <div className="px-4 py-4">
-                  <p className="archive-tag text-[rgba(255,255,255,0.82)]">{technicalSpecsTitle}</p>
-                </div>
-              )}
-            </div>
-
-            <div className="grid grid-cols-2 gap-5">
-              {systemSpecs.slice(0, 4).map((spec, index) => (
-                <motion.article
-                  key={spec.label}
-                  initial={{ opacity: 0, y: 18 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.42, ease, delay: 0.05 * index }}
-                  className="bento-card aspect-square overflow-hidden border border-white/20 bg-black/80 p-5"
-                >
-                  <p className="archive-tag text-[rgba(255,255,255,0.7)]">{spec.label}</p>
-                  <p className="mono-readable mt-4 text-[12px] uppercase text-[rgba(226,236,252,0.92)]">{spec.value}</p>
-                </motion.article>
-              ))}
-            </div>
-
-            <div className="overflow-hidden border border-white/20 bg-black/70">
-              {metricsImage ? (
-                <div className="relative h-24 overflow-hidden md:h-28">
-                  <img src={metricsImage} alt={metricsTitle} loading="lazy" decoding="async" className="h-full w-full object-cover" />
-                  <div className="absolute inset-0 bg-black/45" />
-                  <p className="archive-tag absolute bottom-2 left-3 text-[rgba(255,255,255,0.9)]">{metricsTitle}</p>
-                </div>
-              ) : (
-                <div className="px-4 py-4">
-                  <p className="archive-tag text-[rgba(255,255,255,0.82)]">{metricsTitle}</p>
-                </div>
-              )}
+              </div>
             </div>
           </div>
-        </div>
+        </motion.div>
+      </div>
+
+      <div className="absolute bottom-6 md:bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2">
+        <span className="text-[9px] uppercase tracking-[0.2em] text-text-secondary" style={{ fontFamily: 'DM Sans', fontWeight: 500 }}>scroll</span>
+        <div className="w-[1px] h-[24px] bg-accent/30 scroll-indicator-line" />
       </div>
     </section>
   );

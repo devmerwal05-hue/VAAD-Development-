@@ -23,7 +23,7 @@ This repo includes version hints in `.nvmrc` and `.node-version`.
    - `SUPABASE_SERVICE_ROLE_KEY`
    - `SUPABASE_UPLOADS_BUCKET`
   - `SUPABASE_ADMIN_ROLE` (default: `admin`)
-  - `ADMIN_REQUIRE_MFA` (default: `true`)
+  - `ADMIN_PASSWORD` (required; set a strong value)
   - `ADMIN_SESSION_MAX_AGE_SECONDS` (default: `28800`)
    - `ADMIN_SESSION_SECRET`
    - `SITE_URL`
@@ -32,8 +32,7 @@ This repo includes version hints in `.nvmrc` and `.node-version`.
 4. Install dependencies with `npm install`.
 5. Start the local dev server (includes Vercel Functions under `/api`) with `vercel dev --local --yes --listen 3000`.
   - Open the site at `http://localhost:3000/` (admin at `/admin`).
-  - Sign in to `/admin` with a Supabase email/password account that has role `admin`.
-  - If `ADMIN_REQUIRE_MFA=true`, complete TOTP MFA to reach AAL2.
+  - Sign in to `/admin` with the password from `ADMIN_PASSWORD`.
 
 Optional (frontend-only): You can run `npm run dev` to start Vite on `http://127.0.0.1:5173/`, but admin/content APIs require `vercel dev`.
 
@@ -53,7 +52,7 @@ Optional (frontend-only): You can run `npm run dev` to start Vite on `http://127
 ## Admin flow
 
 - `GET /api/admin/session` issues/checks a signed admin cookie session and returns a CSRF token.
-- `POST /api/admin/session` signs in with Supabase email/password, enforces admin role, and (optionally) enforces MFA AAL2.
+- `POST /api/admin/session` validates the configured admin password and starts a signed `HttpOnly` session.
 - `DELETE /api/admin/session` clears the session and rotates CSRF state.
 - Mutating admin API routes require `X-CSRF-Token` and the `HttpOnly` session cookie.
 - Admin mutations are written to `public.admin_audit_logs` with actor, action, and request metadata.

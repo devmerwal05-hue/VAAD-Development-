@@ -1,12 +1,20 @@
 import { Link } from 'react-router-dom';
-import { m as motion } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { ArrowUpRight } from 'lucide-react';
 import { useContent } from '../lib/useContent';
+import Logo from './Logo';
 
 const ease: [number, number, number, number] = [0.16, 0.77, 0.47, 0.97];
 
-interface FooterItem { href?: string; label: string; }
-interface FooterColumn { items: FooterItem[]; title: string; }
+interface FooterItem {
+  href?: string;
+  label: string;
+}
+
+interface FooterColumn {
+  items: FooterItem[];
+  title: string;
+}
 
 export default function Footer() {
   const { getContentValue } = useContent();
@@ -16,19 +24,19 @@ export default function Footer() {
     {
       title: getContentValue('footer', 'explore_title', 'Explore'),
       items: [
-        { label: getContentValue('nav', 'home_label', 'Home'), href: '/' },
-        { label: getContentValue('nav', 'link_1', 'Work'),     href: getContentValue('nav', 'link_1_href', '/work') },
+        { label: 'Home', href: '/' },
+        { label: getContentValue('nav', 'link_1', 'Work'), href: getContentValue('nav', 'link_1_href', '/work') },
         { label: getContentValue('nav', 'link_2', 'Services'), href: getContentValue('nav', 'link_2_href', '/services') },
-        { label: getContentValue('nav', 'link_6', 'Contact'),  href: getContentValue('nav', 'link_6_href', '/contact') },
+        { label: getContentValue('nav', 'link_6', 'Contact'), href: getContentValue('nav', 'link_6_href', '/contact') },
       ],
     },
     {
       title: getContentValue('footer', 'work_title', 'What We Ship'),
       items: [
         { label: getContentValue('services', 'card_1_title', 'High-conviction websites'), href: '/services' },
-        { label: getContentValue('services', 'card_2_title', 'Operational web apps'),     href: '/services' },
-        { label: getContentValue('services', 'card_3_title', 'Commerce builds'),          href: '/services' },
-        { label: getContentValue('process', 'title', 'A fast, visible process'),          href: '/process' },
+        { label: getContentValue('services', 'card_2_title', 'Operational web apps'), href: '/services' },
+        { label: getContentValue('services', 'card_3_title', 'Commerce builds'), href: '/services' },
+        { label: getContentValue('process', 'title', 'A fast, visible process'), href: '/process' },
       ],
     },
     {
@@ -43,7 +51,7 @@ export default function Footer() {
     {
       title: getContentValue('footer', 'contact_title', 'Contact'),
       items: [
-        { label: contactEmail,                                                              href: `mailto:${contactEmail}` },
+        { label: contactEmail, href: `mailto:${contactEmail}` },
         { label: getContentValue('contact', 'response_time', 'Replies within one business day') },
         { label: getContentValue('contact', 'timezone', 'Based in India, working globally') },
       ],
@@ -51,119 +59,98 @@ export default function Footer() {
   ];
 
   return (
-    <footer style={{ background: '#040A18' }}>
-      {/* CTA section */}
-      <div
-        className="relative overflow-hidden"
-        style={{ borderTop: '1px solid rgba(232,19,42,0.15)' }}
-      >
-        <div className="absolute inset-0 grid-pattern opacity-20 pointer-events-none" />
+    <footer className="bg-footer-bg pt-0 pb-8 relative">
+      <div className="relative overflow-hidden" style={{ borderTop: '1px solid rgba(124,111,247,0.08)' }}>
         <div
           className="absolute inset-0 pointer-events-none"
-          style={{ background: 'radial-gradient(ellipse 80% 70% at 50% 0%, rgba(232,19,42,0.06), transparent 60%)' }}
+          style={{ background: 'radial-gradient(ellipse at 50% 100%, rgba(124,111,247,0.06), transparent 60%)' }}
         />
 
         <motion.div
-          initial={{ opacity: 0, y: 24 }}
+          initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.7, ease }}
-          className="site-container relative z-10 py-20 text-center"
+          transition={{ duration: 0.8, ease }}
+          className="max-w-[1320px] mx-auto px-5 md:px-6 py-16 md:py-20 text-center relative z-10"
         >
-          {/* Annotation */}
-          <div className="flex items-center justify-center gap-4 mb-8">
-            <div className="h-[1px] w-12" style={{ background: 'rgba(232,19,42,0.4)' }} />
-            <span className="section-ref">{getContentValue('footer', 'ready_label', 'Ready to build')}</span>
-            <div className="h-[1px] w-12" style={{ background: 'rgba(232,19,42,0.4)' }} />
-          </div>
-
           <h2
-            className="mb-6 break-words"
-            style={{
-              fontFamily: "'Playfair Display', serif",
-              fontWeight: 900,
-              fontSize: 'clamp(32px, 6vw, 72px)',
-              letterSpacing: '-0.03em',
-              lineHeight: 0.88,
-              color: '#EAE6DB',
-            }}
+            className="text-[clamp(32px,6vw,60px)] text-text-primary mb-4"
+            style={{ fontFamily: 'Syne', fontWeight: 800, lineHeight: 0.95, letterSpacing: '-0.04em' }}
           >
             {getContentValue('footer', 'cta_title', 'Need a site or app that can ship fast?')}
           </h2>
-
           <p
-            className="reading-track mx-auto mb-12 max-w-[520px] text-[15px] leading-[1.8]"
-            style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, color: 'rgba(234,230,219,0.5)' }}
+            className="text-[15px] md:text-[16px] text-text-secondary mb-8 max-w-[520px] mx-auto"
+            style={{ fontFamily: 'DM Sans', fontWeight: 300 }}
           >
             {getContentValue('footer', 'cta_description', 'Share the scope, timeline, and blockers. We will reply with a clear build path instead of a vague pitch deck.')}
           </p>
-
           <Link
             to="/contact"
-            className="shimmer-btn inline-flex items-center gap-2.5 px-8 py-4 text-[11px] tracking-[0.18em] uppercase transition-all duration-300 hover:shadow-[0_0_50px_rgba(232,19,42,0.3)]"
-            style={{
-              fontFamily: "'Barlow Condensed', sans-serif",
-              fontWeight: 600,
-              background: '#E8132A',
-              color: '#EAE6DB',
-              border: '1px solid #E8132A',
-            }}
+            className="shimmer-btn inline-flex items-center gap-2.5 gradient-bg text-white px-8 py-4 rounded-2xl text-[15px] font-medium shadow-[0_4px_40px_rgba(124,111,247,0.3)] hover:shadow-[0_4px_60px_rgba(124,111,247,0.45)] hover:scale-[1.03] active:scale-[0.98] transition-all duration-300"
+            style={{ fontFamily: 'DM Sans', fontWeight: 500 }}
           >
             {getContentValue('footer', 'cta_button', 'Start a project')}
-            <ArrowUpRight size={14} />
+            <ArrowUpRight size={16} />
           </Link>
         </motion.div>
       </div>
 
-      {/* Footer grid */}
       <div
-        className="site-container pb-8 pt-16"
-        style={{ borderTop: '1px solid rgba(232,19,42,0.1)' }}
+        className="max-w-[1320px] mx-auto px-5 md:px-6 relative pt-12 md:pt-14"
+        style={{ borderTop: '1px solid rgba(255,255,255,0.04)' }}
       >
-        <div className="mb-12 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <div className="mb-12 md:mb-14 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
-            <div className="mb-4 flex items-center gap-2">
-              <span
-                style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: 20, letterSpacing: '0.14em', color: '#EAE6DB' }}
-              >
-                {getContentValue('nav', 'logo_text', 'VAAD')}
-              </span>
-              <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#E8132A', display: 'inline-block' }} />
+            <div className="mb-3">
+              <Logo size="lg" />
             </div>
             <p
-              className="text-[13px] max-w-[360px] leading-[1.8]"
-              style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, color: 'rgba(234,230,219,0.35)' }}
+              className="text-[14px] text-text-secondary max-w-[380px]"
+              style={{ fontFamily: 'DM Sans', fontWeight: 300 }}
             >
-              {getContentValue('footer', 'tagline', 'VAAD Development builds launch-ready websites and internal tools for small teams that need clarity, speed, and a maintainable handoff.')}
+              {getContentValue(
+                'footer',
+                'tagline',
+                'VAAD Development builds launch-ready websites and internal tools for small teams that need clarity, speed, and a maintainable handoff.'
+              )}
             </p>
           </div>
-          <p className="annotation-label" style={{ color: 'rgba(234,230,219,0.25)' }}>
+          <p className="text-[12px] uppercase tracking-[0.14em] text-text-tertiary" style={{ fontFamily: 'DM Sans', fontWeight: 500 }}>
             {getContentValue('footer', 'eyebrow', 'Design, build, deploy, maintain')}
           </p>
         </div>
 
-        <div className="rule-line-full mb-12" />
-
-        <div className="mb-16 grid grid-cols-2 gap-8 lg:grid-cols-4">
-          {columns.map((col) => (
-            <div key={col.title}>
-              <h4 className="annotation-label mb-6">{col.title}</h4>
-              <ul className="flex flex-col gap-4">
-                {col.items.map((item) => (
-                  <li key={`${col.title}-${item.label}`}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-12 md:mb-14">
+          {columns.map((column) => (
+            <div key={column.title}>
+              <h4
+                className="text-[11px] uppercase tracking-[0.12em] text-text-tertiary mb-4"
+                style={{ fontFamily: 'DM Sans', fontWeight: 500 }}
+              >
+                {column.title}
+              </h4>
+              <ul className="flex flex-col gap-2.5">
+                {column.items.map((item) => (
+                  <li key={`${column.title}-${item.label}`}>
                     {item.href?.startsWith('mailto:') ? (
-                      <a href={item.href} className="text-[13px] transition-colors duration-200 hover:text-[#EAE6DB]"
-                        style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, color: 'rgba(234,230,219,0.4)' }}>
+                      <a
+                        href={item.href}
+                        className="text-[14px] text-text-secondary hover:text-text-primary transition-colors duration-200"
+                        style={{ fontFamily: 'DM Sans', fontWeight: 300 }}
+                      >
                         {item.label}
                       </a>
                     ) : item.href ? (
-                      <Link to={item.href} className="text-[13px] transition-colors duration-200 hover:text-[#EAE6DB]"
-                        style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, color: 'rgba(234,230,219,0.4)' }}>
+                      <Link
+                        to={item.href}
+                        className="text-[14px] text-text-secondary hover:text-text-primary transition-colors duration-200"
+                        style={{ fontFamily: 'DM Sans', fontWeight: 300 }}
+                      >
                         {item.label}
                       </Link>
                     ) : (
-                      <span className="text-[13px]"
-                        style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, color: 'rgba(234,230,219,0.3)' }}>
+                      <span className="text-[14px] text-text-secondary" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>
                         {item.label}
                       </span>
                     )}
@@ -174,11 +161,16 @@ export default function Footer() {
           ))}
         </div>
 
-        <div className="rule-line-full mb-6" />
-
-        <div className="flex flex-col md:flex-row items-center justify-between gap-2">
-          <span className="annotation-label">{getContentValue('footer', 'copyright', 'Copyright 2026 VAAD Development. All rights reserved.')}</span>
-          <span className="annotation-label">{getContentValue('footer', 'made_by', 'Built for teams that want fewer meetings and stronger execution.')}</span>
+        <div
+          className="pt-6 flex flex-col md:flex-row items-center justify-between gap-2"
+          style={{ borderTop: '1px solid rgba(255,255,255,0.04)' }}
+        >
+          <span className="text-[12px] text-text-tertiary" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>
+            {getContentValue('footer', 'copyright', 'Copyright 2026 VAAD Development. All rights reserved.')}
+          </span>
+          <span className="text-[12px] text-text-tertiary" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>
+            {getContentValue('footer', 'made_by', 'Built for teams that want fewer meetings and stronger execution.')}
+          </span>
         </div>
       </div>
     </footer>

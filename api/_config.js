@@ -15,6 +15,10 @@ export function getAdminRole() {
   return getEnv('SUPABASE_ADMIN_ROLE') || 'admin';
 }
 
+export function getAdminPassword() {
+  return getEnv('ADMIN_PASSWORD') || '';
+}
+
 export function shouldRequireAdminMfa() {
   return getBoolEnv('ADMIN_REQUIRE_MFA', true);
 }

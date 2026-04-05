@@ -1,177 +1,103 @@
-import { useMemo, useState } from 'react';
-import { AnimatePresence, m as motion } from 'framer-motion';
-import { ChevronDown } from 'lucide-react';
-import { useContent } from '../lib/useContent';
+import { motion } from 'framer-motion';
+import { Cloud, Container, Database, GitBranch, Globe, HardDrive, Monitor, Network, Server, Shield, type LucideIcon } from 'lucide-react';
 import SectionLabel from './SectionLabel';
+import SectionTitle from './SectionTitle';
+import { useContent } from '../lib/useContent';
 
+const iconMap = [Monitor, Server, Database, HardDrive, Network, Cloud, GitBranch, Shield, Container, Globe];
+const glowColors = [
+  'rgba(124,111,247,0.12)',
+  'rgba(168,85,249,0.12)',
+  'rgba(34,211,238,0.10)',
+  'rgba(236,72,153,0.10)',
+  'rgba(34,197,94,0.10)',
+  'rgba(251,146,60,0.10)',
+  'rgba(124,111,247,0.10)',
+  'rgba(239,68,68,0.10)',
+  'rgba(59,130,246,0.10)',
+  'rgba(168,85,249,0.10)',
+];
 const ease: [number, number, number, number] = [0.16, 0.77, 0.47, 0.97];
-
 const fallbackCategories = [
-  { name: 'Frontend systems',  desc: 'React interfaces with durable component patterns and content-aware layouts.',             tags: ['React', 'TypeScript', 'Routing'] },
+  { name: 'Frontend systems', desc: 'React interfaces with durable component patterns and content-aware layouts.', tags: ['React', 'TypeScript', 'Routing'] },
   { name: 'Backend workflows', desc: 'Serverless endpoints and operational logic built for forms, content, and admin tooling.', tags: ['Node', 'Vercel Functions', 'Validation'] },
-  { name: 'Data models',       desc: 'Supabase tables and policies shaped around actual editing, intake, and reporting needs.',   tags: ['Supabase', 'Postgres', 'RLS'] },
-  { name: 'Media delivery',    desc: 'Storage-backed image workflows so content editors are not blocked by manual asset handling.', tags: ['Storage', 'Caching', 'Optimization'] },
-  { name: 'Integrations',      desc: 'Analytics, email, CRM, and ops touchpoints connected where they support the workflow.',    tags: ['Webhooks', 'Forms', 'Automation'] },
-  { name: 'Deployment',        desc: 'Preview-to-production delivery on infrastructure that is simple to hand off and maintain.', tags: ['Vercel', 'CDN', 'Rollbacks'] },
+  { name: 'Data models', desc: 'Supabase tables and policies shaped around actual editing, intake, and reporting needs.', tags: ['Supabase', 'Postgres', 'RLS'] },
+  { name: 'Media delivery', desc: 'Storage-backed image workflows so content editors are not blocked by manual asset handling.', tags: ['Storage', 'Caching', 'Optimization'] },
+  { name: 'Integrations', desc: 'Analytics, email, CRM, and ops touchpoints connected where they support the workflow.', tags: ['Webhooks', 'Forms', 'Automation'] },
+  { name: 'Deployment', desc: 'Preview-to-production delivery on infrastructure that is simple to hand off and maintain.', tags: ['Vercel', 'CDN', 'Rollbacks'] },
 ];
 
 export default function TechStack() {
   const { getContentValue } = useContent();
   const labelParts = getContentValue('techstack', 'label', '09 / Capabilities').split(' / ');
-  const storedCount = Number(getContentValue('techstack', 'cat_count', ''));
-  const maxCategories = !Number.isNaN(storedCount) && storedCount > 0 ? storedCount : 10;
+  
+  const storedCategoryCount = Number(getContentValue('techstack', 'cat_count', ''));
+  const maxCategories = (!isNaN(storedCategoryCount) && storedCategoryCount > 0) ? storedCategoryCount : 10;
 
-  const categories = Array.from({ length: maxCategories }, (_, i) => {
-    const n = i + 1;
-    const fb = fallbackCategories[i];
-    const name = getContentValue('techstack', `cat_${n}_name`, fb?.name || '');
+  const categories = Array.from({ length: maxCategories }, (_, index) => {
+    const categoryNumber = index + 1;
+    const fallback = fallbackCategories[index];
+    const name = getContentValue('techstack', `cat_${categoryNumber}_name`, fallback?.name || '');
     if (!name) return null;
+
     return {
       name,
-      desc: getContentValue('techstack', `cat_${n}_desc`, fb?.desc || ''),
-      tags: getContentValue('techstack', `cat_${n}_tags`, fb?.tags.join(', ') || '')
-        .split(',').map((t) => t.trim()).filter(Boolean),
-      index: i,
+      desc: getContentValue('techstack', `cat_${categoryNumber}_desc`, fallback?.desc || ''),
+      tags: getContentValue('techstack', `cat_${categoryNumber}_tags`, fallback?.tags.join(', ') || '')
+        .split(',')
+        .map((entry) => entry.trim())
+        .filter(Boolean),
+      Icon: (iconMap[index] || Globe) as LucideIcon,
+      glow: glowColors[index] || glowColors[0],
     };
-  }).filter(Boolean) as { name: string; desc: string; tags: string[]; index: number }[];
-
-  const [openCards, setOpenCards] = useState<Set<number>>(() => new Set([0]));
-
-  const defaultExpandedLabel = useMemo(
-    () => getContentValue('techstack', 'expanded_label', 'Expanded module'),
-    [getContentValue]
-  );
-
-  function toggleCard(index: number) {
-    setOpenCards((previous) => {
-      const next = new Set(previous);
-      if (next.has(index)) next.delete(index);
-      else next.add(index);
-      return next;
-    });
-  }
+  }).filter(Boolean) as { name: string; desc: string; tags: string[]; Icon: LucideIcon; glow: string }[];
 
   if (categories.length === 0) return null;
 
   return (
-    <section className="section-pad swiss-section relative overflow-hidden py-20 md:py-24">
-      <div className="absolute inset-0 grid-pattern opacity-15 pointer-events-none" />
-      <span className="swiss-meta swiss-meta--tl">{getContentValue('techstack', 'meta_left', 'tech.registry')}</span>
-      <span className="swiss-meta swiss-meta--tr">{getContentValue('techstack', 'meta_right', 'hash // 0x12AF')}</span>
-
-      <div className="site-container swiss-grid relative z-10 max-w-[1320px] gap-8 px-5 md:px-8 lg:gap-12 xl:px-10">
-        {/* Header */}
-        <div className="swiss-full-col mb-4 flex items-center gap-4">
-          <SectionLabel number={labelParts[0] || '09'} label={labelParts[1] || 'Capabilities'} />
-        </div>
-
-        <div className="swiss-full-col mb-12 grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-end lg:gap-12">
-          <motion.h2
-            initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }} transition={{ duration: 0.6, ease }}
-            className="lg:col-span-7"
-            style={{ fontFamily: "'Playfair Display', serif", fontWeight: 900, fontSize: 'clamp(36px, 5vw, 68px)', letterSpacing: '-0.03em', lineHeight: 0.9, color: '#EAE6DB' }}
-          >
-            {getContentValue('techstack', 'title', 'How we build')}
-          </motion.h2>
-          <motion.p
-            initial={{ opacity: 0 }} whileInView={{ opacity: 1 }}
-            viewport={{ once: true }} transition={{ duration: 0.55, delay: 0.1 }}
-            className="reading-track lg:col-span-5 text-[14px] leading-[1.85]"
-            style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, color: 'rgba(234,230,219,0.45)' }}
-          >
-            {getContentValue('techstack', 'subtitle', 'The stack is chosen around delivery speed, maintainability, and how much control your team needs after launch.')}
-          </motion.p>
-        </div>
-
-        <div className="swiss-full-col rule-line-full mb-4" />
-
-        <div className="swiss-full-col grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-12">
-          {categories.map((cat, i) => {
-            const isOpen = openCards.has(cat.index);
-
+    <section className="py-28 md:py-36 relative overflow-hidden">
+      <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 30% 50%, rgba(124,111,247,0.04), transparent 50%), radial-gradient(ellipse at 70% 50%, rgba(34,211,238,0.03), transparent 50%)' }} />
+      <div className="max-w-[1280px] mx-auto px-6 relative z-10">
+        <SectionLabel number={labelParts[0] || '09'} label={labelParts[1] || 'Capabilities'} />
+        <SectionTitle>{getContentValue('techstack', 'title', 'How we build')}</SectionTitle>
+        <motion.p initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, ease }} className="text-[16px] md:text-[17px] text-text-secondary mb-14 -mt-6 max-w-[600px] leading-[1.7]" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>
+          {getContentValue('techstack', 'subtitle', 'The stack is chosen around delivery speed, maintainability, and how much control your team needs after launch.')}
+        </motion.p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {categories.map((category, index) => {
+            const Icon = category.Icon;
             return (
-            <motion.div
-              key={cat.name}
-              initial={{ opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-5%' }}
-              transition={{ duration: 0.6, ease, delay: i * 0.06 }}
-              className="group bento-card scanline-hover relative border border-[rgba(232,19,42,0.18)] bg-[rgba(9,22,40,0.62)] p-8 md:p-10 lg:col-span-6 xl:col-span-4"
-            >
-              {/* Hover */}
-              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" style={{ background: 'rgba(232,19,42,0.03)' }} />
-              <div className="absolute top-0 left-0 right-0 h-0 group-hover:h-[2px] transition-all duration-500" style={{ background: '#E8132A' }} />
-
-              {/* Watermark number */}
-              <span
-                className="absolute top-4 right-6 select-none pointer-events-none"
-                style={{ fontFamily: "'Playfair Display', serif", fontWeight: 900, fontSize: 64, color: 'rgba(234,230,219,0.02)', lineHeight: 1 }}
+              <motion.div
+                key={category.name}
+                initial={{ opacity: 0, y: 28, scale: 0.97 }}
+                whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                viewport={{ once: true, margin: '-5%' }}
+                transition={{ duration: 0.7, ease, delay: index * 0.06 }}
+                whileHover={{ y: -3, transition: { duration: 0.25 } }}
+                className="group relative bg-surface-1 rounded-2xl p-6 md:p-7 border border-[rgba(255,255,255,0.04)] hover:border-[rgba(124,111,247,0.18)] transition-all duration-300 overflow-hidden"
               >
-                {String(i + 1).padStart(2, '0')}
-              </span>
-
-              <div className="relative z-10">
-                <button
-                  type="button"
-                  onClick={() => toggleCard(cat.index)}
-                  className="w-full text-left"
-                  aria-expanded={isOpen}
-                  aria-label={`${isOpen ? defaultExpandedLabel : getContentValue('techstack', 'collapsed_label', 'Collapsed module')}: ${cat.name}`}
-                >
-                  <p className="annotation-label mb-4">
-                    {getContentValue('techstack', 'module_prefix', 'Module')} / {String(i + 1).padStart(2, '0')}
-                  </p>
-
-                  <div className="flex items-start justify-between gap-6">
-                    <h3
-                      className="mb-1 group-hover:text-[#E8132A] transition-colors duration-300"
-                      style={{ fontFamily: "'Playfair Display', serif", fontWeight: 700, fontSize: 'clamp(19px, 2vw, 24px)', letterSpacing: '-0.02em', color: '#EAE6DB', lineHeight: 1.12 }}
-                    >
-                      {cat.name}
-                    </h3>
-                    <ChevronDown
-                      size={18}
-                      className={`mt-1 shrink-0 text-[rgba(234,230,219,0.6)] transition-transform duration-300 ${isOpen ? 'rotate-180 text-[#E8132A]' : ''}`}
-                    />
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" style={{ background: `radial-gradient(ellipse at 20% 20%, ${category.glow}, transparent 70%)` }} />
+                <span className="absolute top-3 right-5 text-[64px] font-[800] pointer-events-none select-none" style={{ fontFamily: 'Syne', color: 'rgba(255,255,255,0.015)' }}>{String(index + 1).padStart(2, '0')}</span>
+                <div className="relative z-10">
+                  <div className="flex items-start gap-4 mb-4">
+                    <div className="w-11 h-11 rounded-xl bg-[rgba(124,111,247,0.08)] group-hover:bg-[rgba(124,111,247,0.14)] flex items-center justify-center shrink-0 transition-colors duration-300">
+                      <Icon size={20} className="text-accent" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-[18px] md:text-[20px] text-text-primary mb-1" style={{ fontFamily: 'Syne', fontWeight: 700 }}>{category.name}</h3>
+                      <p className="text-[13px] md:text-[14px] text-text-secondary leading-[1.65]" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>{category.desc}</p>
+                    </div>
                   </div>
-                </button>
-
-                <AnimatePresence initial={false}>
-                  {isOpen && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0, y: -6 }}
-                      animate={{ opacity: 1, height: 'auto', y: 0 }}
-                      exit={{ opacity: 0, height: 0, y: -4 }}
-                      transition={{ duration: 0.28, ease: [0.16, 0.77, 0.47, 0.97] }}
-                      className="overflow-hidden"
-                    >
-                      <p className="mb-8 mt-4 text-[14px] leading-[1.9]" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, color: 'rgba(234,230,219,0.5)' }}>
-                        {cat.desc}
-                      </p>
-
-                      {/* Tags */}
-                      <div className="flex flex-wrap gap-2.5">
-                        {cat.tags.map((tag) => (
-                          <span
-                            key={tag}
-                            className="px-2.5 py-1.5 text-[9px] uppercase tracking-[0.18em] transition-all duration-200 group-hover:border-[rgba(232,19,42,0.3)]"
-                            style={{
-                              fontFamily: "'JetBrains Mono', monospace",
-                              color: 'rgba(234,230,219,0.42)',
-                              border: '1px solid rgba(234,230,219,0.1)',
-                            }}
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            </motion.div>
-          );
+                  <div className="flex flex-wrap gap-1.5 mt-1">
+                    {category.tags.map((tag) => (
+                      <span key={tag} className="text-[10px] md:text-[11px] px-2.5 py-1 rounded-lg transition-colors duration-200 group-hover:bg-[rgba(124,111,247,0.08)] group-hover:text-accent-light" style={{ fontFamily: 'JetBrains Mono', background: 'rgba(255,255,255,0.03)', color: '#22D3EE', border: '1px solid rgba(34,211,238,0.08)' }}>
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
+            );
           })}
         </div>
       </div>

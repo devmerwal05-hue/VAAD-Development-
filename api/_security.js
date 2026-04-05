@@ -419,6 +419,7 @@ function buildSessionPayload(session, user) {
   return {
     iat: Date.now(),
     exp: Math.min(expiresAtMs, Date.now() + (ADMIN_SESSION_MAX_AGE_SECONDS * 1000)),
+    mode: 'supabase',
     accessToken: session?.access_token || '',
     refreshToken: session?.refresh_token || '',
     user: {
@@ -430,12 +431,48 @@ function buildSessionPayload(session, user) {
   };
 }
 
+function buildPasswordSessionPayload() {
+  const role = getAdminRole();
+  return {
+    iat: Date.now(),
+    exp: Date.now() + (ADMIN_SESSION_MAX_AGE_SECONDS * 1000),
+    mode: 'password',
+    accessToken: '',
+    refreshToken: '',
+    user: {
+      id: 'password-admin',
+      email: '',
+      role,
+      aal: 'password',
+    },
+  };
+}
+
 export function startAdminSession(req, res, { session, user, rotateCsrf = true } = {}) {
   if (!session?.access_token || !session?.refresh_token || !user?.id) {
     throw new Error('Unable to create admin session from Supabase auth response.');
   }
 
   const payload = buildSessionPayload(session, user);
+  const token = encodeSessionPayload(payload);
+
+  appendSetCookie(res, buildCookie(ADMIN_SESSION_COOKIE, token, {
+    httpOnly: true,
+    secure: isSecureRequest(req),
+    sameSite: 'Strict',
+    maxAge: ADMIN_SESSION_MAX_AGE_SECONDS,
+  }));
+
+  const csrfToken = ensureCsrfToken(req, res, { rotate: rotateCsrf });
+
+  return {
+    csrfToken,
+    user: payload.user,
+  };
+}
+
+export function startPasswordAdminSession(req, res, { rotateCsrf = true } = {}) {
+  const payload = buildPasswordSessionPayload();
   const token = encodeSessionPayload(payload);
 
   appendSetCookie(res, buildCookie(ADMIN_SESSION_COOKIE, token, {
@@ -504,6 +541,41 @@ export async function verifyAdminSession(req, res, { respondOnError = true } = {
   const cookies = parseCookies(req);
   const rawToken = cookies[ADMIN_SESSION_COOKIE];
   const parsed = parseSignedSession(rawToken, { allowExpired: true });
+
+  if (!parsed) {
+    if (respondOnError) res.status(401).json({ error: 'Unauthorized' });
+    return null;
+  }
+
+  if (parsed.mode === 'password') {
+    if (Number(parsed.exp) < Date.now()) {
+      clearAdminSession(req, res);
+      if (respondOnError) res.status(401).json({ error: 'Session expired. Please sign in again.' });
+      return null;
+    }
+
+    const role = getAdminRole();
+    const userId = parsed?.user?.id || 'password-admin';
+    const email = parsed?.user?.email || null;
+
+    return {
+      accessToken: null,
+      user: {
+        id: userId,
+        email,
+        app_metadata: {
+          role,
+          roles: [role],
+        },
+      },
+      actor: {
+        userId,
+        email,
+        role,
+        aal: 'password',
+      },
+    };
+  }
 
   if (!parsed?.accessToken) {
     if (respondOnError) res.status(401).json({ error: 'Unauthorized' });

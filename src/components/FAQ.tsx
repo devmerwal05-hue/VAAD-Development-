@@ -1,115 +1,57 @@
 import { useState } from 'react';
-import { AnimatePresence, m as motion } from 'framer-motion';
-import { useContent } from '../lib/useContent';
+import { AnimatePresence, motion } from 'framer-motion';
+import { Minus, Plus } from 'lucide-react';
 import SectionLabel from './SectionLabel';
+import SectionTitle from './SectionTitle';
+import { useContent } from '../lib/useContent';
 
 const ease: [number, number, number, number] = [0.16, 0.77, 0.47, 0.97];
-
-const faqDefaults = [
-  { q: 'How fast can a project start?',      a: 'Once scope is agreed, work can usually start within a few days instead of waiting through a long intake cycle.' },
-  { q: 'Do you also handle content updates?', a: 'Yes. We can structure the CMS, migrate content, or hand your team a workflow for ongoing edits.' },
-  { q: 'Will the site be editable after launch?', a: 'That is a default expectation. Content models and admin editing should not depend on a developer for routine changes.' },
-  { q: 'Can you work with an existing brand?', a: 'Yes. The design direction can extend an existing system or sharpen a rough one without forcing a full rebrand.' },
-];
 
 export default function FAQ() {
   const [open, setOpen] = useState<number | null>(null);
   const { getContentValue } = useContent();
   const labelParts = getContentValue('faq', 'label', '07 / FAQ').split(' / ');
-  const storedCount = Number(getContentValue('faq', 'faq_count', ''));
-  const faqCount = !Number.isNaN(storedCount) && storedCount > 0 ? storedCount : faqDefaults.length;
-
-  const faqs = Array.from({ length: faqCount }, (_, i) => ({
-    q: getContentValue('faq', `q_${i + 1}`, faqDefaults[i]?.q || ''),
-    a: getContentValue('faq', `a_${i + 1}`, faqDefaults[i]?.a || ''),
-  })).filter((f) => f.q);
+  
+  const faqDefaults = [
+    { q: 'How fast can a project start?', a: 'Once scope is agreed, work can usually start within a few days instead of waiting through a long intake cycle.' },
+    { q: 'Do you also handle content updates?', a: 'Yes. We can structure the CMS, migrate content, or hand your team a workflow for ongoing edits.' },
+    { q: 'Will the site be editable after launch?', a: 'That is a default expectation. Content models and admin editing should not depend on a developer for routine changes.' },
+    { q: 'Can you work with an existing brand?', a: 'Yes. The design direction can extend an existing system or sharpen a rough one without forcing a full rebrand.' },
+  ];
+  
+  const storedFaqCount = Number(getContentValue('faq', 'faq_count', ''));
+  const faqCount = (!isNaN(storedFaqCount) && storedFaqCount > 0) ? storedFaqCount : faqDefaults.length;
+  
+  const faqs = Array.from({ length: faqCount }, (_, index) => ({
+    q: getContentValue('faq', `q_${index + 1}`, faqDefaults[index]?.q || ''),
+    a: getContentValue('faq', `a_${index + 1}`, faqDefaults[index]?.a || ''),
+  })).filter(faq => faq.q);
 
   return (
-    <section className="section-pad swiss-section relative py-20 md:py-24">
-      <div className="absolute inset-0 grid-pattern opacity-15 pointer-events-none" />
-      <span className="swiss-meta swiss-meta--tl">{getContentValue('faq', 'meta_left', 'faq.module')}</span>
-      <span className="swiss-meta swiss-meta--tr">{getContentValue('faq', 'meta_right', 'cache // on')}</span>
-
-      <div className="site-container swiss-grid relative z-10 max-w-[1320px] gap-8 px-5 md:px-8 lg:gap-12 xl:px-10">
-        {/* Header */}
-        <div className="swiss-full-col mb-4 flex items-center gap-4">
-          <SectionLabel number={labelParts[0] || '07'} label={labelParts[1] || 'FAQ'} />
-        </div>
-
-        <motion.h2
-          initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }} transition={{ duration: 0.6, ease }}
-          className="swiss-text-col mb-4"
-          style={{ fontFamily: "'Playfair Display', serif", fontWeight: 900, fontSize: 'clamp(36px, 5vw, 68px)', letterSpacing: '-0.03em', lineHeight: 0.9, color: '#EAE6DB' }}
-        >
-          {getContentValue('faq', 'title', 'Common questions')}
-        </motion.h2>
-
-        <div className="swiss-full-col rule-line-full mb-4" />
-
-        <div className="swiss-text-col flex flex-col gap-6">
-          {faqs.map((faq, i) => (
-            <motion.div
-              key={faq.q}
-              initial={{ opacity: 0, y: 14 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.3 }}
-              transition={{ duration: 0.4, ease, delay: i * 0.07 }}
-              className="overflow-hidden border border-[rgba(232,19,42,0.24)] bg-[rgba(9,22,40,0.62)]"
-            >
+    <section className="py-24 md:py-32">
+      <div className="max-w-[820px] mx-auto px-6">
+        <SectionLabel number={labelParts[0] || '07'} label={labelParts[1] || 'FAQ'} />
+        <SectionTitle>{getContentValue('faq', 'title', 'Common questions')}</SectionTitle>
+        <div className="flex flex-col gap-2">
+          {faqs.map((faq, index) => (
+            <motion.div key={faq.q} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.3 }} transition={{ duration: 0.4, delay: index * 0.04 }} className={`rounded-xl border transition-all duration-300 ${open === index ? 'bg-surface-1 border-[rgba(124,111,247,0.15)] shadow-[0_0_30px_rgba(124,111,247,0.04)]' : 'border-[rgba(255,255,255,0.04)] hover:border-[rgba(255,255,255,0.08)]'}`}>
               <button
                 type="button"
-                onClick={() => setOpen(open === i ? null : i)}
-                aria-expanded={open === i}
-                aria-controls={`faq-panel-${i}`}
-                id={`faq-trigger-${i}`}
-                className="group flex w-full items-center justify-between px-7 py-8 text-left md:px-8 md:py-9"
+                onClick={() => setOpen(open === index ? null : index)}
+                aria-expanded={open === index}
+                aria-controls={`faq-panel-${index}`}
+                id={`faq-trigger-${index}`}
+                className="w-full flex items-center justify-between text-left px-6 py-5"
               >
-                <div className="flex min-w-0 flex-1 items-start gap-6">
-                  <span
-                    className="shrink-0 mt-1"
-                    style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, letterSpacing: '0.22em', color: open === i ? '#E8132A' : 'rgba(234,230,219,0.2)', textTransform: 'uppercase' }}
-                  >
-                    {String(i + 1).padStart(2, '0')}
-                  </span>
-                  <span
-                    className="pr-4 text-[16px] leading-[1.6] transition-colors duration-200 md:text-[18px]"
-                    style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 400, color: open === i ? '#EAE6DB' : 'rgba(234,230,219,0.65)' }}
-                  >
-                    {faq.q}
-                  </span>
-                </div>
-                {/* Plus / minus indicator */}
-                <span
-                  className="flex h-7 w-7 shrink-0 items-center justify-center border border-[rgba(232,19,42,0.35)] transition-all duration-300"
-                  style={{ color: '#E8132A', background: 'rgba(232,19,42,0.06)' }}
-                >
-                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                    <line x1="6" y1="0" x2="6" y2="12" stroke="currentColor" strokeWidth="1.5"
-                      style={{ transform: open === i ? 'scaleY(0)' : 'scaleY(1)', transformOrigin: 'center', transition: 'transform 0.25s ease' }} />
-                    <line x1="0" y1="6" x2="12" y2="6" stroke="currentColor" strokeWidth="1.5" />
-                  </svg>
-                </span>
+                <span className="text-[16px] text-text-primary pr-4" style={{ fontFamily: 'DM Sans', fontWeight: 500 }}>{faq.q}</span>
+                <motion.span animate={{ rotate: open === index ? 180 : 0 }} transition={{ duration: 0.2 }} className="shrink-0 w-8 h-8 rounded-lg bg-[rgba(124,111,247,0.08)] flex items-center justify-center">
+                  {open === index ? <Minus size={15} className="text-accent" /> : <Plus size={15} className="text-accent" />}
+                </motion.span>
               </button>
-
               <AnimatePresence>
-                {open === i && (
-                  <motion.div
-                    id={`faq-panel-${i}`}
-                    role="region"
-                    aria-labelledby={`faq-trigger-${i}`}
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.35, ease }}
-                    className="overflow-hidden"
-                  >
-                    <p
-                      className="pb-9 pl-14 pr-7 text-[15px] leading-[1.95] md:pl-16 md:pr-8"
-                      style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, color: 'rgba(234,230,219,0.55)' }}
-                    >
-                      {faq.a}
-                    </p>
+                {open === index && (
+                  <motion.div id={`faq-panel-${index}`} role="region" aria-labelledby={`faq-trigger-${index}`} initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.35, ease }} className="overflow-hidden">
+                    <p className="text-[15px] text-text-secondary leading-[1.75] px-6 pb-6" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>{faq.a}</p>
                   </motion.div>
                 )}
               </AnimatePresence>

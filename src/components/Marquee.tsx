@@ -1,43 +1,26 @@
 import { useContent } from '../lib/useContent';
-import { marqueeDefaults } from '../lib/homeContent';
 
 export default function Marquee() {
   const { getContentValue } = useContent();
-  const raw = getContentValue('marquee', 'items', marqueeDefaults.items);
-  const items = raw.split(',').map((s) => s.trim()).filter(Boolean);
-  const doubled = [...items, ...items];
+  const raw = getContentValue(
+    'marquee',
+    'items',
+    'Scoped delivery,Operations dashboards,Marketing sites with real CMS,Fast launch cycles,Conversion-focused landing pages,React and TypeScript,Node and Supabase,Vercel deployment,Admin tooling'
+  );
+  const items = raw.split(',').map((entry) => entry.trim()).filter(Boolean);
+
+  const content = items.map((item, index) => (
+    <span key={item + index} className="flex items-center gap-5 shrink-0">
+      <span className="text-text-secondary hover:text-text-primary transition-colors" style={{ fontFamily: 'JetBrains Mono', fontSize: '12px', letterSpacing: '0.06em' }}>{item}</span>
+      <span className="w-1 h-1 rounded-full bg-accent/40" />
+    </span>
+  ));
 
   return (
-    <div
-      className="swiss-section relative overflow-hidden border-b border-white/5 py-3"
-      style={{ background: 'rgba(4,19,48,0.95)' }}
-      aria-hidden="true"
-    >
-      <span className="swiss-meta swiss-meta--tl">{getContentValue('marquee', 'meta_left', 'stream.buffer')}</span>
-      <span className="swiss-meta swiss-meta--tr">{getContentValue('marquee', 'meta_right', 'seq // 0031')}</span>
-
-      {/* Fade edges */}
-      <div className="absolute left-0 top-0 bottom-0 w-16 z-10 pointer-events-none"
-        style={{ background: 'linear-gradient(90deg, #060C20, transparent)' }} />
-      <div className="absolute right-0 top-0 bottom-0 w-16 z-10 pointer-events-none"
-        style={{ background: 'linear-gradient(270deg, #060C20, transparent)' }} />
-
-      <div className="marquee-track flex gap-0">
-        {doubled.map((item, i) => (
-          <span key={i} className="flex shrink-0 items-center gap-6 pr-6">
-            <span
-              className="mono-readable whitespace-nowrap text-[10px] uppercase"
-              style={{
-                fontFamily: "'JetBrains Mono', monospace",
-                fontWeight: 500,
-                color: i % 3 === 0 ? 'rgba(255,44,27,0.95)' : 'rgba(156,181,220,0.86)',
-              }}
-            >
-              {item}
-            </span>
-            <span style={{ width: 3, height: 3, borderRadius: '50%', background: 'rgba(255,44,27,0.9)', display: 'inline-block', flexShrink: 0 }} />
-          </span>
-        ))}
+    <div className="w-full h-[52px] bg-surface-1/50 flex items-center overflow-hidden" style={{ borderTop: '1px solid rgba(124,111,247,0.06)', borderBottom: '1px solid rgba(124,111,247,0.06)' }}>
+      <div className="marquee-track flex items-center gap-5 whitespace-nowrap">
+        {content}
+        {content}
       </div>
     </div>
   );

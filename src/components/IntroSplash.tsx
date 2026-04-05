@@ -1,141 +1,135 @@
-import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
-import { useContent } from '../lib/useContent';
+import { motion, AnimatePresence } from 'framer-motion';
 
-interface Props { onComplete: () => void; }
+const ease: [number, number, number, number] = [0.16, 0.77, 0.47, 0.97];
 
-export default function IntroSplash({ onComplete }: Props) {
-  const [phase, setPhase] = useState<'enter' | 'hold' | 'exit'>('enter');
-  const { getContentValue } = useContent();
+export default function IntroSplash({ onComplete }: { onComplete: () => void }) {
+  const [phase, setPhase] = useState<'letters' | 'diamond' | 'glow' | 'exit'>('letters');
 
   useEffect(() => {
-    const t1 = setTimeout(() => setPhase('hold'), 600);
-    const t2 = setTimeout(() => setPhase('exit'), 2200);
-    const t3 = setTimeout(() => onComplete(), 2800);
-    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
+    // Letter animation: 0-800ms
+    // Diamond pop: 800ms
+    // Glow pulse: 1200ms
+    // Exit: 1800ms
+    const t1 = setTimeout(() => setPhase('diamond'), 800);
+    const t2 = setTimeout(() => setPhase('glow'), 1200);
+    const t3 = setTimeout(() => setPhase('exit'), 1900);
+    const t4 = setTimeout(() => onComplete(), 2400);
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); clearTimeout(t4); };
   }, [onComplete]);
 
   return (
     <AnimatePresence>
-      {phase !== 'exit' && (
+      {phase !== 'exit' ? null : null}
+      <motion.div
+        key="splash"
+        initial={{ opacity: 1 }}
+        animate={phase === 'exit' ? { opacity: 0, scale: 1.1 } : { opacity: 1 }}
+        transition={{ duration: 0.5, ease }}
+        className="fixed inset-0 z-[200] flex items-center justify-center"
+        style={{ background: '#050509' }}
+      >
+        {/* Ambient glow behind logo */}
         <motion.div
-          initial={{ opacity: 1 }}
-          exit={{ opacity: 0, transition: { duration: 0.55, ease: 'easeInOut' } }}
-          className="fixed inset-0 z-[9999] flex flex-col items-center justify-center overflow-hidden"
-          style={{ background: '#060C20' }}
-        >
-          {/* Grid overlay */}
-          <div className="absolute inset-0 grid-pattern opacity-40 pointer-events-none" />
+          className="absolute w-[300px] h-[300px] rounded-full"
+          initial={{ opacity: 0, scale: 0.5 }}
+          animate={phase === 'glow' || phase === 'exit'
+            ? { opacity: 0.6, scale: 1.2 }
+            : phase === 'diamond'
+            ? { opacity: 0.3, scale: 0.8 }
+            : { opacity: 0, scale: 0.5 }
+          }
+          transition={{ duration: 0.8, ease }}
+          style={{
+            background: 'radial-gradient(circle, rgba(124,111,247,0.25) 0%, rgba(168,85,247,0.1) 40%, transparent 70%)',
+            filter: 'blur(40px)',
+          }}
+        />
 
-          {/* Top annotation bar */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: phase === 'hold' ? 1 : 0 }}
-            transition={{ duration: 0.4 }}
-            className="absolute top-8 left-0 right-0 flex items-center justify-between px-8"
+        {/* Logo container */}
+        <div className="relative flex items-center gap-0" style={{ fontFamily: 'Syne', fontWeight: 800 }}>
+          {/* V */}
+          <motion.span
+            initial={{ opacity: 0, y: 30, rotateY: -40 }}
+            animate={{ opacity: 1, y: 0, rotateY: 0 }}
+            transition={{ duration: 0.5, ease, delay: 0.1 }}
+            className="text-[64px] md:text-[80px] text-white inline-block"
+            style={{ transformOrigin: 'center bottom' }}
           >
-            <span className="annotation-label">{getContentValue('intro_splash', 'top_left', 'SPECIMEN / 001')}</span>
-            <span className="annotation-label">{getContentValue('intro_splash', 'top_center', 'EST. 2024')}</span>
-            <span className="annotation-label">{getContentValue('intro_splash', 'top_right', 'VAA-DEV-X')}</span>
-          </motion.div>
+            V
+          </motion.span>
 
-          {/* Horizontal scan line — animates across */}
-          <motion.div
-            initial={{ scaleX: 0, transformOrigin: 'left' }}
-            animate={{ scaleX: phase === 'hold' ? 1 : 0, transformOrigin: phase === 'hold' ? 'left' : 'right' }}
-            transition={{ duration: 0.55, ease: [0.16, 0.77, 0.47, 0.97] }}
-            className="absolute left-0 right-0 h-[1px]"
-            style={{ top: '50%', background: 'rgba(232, 19, 42, 0.4)' }}
+          {/* A (first) */}
+          <motion.span
+            initial={{ opacity: 0, y: 30, rotateY: -40 }}
+            animate={{ opacity: 1, y: 0, rotateY: 0 }}
+            transition={{ duration: 0.5, ease, delay: 0.25 }}
+            className="text-[64px] md:text-[80px] text-white inline-block"
+            style={{ transformOrigin: 'center bottom' }}
+          >
+            A
+          </motion.span>
+
+          {/* Diamond — pops in between the two A's */}
+          <motion.span
+            initial={{ opacity: 0, scale: 0, rotate: 0 }}
+            animate={
+              phase === 'diamond' || phase === 'glow' || phase === 'exit'
+                ? { opacity: 1, scale: 1, rotate: 45 }
+                : { opacity: 0, scale: 0, rotate: 0 }
+            }
+            transition={
+              phase === 'diamond'
+                ? { type: 'spring', stiffness: 500, damping: 15, mass: 0.5 }
+                : { duration: 0.3 }
+            }
+            className="w-[10px] h-[10px] md:w-[12px] md:h-[12px] bg-accent mx-[3px] mt-[8px] inline-block"
+            style={{
+              boxShadow: phase === 'glow' || phase === 'exit'
+                ? '0 0 20px rgba(124,111,247,0.6), 0 0 60px rgba(124,111,247,0.3)'
+                : 'none',
+              transition: 'box-shadow 0.4s ease',
+            }}
           />
 
-          {/* Main VAAD text */}
-          <div className="relative flex flex-col items-center">
-            <motion.div
-              initial={{ opacity: 0, y: 40, scaleX: 0.92 }}
-              animate={{ opacity: 1, y: 0, scaleX: 1 }}
-              transition={{ duration: 0.55, ease: [0.16, 0.77, 0.47, 0.97], delay: 0.1 }}
-              className="relative"
-            >
-              <h1
-                className="text-[#EAE6DB] text-center leading-none select-none"
-                style={{
-                  fontFamily: "'Playfair Display', serif",
-                  fontWeight: 900,
-                  fontSize: 'clamp(80px, 20vw, 200px)',
-                  letterSpacing: '-0.04em',
-                  lineHeight: 0.85,
-                }}
-              >
-                {getContentValue('nav', 'logo_text', 'VAAD')}
-              </h1>
-
-              {/* Red overlay accent — partial text */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: phase === 'hold' ? 1 : 0 }}
-                transition={{ duration: 0.3, delay: 0.2 }}
-                className="absolute inset-0 flex items-center justify-center overflow-hidden pointer-events-none"
-                style={{ clipPath: 'inset(0 60% 0 0)' }}
-              >
-                <h1
-                  className="text-[#E8132A] text-center leading-none select-none"
-                  style={{
-                    fontFamily: "'Playfair Display', serif",
-                    fontWeight: 900,
-                    fontSize: 'clamp(80px, 20vw, 200px)',
-                    letterSpacing: '-0.04em',
-                    lineHeight: 0.85,
-                  }}
-                >
-                  {getContentValue('nav', 'logo_text', 'VAAD')}
-                </h1>
-              </motion.div>
-
-              {/* Corner marks */}
-              <span className="absolute top-0 left-0 w-3 h-3 border-t border-l border-[rgba(232,19,42,0.6)]" />
-              <span className="absolute top-0 right-0 w-3 h-3 border-t border-r border-[rgba(232,19,42,0.6)]" />
-              <span className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-[rgba(232,19,42,0.6)]" />
-              <span className="absolute bottom-0 right-0 w-3 h-3 border-b border-r border-[rgba(232,19,42,0.6)]" />
-            </motion.div>
-
-            {/* Sub-label */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: phase === 'hold' ? 1 : 0 }}
-              transition={{ duration: 0.4, delay: 0.3 }}
-              className="flex items-center gap-4 mt-6"
-            >
-              <div className="h-[1px] w-12" style={{ background: 'rgba(232,19,42,0.4)' }} />
-              <span
-                className="text-[9px] tracking-[0.35em] uppercase"
-                style={{ fontFamily: "'JetBrains Mono', monospace", color: 'rgba(234,230,219,0.4)' }}
-              >
-                {getContentValue('intro_splash', 'tagline', 'Development')}
-              </span>
-              <div className="h-[1px] w-12" style={{ background: 'rgba(232,19,42,0.4)' }} />
-            </motion.div>
-          </div>
-
-          {/* Bottom annotation bar */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: phase === 'hold' ? 1 : 0 }}
-            transition={{ duration: 0.4 }}
-            className="absolute bottom-8 left-0 right-0 flex items-center justify-between px-8"
+          {/* A (second) */}
+          <motion.span
+            initial={{ opacity: 0, y: 30, rotateY: 40 }}
+            animate={{ opacity: 1, y: 0, rotateY: 0 }}
+            transition={{ duration: 0.5, ease, delay: 0.4 }}
+            className="text-[64px] md:text-[80px] text-white inline-block"
+            style={{ transformOrigin: 'center bottom' }}
           >
-            <span className="annotation-label">{getContentValue('intro_splash', 'bottom_left', 'SYSTEM / INIT')}</span>
-            <div className="flex items-center gap-2">
-              <motion.span
-                animate={{ opacity: [0.4, 1, 0.4] }}
-                transition={{ duration: 1.2, repeat: Infinity }}
-                style={{ width: 4, height: 4, borderRadius: '50%', background: '#E8132A', display: 'inline-block' }}
-              />
-              <span className="annotation-label">{getContentValue('intro_splash', 'loading_label', 'Loading')}</span>
-            </div>
-            <span className="annotation-label">{getContentValue('intro_splash', 'bottom_right', 'VX / 2026')}</span>
-          </motion.div>
-        </motion.div>
-      )}
+            A
+          </motion.span>
+
+          {/* D */}
+          <motion.span
+            initial={{ opacity: 0, y: 30, rotateY: 40 }}
+            animate={{ opacity: 1, y: 0, rotateY: 0 }}
+            transition={{ duration: 0.5, ease, delay: 0.55 }}
+            className="text-[64px] md:text-[80px] text-white inline-block"
+            style={{ transformOrigin: 'center bottom' }}
+          >
+            D
+          </motion.span>
+        </div>
+
+        {/* Tagline fades in after diamond */}
+        <motion.p
+          initial={{ opacity: 0, y: 10 }}
+          animate={
+            phase === 'glow' || phase === 'exit'
+              ? { opacity: 0.6, y: 0 }
+              : { opacity: 0, y: 10 }
+          }
+          transition={{ duration: 0.4, ease }}
+          className="absolute mt-[120px] md:mt-[140px] text-[11px] md:text-[12px] text-text-tertiary tracking-[0.2em] uppercase"
+          style={{ fontFamily: 'DM Sans', fontWeight: 500 }}
+        >
+          Development
+        </motion.p>
+      </motion.div>
     </AnimatePresence>
   );
 }

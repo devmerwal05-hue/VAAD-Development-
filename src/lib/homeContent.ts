@@ -47,7 +47,7 @@ export interface TeamFallbackItem {
 export const heroDefaults = {
   eyebrow: 'Web Design + Web App Delivery',
   headline_line1: 'Small teams need fast systems',
-  headline_line2: 'not vague agency timelines.',
+  headline_line2: 'not timeline guesswork.',
   subheadline: 'Conversion-focused websites and operational web apps for teams that need a tight scope, a fast build window, and a handoff they can actually maintain.',
   cta_primary: 'Start a project',
   cta_secondary: 'See shipped work',
@@ -60,7 +60,7 @@ export const heroDefaults = {
   proof_kicker: 'Live delivery board',
   proof_title: 'Creative builds that still respect real deadlines.',
   proof_description: 'Each release is scoped against launch pressure, content reality, and what your team can maintain after handoff.',
-  proof_image: '',
+  proof_note: 'The homepage pulls from the same editable content system used by the admin panel.',
 };
 
 export const marqueeDefaults = {
@@ -84,13 +84,6 @@ export const serviceDefaults = [
     title: 'Launch support',
     description: 'Deployment, analytics, content updates, and post-launch improvements so the build keeps paying off after go-live.',
   },
-] as const;
-
-const serviceDetailDefaults = [
-  ['Narrative-first page architecture', 'CMS-driven content blocks', 'Performance budget and launch QA', 'Responsive behavior mapped before build'],
-  ['Role-aware dashboard views', 'Form and approval flows', 'Audit-friendly data logging', 'Actionable status states for teams'],
-  ['Catalog and merch structure', 'Conversion-focused PDP templates', 'Mobile checkout optimization', 'Analytics event mapping'],
-  ['Deployment and rollback readiness', 'CMS handoff and governance', 'Issue triage during launch window', 'Iteration backlog for phase two'],
 ] as const;
 
 export const techStackDefaults = [
@@ -276,7 +269,6 @@ export const footerDefaults = {
 
 const navFields: AdminFieldDefinition[] = [
   { key: 'logo_text', label: 'Logo text', fallback: 'VAAD' },
-  { key: 'home_label', label: 'Home label', fallback: 'Home' },
   { key: 'link_1', label: 'Link 1 label', fallback: 'Work' },
   { key: 'link_1_href', label: 'Link 1 URL', fallback: '/work', type: 'url' },
   { key: 'link_2', label: 'Link 2 label', fallback: 'Services' },
@@ -289,17 +281,9 @@ const navFields: AdminFieldDefinition[] = [
   { key: 'link_5_href', label: 'Link 5 URL', fallback: '/pricing', type: 'url' },
   { key: 'link_6', label: 'Link 6 label', fallback: 'Contact' },
   { key: 'link_6_href', label: 'Link 6 URL', fallback: '/contact', type: 'url' },
-  { key: 'primary_aria_label', label: 'Primary nav ARIA label', fallback: 'Primary navigation', description: 'Screen reader label for the main navigation landmark.' },
-  { key: 'home_aria_label', label: 'Home link ARIA label', fallback: 'VAAD Development home', description: 'Screen reader label for the logo/home link.' },
-  { key: 'mobile_open_aria', label: 'Mobile menu open (ARIA label)', fallback: 'Open navigation menu', description: 'Screen reader label for the mobile navigation toggle when the menu is closed.' },
-  { key: 'mobile_close_aria', label: 'Mobile menu close (ARIA label)', fallback: 'Close navigation menu', description: 'Screen reader label for the mobile navigation toggle when the menu is open.' },
-  { key: 'mobile_overlay_title', label: 'Mobile overlay title', fallback: 'System Navigation' },
-  { key: 'mobile_overlay_hint', label: 'Mobile overlay hint', fallback: 'swipe to navigate' },
 ];
 
 const heroFields: AdminFieldDefinition[] = [
-  { key: 'meta_left', label: 'Top-left meta label', fallback: 'hero.layout // 12-col' },
-  { key: 'meta_right', label: 'Top-right meta label', fallback: 'v3.1 // bento-grid' },
   { key: 'eyebrow', label: 'Eyebrow', fallback: heroDefaults.eyebrow },
   { key: 'headline_line1', label: 'Headline line 1', fallback: heroDefaults.headline_line1 },
   { key: 'headline_line2', label: 'Headline line 2', fallback: heroDefaults.headline_line2 },
@@ -313,68 +297,27 @@ const heroFields: AdminFieldDefinition[] = [
   { key: 'stat_2_label', label: 'Stat 2 label', fallback: heroDefaults.stat_2_label },
   { key: 'stat_3_number', label: 'Stat 3 value', fallback: heroDefaults.stat_3_number },
   { key: 'stat_3_label', label: 'Stat 3 label', fallback: heroDefaults.stat_3_label },
-  { key: 'spec_1_label', label: 'Spec 1 label', fallback: 'Delivery mode' },
-  { key: 'spec_1_value', label: 'Spec 1 value', fallback: 'Embedded sprint' },
-  { key: 'spec_2_label', label: 'Spec 2 label', fallback: 'Iteration cycle' },
-  { key: 'spec_2_value', label: 'Spec 2 value', fallback: '48-hour checkpoints' },
-  { key: 'spec_3_label', label: 'Spec 3 label', fallback: 'Stack bias' },
-  { key: 'spec_3_value', label: 'Spec 3 value', fallback: 'React + TypeScript + Supabase' },
-  { key: 'spec_4_label', label: 'Spec 4 label', fallback: 'Launch profile' },
-  { key: 'spec_4_value', label: 'Spec 4 value', fallback: 'Content-ready + measurable' },
   { key: 'proof_kicker', label: 'Proof card kicker', fallback: heroDefaults.proof_kicker },
   { key: 'proof_title', label: 'Proof card title', fallback: heroDefaults.proof_title, type: 'textarea' },
   { key: 'proof_description', label: 'Proof card description', fallback: heroDefaults.proof_description, type: 'textarea' },
-  { key: 'proof_image', label: 'Proof card image', fallback: heroDefaults.proof_image, type: 'image', description: 'Optional. Upload an image for the delivery board panel. If empty, the first portfolio project image is used.' },
-  { key: 'info_1_title', label: 'Info box 1 title', fallback: 'Core Service' },
-  { key: 'info_1_text', label: 'Info box 1 text', fallback: 'Clear scoping, focused execution, and handoff-ready delivery in one loop.', type: 'textarea' },
-  { key: 'info_1_image', label: 'Info box 1 image', fallback: '', type: 'image' },
-  { key: 'info_2_title', label: 'Info box 2 title', fallback: 'Technical Specs' },
-  { key: 'info_2_text', label: 'Info box 2 text', fallback: 'Critical constraints and architecture details.', type: 'textarea' },
-  { key: 'info_2_image', label: 'Info box 2 image', fallback: '', type: 'image' },
-  { key: 'info_3_title', label: 'Info box 3 title', fallback: 'Delivery metrics' },
-  { key: 'info_3_text', label: 'Info box 3 text', fallback: 'Operational metrics for timeline confidence.', type: 'textarea' },
-  { key: 'info_3_image', label: 'Info box 3 image', fallback: '', type: 'image' },
-  { key: 'proof_location', label: 'Proof card location label', fallback: 'Home', description: 'Small label in the proof-card header (top right).' },
-  { key: 'featured_fallback_alt', label: 'Featured image alt (fallback)', fallback: 'Featured release' },
-  { key: 'featured_fallback_tag', label: 'Featured tag (fallback)', fallback: 'Featured release' },
-  { key: 'featured_fallback_name', label: 'Featured title (fallback)', fallback: 'Launch-ready systems' },
-  { key: 'proof_panel_label', label: 'Panel label prefix', fallback: 'Panel', description: 'Shown as “Panel 01”, “Panel 02”… in the proof-card sidebar.' },
-  { key: 'scroll_hint', label: 'Scroll hint label', fallback: 'scroll' },
-];
-
-const marqueeFields: AdminFieldDefinition[] = [
-  { key: 'items', label: 'Marquee items', fallback: marqueeDefaults.items, type: 'list', description: 'Comma-separated items.' },
-  { key: 'meta_left', label: 'Top-left meta label', fallback: 'stream.buffer' },
-  { key: 'meta_right', label: 'Top-right meta label', fallback: 'seq // 0031' },
+  { key: 'proof_note', label: 'Proof card note', fallback: heroDefaults.proof_note, type: 'textarea' },
 ];
 
 const serviceFields: AdminFieldDefinition[] = [
-  { key: 'meta_left', label: 'Top-left meta label', fallback: 'services.node' },
-  { key: 'meta_right', label: 'Top-right meta label', fallback: 'v2.6 // 12-col' },
-  { key: 'archive_tag', label: 'Top-right archive tag', fallback: 'bionic_catalog_stream' },
   { key: 'label', label: 'Section label', fallback: '01 / Services' },
   { key: 'title', label: 'Section title', fallback: 'What we build' },
   { key: 'subtitle', label: 'Section subtitle', fallback: 'Delivery is structured around what your team actually needs to launch, maintain, and extend after handoff.', type: 'textarea' },
   { key: 'card_count', label: 'Number of service cards', fallback: String(serviceDefaults.length), type: 'text', description: 'Set the number of service cards to display (1-10).' },
   ...serviceDefaults.flatMap((service, index) => {
     const number = index + 1;
-    const details = serviceDetailDefaults[index] || ['', '', '', ''];
     return [
       { key: `card_${number}_title`, label: `Service ${number} title`, fallback: service.title },
       { key: `card_${number}_desc`, label: `Service ${number} description`, fallback: service.description, type: 'textarea' as const },
-      { key: `card_${number}_image`, label: `Service ${number} image`, fallback: '', type: 'image' as const, description: 'Optional card image. Leave empty to use the built-in gradient fallback.' },
-      { key: `card_${number}_detail_1`, label: `Service ${number} detail 1`, fallback: details[0] },
-      { key: `card_${number}_detail_2`, label: `Service ${number} detail 2`, fallback: details[1] },
-      { key: `card_${number}_detail_3`, label: `Service ${number} detail 3`, fallback: details[2] },
-      { key: `card_${number}_detail_4`, label: `Service ${number} detail 4`, fallback: details[3] },
     ];
   }),
 ];
 
 const techStackFields: AdminFieldDefinition[] = [
-  { key: 'meta_left', label: 'Top-left meta label', fallback: 'tech.registry' },
-  { key: 'meta_right', label: 'Top-right meta label', fallback: 'hash // 0x12AF' },
-  { key: 'module_prefix', label: 'Module label prefix', fallback: 'Module' },
   { key: 'label', label: 'Section label', fallback: '09 / Capabilities' },
   { key: 'title', label: 'Section title', fallback: 'How we build' },
   { key: 'subtitle', label: 'Section subtitle', fallback: 'The stack is chosen around delivery speed, maintainability, and how much control your team needs after launch.', type: 'textarea' },
@@ -391,10 +334,6 @@ const techStackFields: AdminFieldDefinition[] = [
 ];
 
 const statsFields: AdminFieldDefinition[] = [
-  { key: 'meta_left', label: 'Top-left meta label', fallback: 'stats.matrix' },
-  { key: 'meta_right', label: 'Top-right meta label', fallback: 'coord // 48.12N' },
-  { key: 'archive_tag', label: 'Top-right archive tag', fallback: 'sync_stability_matrix' },
-  { key: 'metric_prefix', label: 'Metric badge prefix', fallback: 'metric' },
   { key: 'label', label: 'Section label', fallback: '02 / Why Us' },
   { key: 'title', label: 'Section title', fallback: 'Why teams choose VAAD' },
   { key: 'stat_count', label: 'Number of stats', fallback: String(statsDefaults.length), type: 'text', description: 'Set the number of stats to display (1-6).' },
@@ -411,9 +350,6 @@ const statsFields: AdminFieldDefinition[] = [
 ];
 
 const processFields: AdminFieldDefinition[] = [
-  { key: 'meta_left', label: 'Top-left meta label', fallback: 'process.timeline' },
-  { key: 'meta_right', label: 'Top-right meta label', fallback: 'coord // 19.07N' },
-  { key: 'phase_prefix', label: 'Step prefix label', fallback: 'Phase' },
   { key: 'label', label: 'Section label', fallback: '03 / Process' },
   { key: 'title', label: 'Section title', fallback: 'How a project works' },
   { key: 'step_count', label: 'Number of process steps', fallback: String(processDefaults.length), type: 'text', description: 'Set the number of process steps to display (1-6).' },
@@ -427,129 +363,18 @@ const processFields: AdminFieldDefinition[] = [
 ];
 
 const portfolioMetaFields: AdminFieldDefinition[] = [
-  { key: 'meta_left', label: 'Top-left meta label', fallback: 'portfolio.archive' },
-  { key: 'meta_right', label: 'Top-right meta label', fallback: 'spec // v1.92' },
-  { key: 'archive_tag', label: 'Top-right archive tag', fallback: 'specimen_gallery' },
   { key: 'label', label: 'Section label', fallback: '04 / Work' },
   { key: 'title', label: 'Section title', fallback: 'Selected work' },
   { key: 'footer_text', label: 'Footer text', fallback: 'Detailed breakdowns are available during discovery for projects that match your workflow, audience, and launch window.', type: 'textarea' },
-  { key: 'link_label_live', label: 'Project link label (when URL exists)', fallback: 'View live project' },
-  { key: 'link_label_internal', label: 'Project link label (when no URL)', fallback: 'Internal showcase' },
-];
-
-const uiFields: AdminFieldDefinition[] = [
-  { key: 'skip_to_content', label: 'Skip link label', fallback: 'Skip to content', description: 'Accessible skip-to-content link shown on focus.' },
-  { key: 'loading', label: 'Generic loading label', fallback: 'Loading' },
-  { key: 'frame_meta_left', label: 'Global frame meta (left)', fallback: 'VAAD // DEV_2026' },
-  { key: 'frame_meta_right', label: 'Global frame meta (right)', fallback: 'SYSTEM // ACTIVE' },
-  { key: 'page_hero_meta_left', label: 'Page hero meta (left)', fallback: 'page.hero' },
-  { key: 'page_hero_meta_right', label: 'Page hero meta (right)', fallback: 'layout // 12-col' },
-  { key: 'page_hero_panel_top_left', label: 'Page hero panel top-left label', fallback: '00 / 01' },
-  { key: 'page_hero_panel_top_right', label: 'Page hero panel top-right label', fallback: '01' },
-  { key: 'page_hero_panel_grid_1', label: 'Page hero panel grid label 1', fallback: '01' },
-  { key: 'page_hero_panel_grid_2', label: 'Page hero panel grid label 2', fallback: '02' },
-  { key: 'page_hero_panel_grid_3', label: 'Page hero panel grid label 3', fallback: '03' },
-  { key: 'page_hero_panel_bottom', label: 'Page hero panel bottom label', fallback: '00 / 00' },
-  { key: 'enable_3d_card_effect', label: 'Enable 3D card effect', fallback: 'false', type: 'boolean', description: 'Toggles the interactive 3D tilt effect on supported cards (disabled on touch/coarse pointers and when reduced-motion is enabled).' },
-  { key: 'enable_floating_dock_nav', label: 'Enable floating dock navigation', fallback: 'true', type: 'boolean', description: 'Toggles the icon-based floating dock navigation in the top bar (desktop only).' },
-  { key: 'content_loading_banner', label: 'Content banner (loading)', fallback: 'Loading live content from Supabase.', type: 'textarea' },
-  { key: 'content_error_banner', label: 'Content banner (error)', fallback: 'Live content is unavailable right now. Showing fallback content until Supabase is configured.', type: 'textarea' },
-];
-
-const seoFields: AdminFieldDefinition[] = [
-  { key: 'home_title', label: 'Home page title', fallback: 'VAAD Development | Fast websites and web apps' },
-  { key: 'home_description', label: 'Home page description', fallback: 'VAAD Development designs, builds, and ships conversion-focused websites and operational web apps for small teams that need momentum.', type: 'textarea' },
-  { key: 'work_title', label: 'Work page title', fallback: 'VAAD Development | Selected projects' },
-  { key: 'work_description', label: 'Work page description', fallback: 'Recent website and web application builds from VAAD Development, including e-commerce, operations tooling, and launch-focused product work.', type: 'textarea' },
-  { key: 'services_title', label: 'Services page title', fallback: 'VAAD Development | Services' },
-  { key: 'services_description', label: 'Services page description', fallback: 'Website builds, product interfaces, internal tools, and launch support from VAAD Development.', type: 'textarea' },
-  { key: 'process_title', label: 'Process page title', fallback: 'VAAD Development | Process' },
-  { key: 'process_description', label: 'Process page description', fallback: 'How VAAD Development scopes, designs, builds, and launches projects without losing visibility or momentum.', type: 'textarea' },
-  { key: 'team_title', label: 'Team page title', fallback: 'VAAD Development | Team' },
-  { key: 'team_description', label: 'Team page description', fallback: 'Meet the small delivery team behind VAAD Development and how the work is split across design, engineering, and project delivery.', type: 'textarea' },
-  { key: 'pricing_title', label: 'Pricing page title', fallback: 'VAAD Development | Pricing' },
-  { key: 'pricing_description', label: 'Pricing page description', fallback: 'Project pricing, delivery ranges, and what is included in a typical VAAD Development engagement.', type: 'textarea' },
-  { key: 'contact_title', label: 'Contact page title', fallback: 'VAAD Development | Contact' },
-  { key: 'contact_description', label: 'Contact page description', fallback: 'Contact VAAD Development to scope a website, internal tool, or web application build.', type: 'textarea' },
-  { key: 'not_found_title', label: '404 page title', fallback: 'VAAD Development | Page not found' },
-  { key: 'not_found_description', label: '404 page description', fallback: 'The page you requested could not be found.', type: 'textarea' },
-];
-
-const notFoundFields: AdminFieldDefinition[] = [
-  { key: 'meta_left', label: 'Top-left meta label', fallback: '404.route' },
-  { key: 'meta_right', label: 'Top-right meta label', fallback: 'status // missing' },
-  { key: 'heading', label: 'Heading', fallback: 'Page not found' },
-  { key: 'description', label: 'Description', fallback: 'The route does not exist, or the page was removed while the site structure changed.', type: 'textarea' },
-  { key: 'button', label: 'Button label', fallback: 'Return home' },
-];
-
-const errorBoundaryFields: AdminFieldDefinition[] = [
-  { key: 'title', label: 'Title', fallback: 'Something went wrong' },
-  { key: 'description', label: 'Description', fallback: 'An unexpected error occurred. Please refresh the page.', type: 'textarea' },
-  { key: 'button', label: 'Button label', fallback: 'Refresh Page' },
-];
-
-const introSplashFields: AdminFieldDefinition[] = [
-  { key: 'top_left', label: 'Top annotation left', fallback: 'SPECIMEN / 001' },
-  { key: 'top_center', label: 'Top annotation center', fallback: 'EST. 2024' },
-  { key: 'top_right', label: 'Top annotation right', fallback: 'VAA-DEV-X' },
-  { key: 'tagline', label: 'Tagline', fallback: 'Development' },
-  { key: 'bottom_left', label: 'Bottom annotation left', fallback: 'SYSTEM / INIT' },
-  { key: 'loading_label', label: 'Bottom loading label', fallback: 'Loading' },
-  { key: 'bottom_right', label: 'Bottom annotation right', fallback: 'VX / 2026' },
-];
-
-const contactFormFields: AdminFieldDefinition[] = [
-  { key: 'honeypot_label', label: 'Honeypot label', fallback: 'Website' },
-  { key: 'name_label', label: 'Name label', fallback: 'Name' },
-  { key: 'name_placeholder', label: 'Name placeholder', fallback: 'Your name' },
-  { key: 'email_label', label: 'Email label', fallback: 'Email' },
-  { key: 'email_placeholder', label: 'Email placeholder', fallback: 'you@company.com' },
-  { key: 'phone_label', label: 'Phone label', fallback: 'Phone number' },
-  { key: 'phone_placeholder', label: 'Phone placeholder', fallback: '+91 98765 43210' },
-  { key: 'phone_help', label: 'Phone help text', fallback: 'Optional. Include the country code so we can reach you on WhatsApp or by phone.', type: 'textarea' },
-  { key: 'company_label', label: 'Company label', fallback: 'Company or brand' },
-  { key: 'company_placeholder', label: 'Company placeholder', fallback: 'Optional' },
-  { key: 'project_type_label', label: 'Project type label', fallback: 'Project type' },
-  { key: 'budget_range_label', label: 'Budget range label', fallback: 'Budget range' },
-  { key: 'select_placeholder', label: 'Select placeholder', fallback: 'Select one' },
-  { key: 'message_label', label: 'Message label', fallback: 'Project details' },
-  { key: 'message_placeholder', label: 'Message placeholder', fallback: 'What are you building, who is it for, and what should happen next?', type: 'textarea' },
-  { key: 'message_help', label: 'Message help text', fallback: 'Include launch pressure, approvals, integrations, or anything else that affects delivery.', type: 'textarea' },
-  { key: 'submit_sending', label: 'Submit button (sending)', fallback: 'Sending...' },
-  { key: 'submit_error_generic', label: 'Submit error (generic)', fallback: 'Something went wrong.' },
-  { key: 'validation_name_required', label: 'Validation: name', fallback: 'Name is required.' },
-  { key: 'validation_email_invalid', label: 'Validation: email', fallback: 'Enter a valid email address.' },
-  { key: 'validation_phone_digits', label: 'Validation: phone digits', fallback: 'Phone number must contain 7 to 15 digits.' },
-  { key: 'validation_phone_country_code', label: 'Validation: phone country code', fallback: 'Include a country code, for example +91.' },
-  { key: 'validation_project_type_required', label: 'Validation: project type', fallback: 'Choose the type of project you need.' },
-  { key: 'validation_budget_required', label: 'Validation: budget range', fallback: 'Choose a budget range.' },
-  { key: 'validation_message_min', label: 'Validation: message', fallback: 'Message must be at least 10 characters.' },
-  { key: 'project_type_website', label: 'Project type option: website', fallback: 'Website' },
-  { key: 'project_type_web_application', label: 'Project type option: web application', fallback: 'Web Application' },
-  { key: 'project_type_ecommerce', label: 'Project type option: e-commerce', fallback: 'E-commerce Store' },
-  { key: 'project_type_not_sure', label: 'Project type option: not sure', fallback: 'Not sure yet' },
-  { key: 'budget_range_under_500', label: 'Budget option: under 500', fallback: 'Under $500' },
-  { key: 'budget_range_between_500_1500', label: 'Budget option: 500-1500', fallback: '$500-$1,500' },
-  { key: 'budget_range_between_1500_3000', label: 'Budget option: 1500-3000', fallback: '$1,500-$3,000' },
-  { key: 'budget_range_above_3000', label: 'Budget option: above 3000', fallback: '$3,000+' },
-  { key: 'budget_range_lets_discuss', label: 'Budget option: lets discuss', fallback: "Let's discuss" },
 ];
 
 const teamMetaFields: AdminFieldDefinition[] = [
-  { key: 'meta_left', label: 'Top-left meta label', fallback: 'team.directory' },
-  { key: 'meta_right', label: 'Top-right meta label', fallback: 'rev // 05.04' },
-  { key: 'member_prefix', label: 'Member prefix label', fallback: 'Member' },
   { key: 'label', label: 'Section label', fallback: '05 / Team' },
   { key: 'title', label: 'Section title', fallback: 'The people behind the work' },
   { key: 'subtitle', label: 'Section subtitle', fallback: 'A compact team that scopes, designs, builds, and launches without handoff fog.', type: 'textarea' },
 ];
 
 const pricingFields: AdminFieldDefinition[] = [
-  { key: 'meta_left', label: 'Top-left meta label', fallback: 'pricing.matrix' },
-  { key: 'meta_right', label: 'Top-right meta label', fallback: 'schema // usd.v3' },
-  { key: 'plan_prefix', label: 'Plan prefix label', fallback: 'Plan' },
-  { key: 'currency_label', label: 'Currency label', fallback: 'USD' },
   { key: 'label', label: 'Section label', fallback: '06 / Pricing' },
   { key: 'title', label: 'Section title', fallback: 'Transparent pricing' },
   { key: 'subtitle', label: 'Section subtitle', fallback: 'Clear ranges for common scopes. Final pricing depends on content volume, integrations, and operational complexity.', type: 'textarea' },
@@ -571,8 +396,6 @@ const pricingFields: AdminFieldDefinition[] = [
 ];
 
 const faqFields: AdminFieldDefinition[] = [
-  { key: 'meta_left', label: 'Top-left meta label', fallback: 'faq.module' },
-  { key: 'meta_right', label: 'Top-right meta label', fallback: 'cache // on' },
   { key: 'label', label: 'Section label', fallback: '07 / FAQ' },
   { key: 'title', label: 'Section title', fallback: 'Common questions' },
   { key: 'faq_count', label: 'Number of FAQs', fallback: String(faqDefaults.length), type: 'text', description: 'Set the number of FAQ items to display (1-10).' },
@@ -587,8 +410,6 @@ const faqFields: AdminFieldDefinition[] = [
 ];
 
 const contactFields: AdminFieldDefinition[] = [
-  { key: 'meta_left', label: 'Top-left meta label', fallback: 'contact.endpoint' },
-  { key: 'meta_right', label: 'Top-right meta label', fallback: 'tls // active' },
   { key: 'label', label: 'Section label', fallback: '08 / Contact' },
   { key: 'title', label: 'Section title', fallback: 'Tell us what needs to ship' },
   { key: 'heading', label: 'Sidebar heading', fallback: 'Share the scope, timeline, and blockers.' },
@@ -602,7 +423,6 @@ const contactFields: AdminFieldDefinition[] = [
 ];
 
 const footerFields: AdminFieldDefinition[] = [
-  { key: 'ready_label', label: 'CTA eyebrow label', fallback: 'Ready to build' },
   { key: 'cta_title', label: 'Footer CTA title', fallback: footerDefaults.cta_title, type: 'textarea' },
   { key: 'cta_description', label: 'Footer CTA description', fallback: footerDefaults.cta_description, type: 'textarea' },
   { key: 'cta_button', label: 'Footer CTA button', fallback: footerDefaults.cta_button },
@@ -621,11 +441,6 @@ const footerFields: AdminFieldDefinition[] = [
 ];
 
 const workPageFields: AdminFieldDefinition[] = [
-  { key: 'grid_meta_left', label: 'Project grid meta (left)', fallback: 'work.index' },
-  { key: 'grid_meta_right', label: 'Project grid meta (right)', fallback: 'catalog // active' },
-  { key: 'project_prefix', label: 'Project prefix label', fallback: 'Project' },
-  { key: 'cta_meta_left', label: 'CTA meta (left)', fallback: 'work.cta' },
-  { key: 'cta_meta_right', label: 'CTA meta (right)', fallback: 'prompt // 01' },
   { key: 'eyebrow', label: 'Hero eyebrow', fallback: 'Selected Work' },
   { key: 'title_before', label: 'Hero title before highlight', fallback: 'Sites and products that had to' },
   { key: 'title_highlight', label: 'Hero highlighted title', fallback: 'ship on time' },
@@ -636,8 +451,6 @@ const workPageFields: AdminFieldDefinition[] = [
 ];
 
 const servicesPageFields: AdminFieldDefinition[] = [
-  { key: 'cta_meta_left', label: 'CTA meta (left)', fallback: 'services.cta' },
-  { key: 'cta_meta_right', label: 'CTA meta (right)', fallback: 'prompt // 02' },
   { key: 'eyebrow', label: 'Hero eyebrow', fallback: 'What We Build' },
   { key: 'title_before', label: 'Hero title before highlight', fallback: 'Design and engineering for teams that need a' },
   { key: 'title_highlight', label: 'Hero highlighted title', fallback: 'working release' },
@@ -648,8 +461,6 @@ const servicesPageFields: AdminFieldDefinition[] = [
 ];
 
 const processPageFields: AdminFieldDefinition[] = [
-  { key: 'cta_meta_left', label: 'CTA meta (left)', fallback: 'process.cta' },
-  { key: 'cta_meta_right', label: 'CTA meta (right)', fallback: 'prompt // 03' },
   { key: 'eyebrow', label: 'Hero eyebrow', fallback: 'How Delivery Works' },
   { key: 'title_before', label: 'Hero title before highlight', fallback: 'Clear checkpoints from brief to' },
   { key: 'title_highlight', label: 'Hero highlighted title', fallback: 'launch day' },
@@ -660,8 +471,6 @@ const processPageFields: AdminFieldDefinition[] = [
 ];
 
 const teamPageFields: AdminFieldDefinition[] = [
-  { key: 'cta_meta_left', label: 'CTA meta (left)', fallback: 'team.cta' },
-  { key: 'cta_meta_right', label: 'CTA meta (right)', fallback: 'prompt // 04' },
   { key: 'eyebrow', label: 'Hero eyebrow', fallback: 'The Team' },
   { key: 'title_before', label: 'Hero title before highlight', fallback: 'Small crew, direct accountability,' },
   { key: 'title_highlight', label: 'Hero highlighted title', fallback: 'no relay race' },
@@ -699,7 +508,7 @@ export const homeSectionDefinitions: Record<string, AdminSectionDefinition> = {
   marquee: {
     title: 'Marquee',
     description: 'Scrolling capability strip below the hero. Use commas to separate items.',
-    fields: marqueeFields,
+    fields: [{ key: 'items', label: 'Marquee items', fallback: marqueeDefaults.items, type: 'list', description: 'Comma-separated items.' }],
   },
   services: {
     title: 'Services',
@@ -750,36 +559,6 @@ export const homeSectionDefinitions: Record<string, AdminSectionDefinition> = {
     title: 'Footer',
     description: 'Footer CTA and supporting footer copy.',
     fields: footerFields,
-  },
-  ui: {
-    title: 'UI',
-    description: 'Global UI strings such as skip links, loading labels, and the live-content status banner.',
-    fields: uiFields,
-  },
-  seo: {
-    title: 'SEO',
-    description: 'Per-page document titles and meta descriptions used for social previews and search engines.',
-    fields: seoFields,
-  },
-  contact_form: {
-    title: 'Contact Form',
-    description: 'Labels, placeholders, dropdown option labels, and validation copy used in the contact form.',
-    fields: contactFormFields,
-  },
-  not_found: {
-    title: '404 Page',
-    description: 'Copy shown on the not-found page.',
-    fields: notFoundFields,
-  },
-  error_boundary: {
-    title: 'Error Page',
-    description: 'Copy shown when the site hits an unexpected runtime error.',
-    fields: errorBoundaryFields,
-  },
-  intro_splash: {
-    title: 'Intro Splash',
-    description: 'Intro animation copy shown on first visit in a session.',
-    fields: introSplashFields,
   },
   work_page: {
     title: 'Work Page',

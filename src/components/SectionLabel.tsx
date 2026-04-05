@@ -1,31 +1,17 @@
-import { useRef } from 'react';
-import { m, useScroll, useTransform } from 'framer-motion';
+import { motion } from 'framer-motion';
 
 export default function SectionLabel({ number, label }: { number: string; label: string }) {
-  const ref = useRef<HTMLDivElement | null>(null);
-  const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'end start'] });
-  const ghostY = useTransform(scrollYProgress, [0, 0.5, 1], [22, 0, -24]);
-  const ghostOpacity = useTransform(scrollYProgress, [0, 0.5, 1], [0.12, 0.35, 0.1]);
-
   return (
-    <m.div
-      ref={ref}
+    <motion.div
       initial={{ opacity: 0, x: -12 }}
       whileInView={{ opacity: 1, x: 0 }}
       viewport={{ once: true, amount: 0.5 }}
       transition={{ duration: 0.4 }}
-      className="section-label-wrap mb-6 inline-flex items-center gap-4"
+      className="inline-flex items-center gap-3 mb-5"
     >
-      <m.span
-        aria-hidden="true"
-        className="section-ghost-number"
-        style={{ y: ghostY, opacity: ghostOpacity }}
-      >
-        {number}
-      </m.span>
-
-      <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#E8132A', display: 'inline-block' }} />
-      <span className="section-ref">{number} / {label}</span>
-    </m.div>
+      <span className="text-accent text-[13px] font-[800]" style={{ fontFamily: 'Syne' }}>{number}</span>
+      <span className="w-8 h-[1px] bg-accent/30" />
+      <span className="text-[12px] font-medium tracking-[0.1em] uppercase text-text-tertiary" style={{ fontFamily: 'DM Sans', fontWeight: 500 }}>{label}</span>
+    </motion.div>
   );
 }

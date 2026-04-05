@@ -1,153 +1,74 @@
-import { m as motion } from 'framer-motion';
-import { useContent } from '../lib/useContent';
+import { motion } from 'framer-motion';
+import { Globe, Code2, ShoppingBag, Wrench } from 'lucide-react';
 import SectionLabel from './SectionLabel';
+import SectionTitle from './SectionTitle';
+import { useContent } from '../lib/useContent';
 
-const ease: [number, number, number, number] = [0.16, 0.77, 0.47, 0.97];
+const iconComponents = [Globe, Code2, ShoppingBag, Wrench];
 
 const serviceDefaults = [
-  {
-    title: 'High-conviction websites',
-    description: 'Marketing sites with strong hierarchy and conversion-driven storytelling.',
-    details: ['Narrative-first page architecture', 'CMS-driven content blocks', 'Performance budget and launch QA', 'Responsive behavior mapped before build'],
-  },
-  {
-    title: 'Operational web apps',
-    description: 'Internal and client-facing tools that remove workflow drag.',
-    details: ['Role-aware dashboard views', 'Form and approval flows', 'Audit-friendly data logging', 'Actionable status states for teams'],
-  },
-  {
-    title: 'Commerce builds',
-    description: 'Product surfaces built around trust, velocity, and checkout clarity.',
-    details: ['Catalog and merch structure', 'Conversion-focused PDP templates', 'Mobile checkout optimization', 'Analytics event mapping'],
-  },
-  {
-    title: 'Launch support',
-    description: 'Post-ship improvements and content operations that sustain momentum.',
-    details: ['Deployment and rollback readiness', 'CMS handoff and governance', 'Issue triage during launch window', 'Iteration backlog for phase two'],
-  },
+  { title: 'High-conviction websites', description: 'Marketing sites with strong information hierarchy, custom visuals, and a CMS handoff your team can actually maintain.' },
+  { title: 'Operational web apps', description: 'Internal tools, client dashboards, and workflow systems that reduce manual follow-up and keep teams aligned.' },
+  { title: 'Commerce builds', description: 'Stores and product funnels designed around clear merchandising, product storytelling, and mobile conversion paths.' },
+  { title: 'Launch support', description: 'Deployment, analytics, content updates, and post-launch improvements so the build keeps paying off after go-live.' },
 ];
 
 export default function Services() {
   const { getContentValue } = useContent();
   const labelParts = getContentValue('services', 'label', '01 / Services').split(' / ');
+  
   const storedCardCount = Number(getContentValue('services', 'card_count', ''));
-  const cardCount = !Number.isNaN(storedCardCount) && storedCardCount > 0 ? storedCardCount : serviceDefaults.length;
-
+  const cardCount = (!isNaN(storedCardCount) && storedCardCount > 0) ? storedCardCount : serviceDefaults.length;
+  
   const services = Array.from({ length: cardCount }, (_, index) => {
     const fallback = serviceDefaults[index];
-    const detailFallbacks = fallback?.details || [];
-    const details = [1, 2, 3, 4]
-      .map((n) => getContentValue('services', `card_${index + 1}_detail_${n}`, detailFallbacks[n - 1] || ''))
-      .filter(Boolean);
-
     return {
       title: getContentValue('services', `card_${index + 1}_title`, fallback?.title || ''),
       description: getContentValue('services', `card_${index + 1}_desc`, fallback?.description || ''),
-      image: getContentValue('services', `card_${index + 1}_image`, ''),
-      details,
     };
-  }).filter((s) => s.title);
-
-  const visualFallbacks = [
-    'radial-gradient(circle at 50% 45%, rgba(188,208,242,0.68) 0%, rgba(33,57,98,0.35) 34%, rgba(5,24,58,0.95) 100%)',
-    'linear-gradient(165deg, rgba(152,172,206,0.45), rgba(9,29,66,0.95) 52%), radial-gradient(circle at 25% 50%, rgba(235,240,250,0.25), transparent 55%)',
-    'linear-gradient(180deg, rgba(10,36,80,0.3), rgba(4,18,48,0.98)), radial-gradient(circle at 70% 35%, rgba(205,216,237,0.42), transparent 52%)',
-    'linear-gradient(140deg, rgba(160,183,221,0.32), rgba(5,23,55,0.96)), radial-gradient(circle at 40% 70%, rgba(220,228,244,0.28), transparent 48%)',
-  ];
+  }).filter(s => s.title);
 
   return (
-    <section className="section-pad swiss-section relative py-20 md:py-24">
-      <div className="absolute inset-0 grid-pattern opacity-16 pointer-events-none" />
-      <span className="swiss-meta swiss-meta--tl">{getContentValue('services', 'meta_left', 'services.node')}</span>
-      <span className="swiss-meta swiss-meta--tr">{getContentValue('services', 'meta_right', 'v2.6 // 12-col')}</span>
-
-      <div className="site-container swiss-grid relative z-10 max-w-[1320px] gap-8 px-5 md:px-8 lg:gap-12 xl:px-10">
-        <div className="swiss-full-col mb-6 flex items-center justify-between">
-          <SectionLabel number={labelParts[0] || '01'} label={labelParts[1] || 'Services'} />
-          <span className="archive-tag hidden md:block">{getContentValue('services', 'archive_tag', 'bionic_catalog_stream')}</span>
-        </div>
-
-        <div className="swiss-full-col mb-12 grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-end lg:gap-12">
-          <motion.h2
-            initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }} transition={{ duration: 0.6, ease }}
-            className="display-section lg:col-span-7 text-[#dbe5f8]"
-            style={{ fontFamily: "'Playfair Display', serif", fontWeight: 900, fontSize: 'clamp(44px, 8vw, 98px)', fontStyle: 'italic' }}
-          >
-            {getContentValue('services', 'title', 'What we build')}
-          </motion.h2>
-
-          <motion.p
-            initial={{ opacity: 0, y: 14 }} whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }} transition={{ duration: 0.55, ease, delay: 0.1 }}
-            className="reading-track lg:col-span-5 text-[14px] leading-[1.85] text-[rgba(164,188,226,0.88)]"
-            style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}
-          >
-            {getContentValue('services', 'subtitle', 'Delivery is structured around what your team actually needs to launch, maintain, and extend after handoff.')}
-          </motion.p>
-        </div>
-
-        <div className="swiss-full-col grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-12">
-          {services.map((service, index) => (
-            <motion.article
-              key={service.title}
-              initial={{ opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.2 }}
-              transition={{ duration: 0.52, ease, delay: index * 0.06 }}
-              className="archive-panel bento-card scanline-hover service-reveal-card group flex h-full flex-col overflow-hidden lg:col-span-6"
-            >
-              <div className="relative h-[300px] border-b border-[rgba(126,164,224,0.25)] md:h-[340px]">
-                {service.image ? (
-                  <img
-                    src={service.image}
-                    alt={service.title}
-                    loading="lazy"
-                    decoding="async"
-                    className="absolute inset-0 h-full w-full object-cover"
-                  />
-                ) : (
-                  <div className="absolute inset-0" style={{ background: visualFallbacks[index % visualFallbacks.length] }} />
-                )}
-
-                <div className="absolute inset-0 bg-[linear-gradient(to_top,rgba(1,14,42,0.96)_5%,rgba(1,14,42,0.18)_58%)]" />
-                <div className="absolute left-5 top-5 border border-[rgba(255,44,27,0.62)] bg-[rgba(2,18,52,0.9)] px-3 py-1">
-                  <span className="archive-tag">index.{String(index + 1).padStart(3, '0')}</span>
-                </div>
-              </div>
-
-              <div className="flex flex-1 flex-col p-8 md:p-10">
-                <h3
-                  className="display-section mb-4 text-[#dfe7f8]"
-                  style={{ fontFamily: "'Playfair Display', serif", fontWeight: 800, fontSize: 'clamp(34px, 3.8vw, 54px)', fontStyle: 'italic' }}
-                >
-                  {service.title}
-                </h3>
-
-                <p
-                  className="reading-track mb-8 text-[15px] leading-[1.9] text-[rgba(168,190,226,0.9)]"
-                  style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}
-                >
-                  {service.description}
-                </p>
-
-                <div className="mt-auto border-t border-[rgba(126,164,224,0.2)] pt-6">
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
-                    {service.details.slice(0, 4).map((detail, detailIndex) => (
-                      <p
-                        key={detail}
-                        className="service-detail-item mono-readable flex items-start gap-2 text-[10px] uppercase text-[rgba(255,44,27,0.9)]"
-                        style={{ transitionDelay: `${detailIndex * 70}ms` }}
-                      >
-                        <span className="mt-[6px] inline-block h-[3px] w-[3px] shrink-0 rounded-full bg-[rgba(255,44,27,0.9)]" />
-                        <span>{detail}</span>
-                      </p>
-                    ))}
+    <section className="py-24 md:py-32 relative">
+      {/* Background glow */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] rounded-full pointer-events-none opacity-20">
+        <div className="absolute inset-0 bg-gradient-to-b from-[#7C6FF7] to-transparent rounded-full blur-[100px]" />
+      </div>
+      
+      <div className="max-w-[1280px] mx-auto px-6 relative z-10">
+        <SectionLabel number={labelParts[0] || '01'} label={labelParts[1] || 'Services'} />
+        <SectionTitle>{getContentValue('services', 'title', 'What we build')}</SectionTitle>
+        <motion.p initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.55 }} className="text-[15px] md:text-[17px] text-text-secondary mb-12 -mt-6 max-w-[620px] leading-[1.75]" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>
+          {getContentValue('services', 'subtitle', 'Delivery is structured around what your team actually needs to launch, maintain, and extend after handoff.')}
+        </motion.p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          {services.map((service, index) => {
+            const Icon = iconComponents[index % iconComponents.length];
+            return (
+              <motion.div
+                key={service.title}
+                initial={{ opacity: 0, y: 28 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.15 }}
+                transition={{ duration: 0.6, ease: [0.16, 0.77, 0.47, 0.97] as [number, number, number, number], delay: index * 0.08 }}
+                className="perspective-container"
+              >
+                <div className="tilt-card bg-surface-1 rounded-2xl p-8 md:p-10 min-h-[240px] flex flex-col border border-[rgba(255,255,255,0.04)] card-hover relative overflow-hidden group glass">
+                  <span className="absolute top-4 right-6 text-[72px] font-[800] text-[rgba(255,255,255,0.015)] pointer-events-none select-none transition-all duration-500 group-hover:text-[rgba(124,111,247,0.04)]" style={{ fontFamily: 'Syne' }}>
+                    0{index + 1}
+                  </span>
+                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" style={{ background: `radial-gradient(ellipse at ${index % 2 === 0 ? '20% 0%' : '80% 100%'}, rgba(124,111,247,0.06), transparent 60%)` }} />
+                  <div className="relative z-10">
+                    <div className="w-12 h-12 rounded-xl bg-[rgba(124,111,247,0.08)] flex items-center justify-center mb-6 group-hover:bg-[rgba(124,111,247,0.14)] transition-colors duration-300 glow-ring">
+                      <Icon size={22} className="text-accent" />
+                    </div>
+                    <h3 className="text-[22px] text-text-primary mb-3 gradient-text-enhanced" style={{ fontFamily: 'Syne', fontWeight: 700 }}>{service.title}</h3>
+                    <p className="text-[15px] text-text-secondary leading-[1.75] flex-1" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>{service.description}</p>
                   </div>
                 </div>
-              </div>
-            </motion.article>
-          ))}
+              </motion.div>
+            );
+          })}
         </div>
       </div>
     </section>

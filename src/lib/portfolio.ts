@@ -13,12 +13,12 @@ export interface PortfolioProject {
 }
 
 const accentColorPool = [
-  'rgba(232,19,42,0.18)',
-  'rgba(168,30,52,0.15)',
-  'rgba(39,89,176,0.14)',
-  'rgba(12,48,128,0.16)',
-  'rgba(224,71,38,0.13)',
-  'rgba(69,135,220,0.12)',
+  'rgba(124,111,247,0.14)',
+  'rgba(168,85,249,0.12)',
+  'rgba(34,211,238,0.10)',
+  'rgba(236,72,153,0.10)',
+  'rgba(34,197,94,0.10)',
+  'rgba(251,146,60,0.10)',
 ];
 
 const gradientAnglePool = ['135deg', '225deg', '315deg', '45deg', '180deg', '270deg'];

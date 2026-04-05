@@ -1415,10 +1415,7 @@ const SectionSidebar = React.memo(function SectionSidebar({
 
 export default function AdminDashboard() {
   // Auth state
-  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [mfaCode, setMfaCode] = useState("");
-  const [mfaRequired, setMfaRequired] = useState(false);
   const [csrfToken, setCsrfToken] = useState("");
   const [checking, setChecking] = useState(true);
   const [authenticated, setAuthenticated] = useState(false);
@@ -1683,7 +1680,6 @@ export default function AdminDashboard() {
 
         if (sess.authenticated) {
           setAuthenticated(true);
-          setEmail(sess.user?.email || "");
           await loadAll();
         }
       } catch { setAuthenticated(false); } finally { setChecking(false); }
@@ -1700,20 +1696,12 @@ export default function AdminDashboard() {
 
       await apiFetchLogged("/api/admin/session", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, mfa_code: mfaCode }),
+        body: JSON.stringify({ password }),
       });
       setAuthenticated(true);
       setPassword("");
-      setMfaCode("");
-      setMfaRequired(false);
       await loadAll();
     } catch (err) {
-      if (err instanceof ApiRequestError && err.mfaRequired) {
-        setMfaRequired(true);
-        setError("MFA required. Enter the 6-digit authenticator code and submit again.");
-        return;
-      }
-
       const message = getErrorMessage(err);
       if (/failed to fetch/i.test(message) || /networkerror/i.test(message)) {
         setError(
@@ -1731,8 +1719,6 @@ export default function AdminDashboard() {
       await apiFetchLogged("/api/admin/session", { method: "DELETE" });
       setAuthenticated(false);
       setPassword("");
-      setMfaCode("");
-      setMfaRequired(false);
       setContent([]);
       setSubmissions([]);
     } finally { setLoading(false); }
@@ -2026,43 +2012,17 @@ export default function AdminDashboard() {
           </div>
           <form onSubmit={login} className="flex flex-col gap-4">
             <input
-              type="email"
-              autoComplete="email"
-              value={email}
-              onChange={e => {
-                setEmail(e.target.value);
-                setMfaRequired(false);
-              }}
-              placeholder="Admin email"
-              className="w-full bg-white/4 text-white text-[14px] px-4 py-3 rounded-xl border border-white/10 outline-none focus:border-accent/50 placeholder:text-white/25"
-            />
-            <input
               type="password" autoComplete="current-password"
               value={password}
-              onChange={e => {
-                setPassword(e.target.value);
-                setMfaRequired(false);
-              }}
-              placeholder="Password"
+              onChange={e => setPassword(e.target.value)}
+              placeholder="Admin password"
               className="w-full bg-white/4 text-white text-[14px] px-4 py-3 rounded-xl border border-white/10 outline-none focus:border-accent/50 placeholder:text-white/25"
             />
-
-            {mfaRequired && (
-              <input
-                type="text"
-                inputMode="numeric"
-                autoComplete="one-time-code"
-                value={mfaCode}
-                onChange={e => setMfaCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                placeholder="6-digit MFA code"
-                className="w-full bg-white/4 text-white text-[14px] px-4 py-3 rounded-xl border border-accent/40 outline-none focus:border-accent placeholder:text-white/25"
-              />
-            )}
 
             {error && <p className="text-[12px] text-red-400">{error}</p>}
             <button type="submit" disabled={loading}
               className="w-full bg-gradient-to-r from-accent to-accent/80 text-white py-3 rounded-xl text-[14px] font-medium disabled:opacity-50 hover:opacity-90 transition-opacity">
-              {loading ? "Signing in..." : mfaRequired ? "Verify and sign in" : "Sign in"}
+              {loading ? "Signing in..." : "Sign in"}
             </button>
           </form>
         </motion.div>
