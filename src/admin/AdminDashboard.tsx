@@ -1341,31 +1341,22 @@ const SubmissionsPanel = React.memo(function SubmissionsPanel({
     return "copied";
   }, []);
 
-  const getSubmissionRowKey = useCallback((sub: Submission, index: number) => {
+  const getSubmissionRowKey = useCallback((sub: Submission) => {
     const normalizedId = normalizeSubmissionId(sub.id);
     if (normalizedId !== null) return `id:${normalizedId}`;
 
     const idPart = String(sub.id || "").trim();
-    if (idPart) return `raw:${idPart}:${index}`;
+    if (idPart) return `raw:${idPart}`;
 
     const emailPart = String(sub.email || "unknown").toLowerCase().trim();
     const datePart = String(sub.created_at || "unknown").trim();
-    return `fallback:${emailPart}:${datePart}:${index}`;
+    const namePart = String(sub.name || "unknown").toLowerCase().trim();
+    return `fallback:${emailPart}:${datePart}:${namePart}`;
   }, []);
 
   const getSubmissionId = useCallback((sub: Submission) => {
     return normalizeSubmissionId(sub.id);
   }, []);
-
-  const availableRowKeys = useMemo(
-    () => new Set(submissions.map((submission, index) => getSubmissionRowKey(submission, index))),
-    [getSubmissionRowKey, submissions],
-  );
-
-  const availableCopyKeys = useMemo(
-    () => new Set(submissions.map((submission) => getCopyStateKey(submission))),
-    [getCopyStateKey, submissions],
-  );
 
   const formatReceivedDate = useCallback((raw: string) => {
     const parsed = new Date(raw);
@@ -1402,9 +1393,9 @@ const SubmissionsPanel = React.memo(function SubmissionsPanel({
 
   return (
     <div className="flex flex-col gap-2">
-      {submissions.map((sub, index) => {
-        const rowKey = getSubmissionRowKey(sub, index);
-        const expandable = expandedKey !== null && availableRowKeys.has(expandedKey) && expandedKey === rowKey;
+      {submissions.map((sub) => {
+        const rowKey = getSubmissionRowKey(sub);
+        const expandable = expandedKey === rowKey;
         const submissionId = getSubmissionId(sub);
         const statusPending = submissionId !== null && pendingStatusIds.has(submissionId);
 
@@ -1490,7 +1481,7 @@ const SubmissionsPanel = React.memo(function SubmissionsPanel({
                 <div className="px-4 pb-4 flex flex-wrap gap-2">
                   <button type="button" onClick={() => copyEmail(sub)}
                     className="px-3 py-1.5 rounded-lg border border-white/10 text-[12px] text-white/50 hover:text-white hover:border-white/20 flex items-center gap-1.5 transition-all">
-                    {copiedKey !== null && availableCopyKeys.has(copiedKey) && copiedKey === getCopyStateKey(sub) ? (
+                    {copiedKey === getCopyStateKey(sub) ? (
                       <><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12" /></svg> Copied</>
                     ) : (
                       <><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg> Copy email</>
