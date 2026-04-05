@@ -121,7 +121,7 @@ export default function Navigation() {
             style={{ background: 'rgba(6, 6, 12, 0.97)' }}
           >
             <div className="h-[68px] shrink-0" />
-            <div className="flex-1 flex flex-col items-start justify-center px-8 gap-3" role="dialog" aria-modal="true">
+            <div className="flex-1 overflow-y-auto flex flex-col items-start justify-center px-6 sm:px-8 py-8 gap-2.5" role="dialog" aria-modal="true">
               {navLinks.map((link, index) => (
                 <motion.div
                   key={link.href}
@@ -133,7 +133,7 @@ export default function Navigation() {
                     to={link.href}
                     onClick={closeMobileMenu}
                     className={({ isActive }) =>
-                      `text-[40px] font-[800] leading-[1.1] transition-colors block py-1 ${
+                      `text-[clamp(30px,10vw,40px)] font-[800] leading-[1.14] transition-colors block py-1 ${
                         isActive ? 'gradient-text' : 'text-text-primary'
                       }`
                     }

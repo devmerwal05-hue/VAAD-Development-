@@ -359,6 +359,25 @@ select option { background: #0A0A14; color: #EDE9E0; }
 .badge-glow-pulse {
   animation: badgePulse 2s ease-in-out infinite;
 }
+
+@media (max-width: 768px) {
+  .gradient-text-enhanced {
+    animation: none;
+  }
+
+  .card-hover:hover {
+    transform: none;
+    box-shadow: 0 0 30px rgba(124,111,247,0.05);
+  }
+
+  .perspective-container:hover .tilt-card {
+    transform: none;
+  }
+
+  .btn-glow:hover {
+    box-shadow: 0 0 20px rgba(124,111,247,0.22);
+  }
+}
 @keyframes badgePulse {
   0%, 100% { box-shadow: 0 0 12px rgba(124,111,247,0.3); }
   50% { box-shadow: 0 0 20px rgba(124,111,247,0.5), 0 0 30px rgba(124,111,247,0.2); }

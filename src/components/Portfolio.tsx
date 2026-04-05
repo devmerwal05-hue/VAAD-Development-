@@ -14,22 +14,22 @@ export default function Portfolio() {
   if (projects.length === 0) return null;
 
   return (
-    <section className="py-28 md:py-36 relative overflow-hidden">
+    <section className="py-20 md:py-36 relative overflow-hidden">
       <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 80% 20%, rgba(124,111,247,0.06), transparent 45%), radial-gradient(ellipse at 10% 80%, rgba(236,72,153,0.05), transparent 45%)' }} />
-      <div className="max-w-[1360px] mx-auto px-6 relative z-10">
-        <div className="max-w-[720px] mb-14">
+      <div className="max-w-[1360px] mx-auto px-5 md:px-6 relative z-10">
+        <div className="max-w-[720px] mb-10 md:mb-14">
           <SectionLabel number={labelParts[0] || '04'} label={labelParts[1] || 'Work'} />
           <SectionTitle>{getContentValue('portfolio', 'title', 'Selected work')}</SectionTitle>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 md:gap-4">
           {projects.map((project, index) => {
             const featured = index === 0;
             const card = (
-              <div className={`group rounded-[30px] overflow-hidden border border-[rgba(255,255,255,0.06)] bg-surface-1 h-full ${featured ? 'lg:col-span-7' : 'lg:col-span-5'}`}>
+              <div className={`group rounded-[24px] md:rounded-[30px] overflow-hidden border border-[rgba(255,255,255,0.06)] bg-surface-1 h-full ${featured ? 'lg:col-span-7' : 'lg:col-span-5'}`}>
                 <div className={`grid ${featured ? 'md:grid-cols-[1.1fr_0.9fr]' : ''} h-full`}>
                   <div
-                    className={`relative overflow-hidden ${featured ? 'min-h-[360px]' : 'min-h-[280px]'}`}
+                    className={`relative overflow-hidden ${featured ? 'min-h-[300px] md:min-h-[360px]' : 'min-h-[240px] md:min-h-[280px]'}`}
                     style={{ background: `radial-gradient(ellipse at 35% 35%, ${project.accentColor}, transparent 65%), linear-gradient(${project.gradientAngle}, #090914, #14121F)` }}
                   >
                     {project.image ? (
@@ -42,7 +42,7 @@ export default function Portfolio() {
                       />
                     ) : (
                       <div className="absolute inset-0 flex items-center justify-center px-6 text-center">
-                        <span className="text-[44px] md:text-[62px] font-[800] gradient-text" style={{ fontFamily: 'Syne', lineHeight: 0.95 }}>
+                        <span className="text-[34px] sm:text-[44px] md:text-[62px] font-[800] gradient-text" style={{ fontFamily: 'Syne', lineHeight: 0.98 }}>
                           {project.name}
                         </span>
                       </div>
@@ -53,16 +53,16 @@ export default function Portfolio() {
                     </span>
                   </div>
 
-                  <div className="p-6 md:p-8 flex flex-col gap-5 justify-between">
+                  <div className="p-5 md:p-8 flex flex-col gap-5 justify-between">
                     <div>
                       <span className="text-[12px] uppercase tracking-[0.18em] text-text-tertiary" style={{ fontFamily: 'JetBrains Mono' }}>
                         {String(index + 1).padStart(2, '0')}
                       </span>
-                      <h3 className="text-[28px] md:text-[36px] text-text-primary mt-3 mb-3" style={{ fontFamily: 'Syne', fontWeight: 800, lineHeight: 0.95, letterSpacing: '-0.04em' }}>
+                      <h3 className="text-[24px] md:text-[36px] text-text-primary mt-3 mb-3" style={{ fontFamily: 'Syne', fontWeight: 800, lineHeight: 1.03, letterSpacing: '-0.02em' }}>
                         {project.name}
                       </h3>
-                      <p className="text-[15px] text-accent-light mb-4">{project.subtitle}</p>
-                      <p className="text-[15px] text-text-secondary leading-[1.8]" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>
+                      <p className="text-[14px] md:text-[15px] text-accent-light mb-3 md:mb-4">{project.subtitle}</p>
+                      <p className="text-[14px] md:text-[15px] text-text-secondary leading-[1.8]" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>
                         {project.description}
                       </p>
                     </div>
@@ -116,7 +116,7 @@ export default function Portfolio() {
           })}
         </div>
 
-        <motion.p initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.55, delay: 0.2 }} className="text-center text-[15px] text-text-secondary max-w-[560px] mx-auto mt-14 leading-[1.8]" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>
+        <motion.p initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.55, delay: 0.2 }} className="text-center text-[14px] md:text-[15px] text-text-secondary max-w-[560px] mx-auto mt-10 md:mt-14 leading-[1.8]" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>
           {getContentValue('portfolio', 'footer_text', 'Detailed breakdowns are available during discovery for projects that match your workflow, audience, and launch window.')}
         </motion.p>
       </div>

@@ -22,8 +22,8 @@ export default function WorkPage() {
 
   return (
     <PageWrapper>
-      <section className="pt-24 pb-8">
-        <div className="max-w-[1320px] mx-auto px-6">
+      <section className="pt-20 md:pt-24 pb-8">
+        <div className="max-w-[1320px] mx-auto px-5 md:px-6">
           <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease }} className="max-w-[680px]">
             <div className="inline-flex items-center gap-2.5 mb-8 px-4 py-2 rounded-full" style={{ background: 'rgba(124,111,247,0.06)', border: '1px solid rgba(124,111,247,0.12)' }}>
               <span className="w-[5px] h-[5px] rounded-full bg-accent" />
@@ -31,10 +31,10 @@ export default function WorkPage() {
                 {getContentValue('work_page', 'eyebrow', 'Selected Work')}
               </span>
             </div>
-            <h1 className="text-text-primary mb-5" style={{ fontFamily: 'Syne', fontWeight: 800, fontSize: 'clamp(44px, 7vw, 76px)', lineHeight: 0.95, letterSpacing: '-0.04em' }}>
+            <h1 className="text-text-primary mb-5" style={{ fontFamily: 'Syne', fontWeight: 800, fontSize: 'clamp(34px, 10vw, 76px)', lineHeight: 1.05, letterSpacing: '-0.02em' }}>
               {getContentValue('work_page', 'title_before', 'Sites and products that had to')} <span className="gradient-text">{getContentValue('work_page', 'title_highlight', 'ship on time')}</span>
             </h1>
-            <p className="text-[18px] text-text-secondary leading-[1.65]" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>
+            <p className="text-[15px] md:text-[18px] text-text-secondary leading-[1.65]" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>
               {getContentValue('work_page', 'description', 'These are the kinds of builds we take on: lean teams, real delivery pressure, and a clear need for design and engineering to move in the same sprint.')}
             </p>
           </motion.div>
@@ -42,7 +42,7 @@ export default function WorkPage() {
       </section>
 
       <section className="py-12">
-        <div className="max-w-[1320px] mx-auto px-6 flex flex-col gap-20">
+        <div className="max-w-[1320px] mx-auto px-5 md:px-6 flex flex-col gap-14 md:gap-20">
           {projects.map((project, index) => (
             <motion.div
               key={`${project.name}-${index}`}
@@ -70,7 +70,7 @@ export default function WorkPage() {
                         />
                       ) : (
                         <div className="absolute inset-0 flex items-center justify-center px-6 text-center">
-                          <span className="text-[52px] font-[800] gradient-text" style={{ fontFamily: 'Syne' }}>
+                          <span className="text-[36px] md:text-[52px] font-[800] gradient-text" style={{ fontFamily: 'Syne' }}>
                             {project.name}
                           </span>
                         </div>
@@ -107,13 +107,13 @@ export default function WorkPage() {
                   >
                     {project.tag}
                   </span>
-                  <h2 className="text-[36px] md:text-[42px] text-text-primary mb-2" style={{ fontFamily: 'Syne', fontWeight: 800, lineHeight: 1.0, letterSpacing: '-0.03em' }}>
+                  <h2 className="text-[30px] md:text-[42px] text-text-primary mb-2" style={{ fontFamily: 'Syne', fontWeight: 800, lineHeight: 1.04, letterSpacing: '-0.02em' }}>
                     {project.name}
                   </h2>
-                  <p className="text-[18px] text-text-secondary mb-4" style={{ fontFamily: 'DM Sans', fontWeight: 400 }}>
+                  <p className="text-[16px] md:text-[18px] text-text-secondary mb-4" style={{ fontFamily: 'DM Sans', fontWeight: 400 }}>
                     {project.subtitle}
                   </p>
-                  <p className="text-[16px] text-text-secondary leading-[1.75] mb-8" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>
+                  <p className="text-[14px] md:text-[16px] text-text-secondary leading-[1.75] mb-8" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>
                     {project.description}
                   </p>
                   {project.url && (
@@ -137,18 +137,18 @@ export default function WorkPage() {
 
       <Marquee />
 
-      <section className="py-24">
-        <div className="max-w-[640px] mx-auto px-6 text-center">
+      <section className="py-20 md:py-24">
+        <div className="max-w-[640px] mx-auto px-5 md:px-6 text-center">
           <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, ease }}>
             {getContentValue('portfolio', 'footer_text', '') && (
               <p className="text-[15px] text-text-secondary mb-8 leading-[1.7]" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>
                 {getContentValue('portfolio', 'footer_text', '')}
               </p>
             )}
-            <h2 className="text-[36px] text-text-primary mb-4" style={{ fontFamily: 'Syne', fontWeight: 800, letterSpacing: '-0.03em' }}>
+            <h2 className="text-[30px] md:text-[36px] text-text-primary mb-4" style={{ fontFamily: 'Syne', fontWeight: 800, letterSpacing: '-0.02em' }}>
               {getContentValue('work_page', 'cta_title', 'Have a build that needs traction?')}
             </h2>
-            <p className="text-[16px] text-text-secondary mb-8" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>
+            <p className="text-[14px] md:text-[16px] text-text-secondary mb-8" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>
               {getContentValue('work_page', 'cta_description', 'We can scope the work, call out the risks, and tell you what should happen in the first release.')}
             </p>
             <Link

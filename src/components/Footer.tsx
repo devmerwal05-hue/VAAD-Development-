@@ -75,7 +75,7 @@ export default function Footer() {
         >
           <h2
             className="text-[clamp(32px,6vw,60px)] text-text-primary mb-4"
-            style={{ fontFamily: 'Syne', fontWeight: 800, lineHeight: 0.95, letterSpacing: '-0.04em' }}
+            style={{ fontFamily: 'Syne', fontWeight: 800, lineHeight: 1.03, letterSpacing: '-0.02em' }}
           >
             {getContentValue('footer', 'cta_title', 'Need a site or app that can ship fast?')}
           </h2>
@@ -87,7 +87,7 @@ export default function Footer() {
           </p>
           <Link
             to="/contact"
-            className="shimmer-btn inline-flex items-center gap-2.5 gradient-bg text-white px-8 py-4 rounded-2xl text-[15px] font-medium shadow-[0_4px_40px_rgba(124,111,247,0.3)] hover:shadow-[0_4px_60px_rgba(124,111,247,0.45)] hover:scale-[1.03] active:scale-[0.98] transition-all duration-300"
+            className="shimmer-btn inline-flex w-full sm:w-auto justify-center items-center gap-2.5 gradient-bg text-white px-8 py-4 rounded-2xl text-[15px] font-medium shadow-[0_4px_40px_rgba(124,111,247,0.3)] hover:shadow-[0_4px_60px_rgba(124,111,247,0.45)] hover:scale-[1.03] active:scale-[0.98] transition-all duration-300"
             style={{ fontFamily: 'DM Sans', fontWeight: 500 }}
           >
             {getContentValue('footer', 'cta_button', 'Start a project')}

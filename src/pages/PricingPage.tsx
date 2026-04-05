@@ -18,8 +18,8 @@ export default function PricingPage() {
 
   return (
     <PageWrapper>
-      <section className="pt-20 pb-8">
-        <div className="max-w-[1280px] mx-auto px-6">
+      <section className="pt-16 md:pt-20 pb-8">
+        <div className="max-w-[1280px] mx-auto px-5 md:px-6">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, ease }} className="max-w-[680px]">
             <div className="flex items-center gap-2 mb-6">
               <span className="w-[6px] h-[6px] rounded-full bg-accent" />
@@ -27,10 +27,10 @@ export default function PricingPage() {
                 {getContentValue('pricing_page', 'eyebrow', 'Pricing')}
               </span>
             </div>
-            <h1 className="text-text-primary mb-5" style={{ fontFamily: 'Syne', fontWeight: 800, fontSize: 'clamp(40px, 6vw, 72px)', lineHeight: 1.0, letterSpacing: '-0.03em' }}>
+            <h1 className="text-text-primary mb-5" style={{ fontFamily: 'Syne', fontWeight: 800, fontSize: 'clamp(32px, 10vw, 72px)', lineHeight: 1.05, letterSpacing: '-0.02em' }}>
               {getContentValue('pricing_page', 'title_before', 'Pricing framed around delivery, not')} <span className="gradient-text">{getContentValue('pricing_page', 'title_highlight', 'billable drift')}</span>
             </h1>
-            <p className="text-[18px] text-text-secondary leading-[1.65]" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>
+            <p className="text-[15px] md:text-[18px] text-text-secondary leading-[1.65]" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>
               {getContentValue('pricing_page', 'description', 'We scope around the release, the complexity, and the support needed after launch. That gives you a clearer budget before execution starts.')}
             </p>
           </motion.div>

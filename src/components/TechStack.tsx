@@ -55,12 +55,12 @@ export default function TechStack() {
   if (categories.length === 0) return null;
 
   return (
-    <section className="py-28 md:py-36 relative overflow-hidden">
+    <section className="py-20 md:py-36 relative overflow-hidden">
       <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 30% 50%, rgba(124,111,247,0.04), transparent 50%), radial-gradient(ellipse at 70% 50%, rgba(34,211,238,0.03), transparent 50%)' }} />
-      <div className="max-w-[1280px] mx-auto px-6 relative z-10">
+      <div className="max-w-[1280px] mx-auto px-5 md:px-6 relative z-10">
         <SectionLabel number={labelParts[0] || '09'} label={labelParts[1] || 'Capabilities'} />
         <SectionTitle>{getContentValue('techstack', 'title', 'How we build')}</SectionTitle>
-        <motion.p initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, ease }} className="text-[16px] md:text-[17px] text-text-secondary mb-14 -mt-6 max-w-[600px] leading-[1.7]" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>
+        <motion.p initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, ease }} className="text-[14px] sm:text-[15px] md:text-[17px] text-text-secondary mb-10 md:mb-14 -mt-4 md:-mt-6 max-w-[600px] leading-[1.7]" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>
           {getContentValue('techstack', 'subtitle', 'The stack is chosen around delivery speed, maintainability, and how much control your team needs after launch.')}
         </motion.p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -74,10 +74,10 @@ export default function TechStack() {
                 viewport={{ once: true, margin: '-5%' }}
                 transition={{ duration: 0.7, ease, delay: index * 0.06 }}
                 whileHover={{ y: -3, transition: { duration: 0.25 } }}
-                className="group relative bg-surface-1 rounded-2xl p-6 md:p-7 border border-[rgba(255,255,255,0.04)] hover:border-[rgba(124,111,247,0.18)] transition-all duration-300 overflow-hidden"
+                className="group relative bg-surface-1 rounded-2xl p-5 md:p-7 border border-[rgba(255,255,255,0.04)] hover:border-[rgba(124,111,247,0.18)] transition-all duration-300 overflow-hidden"
               >
                 <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" style={{ background: `radial-gradient(ellipse at 20% 20%, ${category.glow}, transparent 70%)` }} />
-                <span className="absolute top-3 right-5 text-[64px] font-[800] pointer-events-none select-none" style={{ fontFamily: 'Syne', color: 'rgba(255,255,255,0.015)' }}>{String(index + 1).padStart(2, '0')}</span>
+                <span className="absolute top-3 right-5 text-[48px] md:text-[64px] font-[800] pointer-events-none select-none" style={{ fontFamily: 'Syne', color: 'rgba(255,255,255,0.015)' }}>{String(index + 1).padStart(2, '0')}</span>
                 <div className="relative z-10">
                   <div className="flex items-start gap-4 mb-4">
                     <div className="w-11 h-11 rounded-xl bg-[rgba(124,111,247,0.08)] group-hover:bg-[rgba(124,111,247,0.14)] flex items-center justify-center shrink-0 transition-colors duration-300">

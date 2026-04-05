@@ -65,13 +65,13 @@ export default function Stats() {
   }).filter(s => s.label);
 
   return (
-    <section className="py-24 md:py-32 relative">
+    <section className="py-20 md:py-32 relative">
       <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(124,111,247,0.03), transparent 60%)' }} />
       {/* Accent glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full pointer-events-none opacity-15">
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[320px] h-[320px] md:w-[600px] md:h-[600px] rounded-full pointer-events-none opacity-10 md:opacity-15">
         <div className="absolute inset-0 bg-gradient-to-br from-[#7C6FF7] via-[#A855F7] to-[#EC4899] rounded-full blur-[120px] pulse-glow" />
       </div>
-      <div className="max-w-[1280px] mx-auto px-6 relative z-10">
+      <div className="max-w-[1280px] mx-auto px-5 md:px-6 relative z-10">
         <SectionLabel number={labelParts[0] || '02'} label={labelParts[1] || 'Why Us'} />
         <SectionTitle>{getContentValue('stats', 'title', 'Why teams choose VAAD')}</SectionTitle>
         <div className={`grid grid-cols-1 ${statCount <= 2 ? 'sm:grid-cols-2' : 'sm:grid-cols-2 lg:grid-cols-4'} gap-5`}>
@@ -86,11 +86,11 @@ export default function Stats() {
             >
               <div className="tilt-card p-6 rounded-2xl bg-surface-1 border border-[rgba(255,255,255,0.04)] card-hover relative overflow-hidden glass">
                 <div className="absolute top-0 left-0 w-full h-[2px] gradient-bg opacity-80" />
-                <div className="text-[48px] leading-none mb-2" style={{ fontFamily: 'Syne', fontWeight: 800 }}>
+                <div className="text-[40px] md:text-[48px] leading-none mb-2" style={{ fontFamily: 'Syne', fontWeight: 800 }}>
                   <AnimatedStat value={stat.value} suffix={stat.suffix} />
                 </div>
                 <div className="text-[11px] uppercase tracking-[0.1em] text-text-secondary mb-3" style={{ fontFamily: 'DM Sans', fontWeight: 500 }}>{stat.sublabel} - {stat.label}</div>
-                <p className="text-[14px] text-text-secondary leading-[1.7]" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>{stat.description}</p>
+                <p className="text-[13px] md:text-[14px] text-text-secondary leading-[1.7]" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>{stat.description}</p>
               </div>
             </motion.div>
           ))}

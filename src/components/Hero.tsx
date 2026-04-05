@@ -28,7 +28,7 @@ export default function Hero() {
   })).filter(s => s.value);
 
   return (
-    <section className="relative min-h-[100svh] overflow-hidden px-5 pt-28 pb-16 md:pt-36 md:pb-24">
+    <section className="relative min-h-[92svh] md:min-h-[100svh] overflow-hidden px-5 pt-24 pb-14 md:pt-36 md:pb-24">
       <div className="absolute inset-0 grid-pattern opacity-20" />
       <div className="absolute inset-0 pointer-events-none">
         <div className="hero-gradient-1 absolute inset-0" />
@@ -36,10 +36,10 @@ export default function Hero() {
       </div>
       
       {/* Floating orbs */}
-      <div className="absolute top-20 left-[10%] w-[300px] h-[300px] rounded-full pointer-events-none opacity-30">
+      <div className="absolute top-20 left-[10%] w-[220px] h-[220px] md:w-[300px] md:h-[300px] rounded-full pointer-events-none opacity-20 md:opacity-30">
         <div className="absolute inset-0 bg-gradient-to-br from-[#7C6FF7] to-[#A855F7] rounded-full blur-[80px] float-orb" />
       </div>
-      <div className="absolute bottom-20 right-[5%] w-[250px] h-[250px] rounded-full pointer-events-none opacity-20">
+      <div className="absolute bottom-16 right-[5%] w-[180px] h-[180px] md:bottom-20 md:w-[250px] md:h-[250px] rounded-full pointer-events-none opacity-15 md:opacity-20">
         <div className="absolute inset-0 bg-gradient-to-br from-[#22D3EE] to-[#7C6FF7] rounded-full blur-[60px] float-orb-slow" />
       </div>
       
@@ -65,7 +65,7 @@ export default function Hero() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.72, ease, delay: 0.12 }}
             className="text-text-primary"
-            style={{ fontFamily: 'Syne', fontWeight: 800, lineHeight: 1.03, letterSpacing: '-0.03em', fontSize: 'clamp(42px, 7.2vw, 108px)' }}
+            style={{ fontFamily: 'Syne', fontWeight: 800, lineHeight: 1.06, letterSpacing: '-0.02em', fontSize: 'clamp(34px, 10.8vw, 108px)' }}
           >
             <span className="block">{line1}</span>
             <span className="block gradient-text-enhanced">{line2}</span>
@@ -75,7 +75,7 @@ export default function Hero() {
             initial={{ opacity: 0, y: 22 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.62, ease, delay: 0.28 }}
-            className="text-[15px] md:text-[18px] text-text-secondary max-w-[620px] mt-7 leading-[1.8]"
+            className="text-[14px] sm:text-[15px] md:text-[18px] text-text-secondary max-w-[620px] mt-6 md:mt-7 leading-[1.8]"
             style={{ fontFamily: 'DM Sans', fontWeight: 300 }}
           >
             {getContentValue('hero', 'subheadline', 'Conversion-focused websites and operational web apps for teams that need a tight scope, a fast build window, and a handoff they can actually maintain.')}
@@ -85,7 +85,7 @@ export default function Hero() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.55, ease, delay: 0.4 }}
-            className="flex flex-col sm:flex-row gap-3 mt-8"
+            className="flex flex-col sm:flex-row gap-3 mt-7 md:mt-8"
           >
             <Link to="/contact" className="shimmer-btn gradient-bg text-white px-7 md:px-8 py-4 rounded-2xl text-[14px] md:text-[15px] font-medium shadow-[0_8px_50px_rgba(124,111,247,0.28)] flex items-center gap-2.5 w-full sm:w-auto justify-center btn-glow" style={{ fontFamily: 'DM Sans', fontWeight: 500 }}>
               {getContentValue('hero', 'cta_primary', 'Start a project')} <ArrowRight size={16} className="btn-arrow-icon" />
@@ -99,7 +99,7 @@ export default function Hero() {
             initial={{ opacity: 0, y: 22 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease, delay: 0.5 }}
-            className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-10"
+            className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-8 md:mt-10"
           >
             {stats.map((stat, index) => (
               <div key={stat.label + index} className="rounded-2xl border border-[rgba(255,255,255,0.06)] bg-[rgba(10,10,20,0.72)] px-4 py-4 backdrop-blur-sm glass card-hover">

@@ -12,7 +12,7 @@ export default function PageWrapper({ children }: { children: ReactNode }) {
         Skip to content
       </a>
       <Navigation />
-      <div id="page-content" className="pt-[72px]">
+      <div id="page-content" className="pt-[68px] md:pt-[72px]">
         {children}
       </div>
       <Footer />

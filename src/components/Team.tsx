@@ -46,13 +46,13 @@ export default function Team() {
   if (members.length === 0) return null;
 
   return (
-    <section className="py-24 md:py-32 relative overflow-hidden">
+    <section className="py-20 md:py-32 relative overflow-hidden">
       <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 20% 20%, rgba(124,111,247,0.06), transparent 55%), radial-gradient(ellipse at 80% 10%, rgba(34,211,238,0.05), transparent 45%)' }} />
-      <div className="max-w-[1320px] mx-auto px-6 relative z-10">
+      <div className="max-w-[1320px] mx-auto px-5 md:px-6 relative z-10">
         <div className="max-w-[720px] mb-12">
           <SectionLabel number={labelParts[0] || '05'} label={labelParts[1] || 'Team'} />
           <SectionTitle>{getContentValue('team', 'title', 'The people behind the work')}</SectionTitle>
-          <p className="text-[15px] md:text-[17px] text-text-secondary -mt-6 max-w-[620px] leading-[1.75]" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>
+          <p className="text-[14px] sm:text-[15px] md:text-[17px] text-text-secondary -mt-4 md:-mt-6 max-w-[620px] leading-[1.75]" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>
             {getContentValue('team', 'subtitle', 'A compact team that scopes, designs, builds, and launches without handoff fog.')}
           </p>
         </div>
@@ -68,9 +68,9 @@ export default function Team() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.2 }}
                 transition={{ duration: 0.55, delay: index * 0.06 }}
-                className={`group rounded-[28px] border border-[rgba(255,255,255,0.06)] bg-surface-1 overflow-hidden ${featured ? 'lg:col-span-7' : 'lg:col-span-5'}`}
+                className={`group rounded-[24px] md:rounded-[28px] border border-[rgba(255,255,255,0.06)] bg-surface-1 overflow-hidden ${featured ? 'lg:col-span-7' : 'lg:col-span-5'}`}
               >
-                <div className={`grid ${featured ? 'md:grid-cols-[280px_1fr]' : 'md:grid-cols-[220px_1fr]'}`}>
+                <div className={`grid ${featured ? 'lg:grid-cols-[280px_1fr]' : 'lg:grid-cols-[220px_1fr]'}`}>
                   <div className="relative min-h-[280px] md:min-h-full">
                     {member.image ? (
                       <img
@@ -82,7 +82,7 @@ export default function Team() {
                       />
                     ) : (
                       <div className="absolute inset-0 flex items-center justify-center" style={{ background: member.gradient }}>
-                        <span className="text-white text-[72px] md:text-[92px]" style={{ fontFamily: 'Syne', fontWeight: 800 }}>
+                        <span className="text-white text-[60px] md:text-[92px]" style={{ fontFamily: 'Syne', fontWeight: 800 }}>
                           {member.initials}
                         </span>
                       </div>
@@ -98,10 +98,10 @@ export default function Team() {
                       <p className="text-[11px] uppercase tracking-[0.14em] text-accent-light mb-3" style={{ fontFamily: 'DM Sans', fontWeight: 500 }}>
                         {member.role}
                       </p>
-                      <h3 className="text-[28px] md:text-[36px] text-text-primary mb-4" style={{ fontFamily: 'Syne', fontWeight: 800, lineHeight: 0.95, letterSpacing: '-0.04em' }}>
+                      <h3 className="text-[24px] md:text-[36px] text-text-primary mb-4" style={{ fontFamily: 'Syne', fontWeight: 800, lineHeight: 1.03, letterSpacing: '-0.02em' }}>
                         {member.name}
                       </h3>
-                      <p className="text-[15px] text-text-secondary leading-[1.8]" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>
+                      <p className="text-[14px] md:text-[15px] text-text-secondary leading-[1.8]" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>
                         {member.description}
                       </p>
                     </div>

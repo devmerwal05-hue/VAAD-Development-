@@ -126,8 +126,8 @@ export default function Contact() {
   }
 
   return (
-    <section className="py-24 md:py-32">
-      <div className="max-w-[1280px] mx-auto px-6">
+    <section className="py-20 md:py-32">
+      <div className="max-w-[1280px] mx-auto px-5 md:px-6">
         <SectionLabel number={labelParts[0] || '08'} label={labelParts[1] || 'Contact'} />
         <SectionTitle>{getContentValue('contact', 'title', 'Tell us what needs to ship')}</SectionTitle>
 
@@ -139,12 +139,12 @@ export default function Contact() {
             transition={{ duration: 0.7, ease }}
           >
             <h3
-              className="text-[28px] md:text-[32px] text-text-primary mb-5"
+              className="text-[24px] sm:text-[28px] md:text-[32px] text-text-primary mb-5"
               style={{ fontFamily: 'Syne', fontWeight: 700, lineHeight: 1.1 }}
             >
               {getContentValue('contact', 'heading', 'Share the scope, timeline, and blockers.')}
             </h3>
-            <p className="text-[15px] text-text-secondary leading-[1.7] mb-10" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>
+            <p className="text-[14px] md:text-[15px] text-text-secondary leading-[1.7] mb-8 md:mb-10" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>
               {getContentValue(
                 'contact',
                 'description',
@@ -191,10 +191,10 @@ export default function Contact() {
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
                 </div>
-                <h3 className="text-[24px] text-text-primary mb-3" style={{ fontFamily: 'Syne', fontWeight: 700 }}>
+                <h3 className="text-[22px] md:text-[24px] text-text-primary mb-3" style={{ fontFamily: 'Syne', fontWeight: 700 }}>
                   {getContentValue('contact', 'success_title', 'Message sent')}
                 </h3>
-                <p className="text-[15px] text-text-secondary" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>
+                <p className="text-[14px] md:text-[15px] text-text-secondary" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>
                   {getContentValue('contact', 'success_desc', 'Thanks. We will review the scope and reply with next steps.')}
                 </p>
               </div>
