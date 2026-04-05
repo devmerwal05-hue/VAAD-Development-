@@ -64,9 +64,7 @@ export default function App() {
 
     return (
       <ErrorBoundary>
-        <ContentProvider>
-          {withRouteBoundary(<AdminDashboard />)}
-        </ContentProvider>
+        {withRouteBoundary(<AdminDashboard />)}
       </ErrorBoundary>
     );
   }

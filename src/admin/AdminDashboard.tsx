@@ -1713,6 +1713,7 @@ export default function AdminDashboard() {
   const [csrfToken, setCsrfToken] = useState("");
   const [checking, setChecking] = useState(true);
   const [sessionProbeKey, setSessionProbeKey] = useState(0);
+  const sessionProbeTimedOutRef = useRef(false);
   const [authenticated, setAuthenticated] = useState(false);
 
   // Data
@@ -2037,9 +2038,11 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     let cancelled = false;
+    sessionProbeTimedOutRef.current = false;
+
     const timeoutId = window.setTimeout(() => {
       if (cancelled) return;
-      setChecking(false);
+      sessionProbeTimedOutRef.current = true;
       setError("Admin session check timed out. Try signing in, or click Retry connection.");
     }, 8000);
 
@@ -2056,8 +2059,15 @@ export default function AdminDashboard() {
         if (sess.csrfToken) setCsrfToken(sess.csrfToken);
 
         if (sess.authenticated) {
+          sessionProbeTimedOutRef.current = false;
           setAuthenticated(true);
+          setChecking(false);
           void loadAll();
+          return;
+        }
+
+        if (!sessionProbeTimedOutRef.current) {
+          setChecking(false);
         }
       } catch (probeError) {
         if (cancelled) return;
@@ -2074,10 +2084,16 @@ export default function AdminDashboard() {
               : "Admin API is not reachable from this domain right now. Retry, then verify deployment env vars if it persists."
           );
         }
+
+        if (!sessionProbeTimedOutRef.current) {
+          setChecking(false);
+        }
       } finally {
         if (!cancelled) {
           window.clearTimeout(timeoutId);
-          setChecking(false);
+          if (!sessionProbeTimedOutRef.current) {
+            setChecking(false);
+          }
         }
       }
     })();
