@@ -8,6 +8,42 @@ interface ImageUploaderProps {
   value: string;
 }
 
+function getCookieValue(name: string) {
+  if (typeof document === 'undefined') return '';
+  const raw = document.cookie || '';
+  if (!raw) return '';
+
+  const target = `${name}=`;
+  for (const part of raw.split(';')) {
+    const trimmed = part.trim();
+    if (!trimmed.startsWith(target)) continue;
+    return decodeURIComponent(trimmed.slice(target.length));
+  }
+
+  return '';
+}
+
+async function resolveAdminCsrfToken() {
+  let token = getCookieValue('vaad_admin_csrf');
+  if (token) return token;
+
+  try {
+    const response = await fetch('/api/admin/session', {
+      method: 'GET',
+      credentials: 'include',
+    });
+    const payload = (await response.json().catch(() => null)) as { csrfToken?: unknown } | null;
+    if (payload && typeof payload.csrfToken === 'string' && payload.csrfToken) {
+      token = payload.csrfToken;
+    }
+  } catch {
+    // Ignore and fall back to cookie check below.
+  }
+
+  if (!token) token = getCookieValue('vaad_admin_csrf');
+  return token;
+}
+
 export default function ImageUploader({ value, onChange, compact = false }: ImageUploaderProps) {
   const [dragging, setDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -40,11 +76,17 @@ export default function ImageUploader({ value, onChange, compact = false }: Imag
         reader.readAsDataURL(file);
       });
 
+      const csrfToken = await resolveAdminCsrfToken();
+
       const response = await fetch('/api/upload', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(csrfToken
+            ? { 'X-CSRF-Token': csrfToken }
+            : {}),
         },
+        credentials: 'include',
         body: JSON.stringify({
           filename: file.name,
           content_type: file.type,

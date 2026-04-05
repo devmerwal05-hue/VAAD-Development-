@@ -12,8 +12,8 @@ export default function ProcessPage() {
   const { getContentValue } = useContent();
 
   usePageMetadata({
-    title: 'VAAD Development | Process',
-    description: 'How VAAD Development scopes, designs, builds, and launches projects without losing visibility or momentum.',
+    title: getContentValue('seo', 'process_title', 'VAAD Development | Process'),
+    description: getContentValue('seo', 'process_description', 'How VAAD Development scopes, designs, builds, and launches projects without losing visibility or momentum.'),
     path: '/process',
   });
 

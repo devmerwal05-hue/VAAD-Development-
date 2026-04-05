@@ -11,8 +11,8 @@ export default function PricingPage() {
   const { getContentValue } = useContent();
 
   usePageMetadata({
-    title: 'VAAD Development | Pricing',
-    description: 'Project pricing, delivery ranges, and what is included in a typical VAAD Development engagement.',
+    title: getContentValue('seo', 'pricing_title', 'VAAD Development | Pricing'),
+    description: getContentValue('seo', 'pricing_description', 'Project pricing, delivery ranges, and what is included in a typical VAAD Development engagement.'),
     path: '/pricing',
   });
 

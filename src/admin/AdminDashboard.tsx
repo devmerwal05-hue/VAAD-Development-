@@ -114,6 +114,8 @@ const VIRTUALIZED_FIELD_WRAPPER_STYLE: VirtualizedFieldWrapperStyle = {
 
 type DeviceMode = "desktop" | "tablet" | "mobile";
 type ActiveTab = "submissions" | string;
+type CollectionFieldType = "text" | "textarea" | "url" | "image" | "gallery";
+type CollectionFieldDef = { key: string; label: string; type: CollectionFieldType };
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CONSTANTS
@@ -182,7 +184,7 @@ const COLLECTION_META: Record<CollectionSection, { prefix: string; countKey: str
   team: { prefix: "member", countKey: "member_count", primaryField: "name", itemLabel: "Member" },
 };
 
-const PORTFOLIO_FIELDS = [
+const PORTFOLIO_FIELDS: CollectionFieldDef[] = [
   { key: "tag", label: "Tag", type: "text" },
   { key: "name", label: "Name", type: "text" },
   { key: "subtitle", label: "Subtitle", type: "text" },
@@ -192,7 +194,7 @@ const PORTFOLIO_FIELDS = [
   { key: "gallery", label: "Gallery", type: "gallery" },
 ];
 
-const TEAM_FIELDS = [
+const TEAM_FIELDS: CollectionFieldDef[] = [
   { key: "name", label: "Name", type: "text" },
   { key: "initials", label: "Initials", type: "text" },
   { key: "role", label: "Role", type: "text" },
@@ -207,19 +209,18 @@ const DEVICE_WIDTHS: Record<DeviceMode, string> = {
 };
 
 const PROJECT_TYPE_LABELS: Record<string, string> = {
-  marketing_site: "Marketing site",
-  web_app: "Web app",
-  ops_dashboard: "Ops dashboard",
-  ecommerce: "E-commerce",
-  other: "Other",
+  website: "Website",
+  web_application: "Web Application",
+  ecommerce: "E-commerce Store",
+  not_sure: "Not sure yet",
 };
 
 const BUDGET_RANGE_LABELS: Record<string, string> = {
-  under_2k: "Under £2k",
-  "2k_5k": "£2k – £5k",
-  "5k_10k": "£5k – £10k",
-  "10k_plus": "£10k+",
-  discuss: "Let's discuss",
+  under_500: "Under $500",
+  between_500_1500: "$500-$1,500",
+  between_1500_3000: "$1,500-$3,000",
+  above_3000: "$3,000+",
+  lets_discuss: "Let's discuss",
 };
 
 type SidebarGroup = {
@@ -321,6 +322,17 @@ function validateAdminContentInput(section: string, key: string, value: string):
   return null;
 }
 
+function inferCollectionFieldType(fieldKey: string, value: string): CollectionFieldType {
+  const key = fieldKey.toLowerCase();
+  if (key.includes("gallery")) return "gallery";
+  if (key.includes("image")) return "image";
+  if (key.includes("url") || key.includes("href")) return "url";
+  if (/desc|description|bio|message|note|details|content/.test(key) || value.length > 120) {
+    return "textarea";
+  }
+  return "text";
+}
+
 function getConflictCurrent(details: unknown): ContentItem | null {
   if (!details || typeof details !== "object") return null;
   if (!("current" in details)) return null;
@@ -374,6 +386,21 @@ function withCsrfHeader(options: RequestInit | undefined, csrfToken: string): Re
   return { ...(options || {}), headers };
 }
 
+function getCookieValue(name: string) {
+  if (typeof document === "undefined") return "";
+  const raw = document.cookie || "";
+  if (!raw) return "";
+
+  const target = `${name}=`;
+  for (const part of raw.split(";")) {
+    const trimmed = part.trim();
+    if (!trimmed.startsWith(target)) continue;
+    return decodeURIComponent(trimmed.slice(target.length));
+  }
+
+  return "";
+}
+
 // FIX #2: Build a lookup map for O(1) section+key retrieval
 function buildContentMap(items: ContentItem[]) {
   const map = new Map<string, ContentItem>();
@@ -400,8 +427,51 @@ async function apiFetch<T = unknown>(
   const t0 = Date.now();
   let status: number | null = null;
   try {
+    const method = (options?.method || "GET").toUpperCase();
+    const isMutating = ["POST", "PUT", "PATCH", "DELETE"].includes(method);
+    const headers = new Headers(options?.headers || {});
+
+    if (isMutating && !headers.has("X-CSRF-Token")) {
+      let csrfToken = getCookieValue("vaad_admin_csrf");
+
+      if (!csrfToken) {
+        try {
+          const sessionProbe = await fetch("/api/admin/session", {
+            method: "GET",
+            credentials: "include",
+          });
+          const probeBody = await sessionProbe.json().catch(() => null);
+          const tokenFromBody = (
+            probeBody
+            && typeof probeBody === "object"
+            && "csrfToken" in probeBody
+            && typeof (probeBody as { csrfToken?: unknown }).csrfToken === "string"
+          )
+            ? (probeBody as { csrfToken: string }).csrfToken
+            : "";
+
+          if (tokenFromBody) {
+            csrfToken = tokenFromBody;
+            onCsrfToken?.(tokenFromBody);
+          }
+        } catch {
+          // Ignore probe failures and let the request surface the real error.
+        }
+
+        if (!csrfToken) csrfToken = getCookieValue("vaad_admin_csrf");
+      }
+
+      if (csrfToken) {
+        headers.set("X-CSRF-Token", csrfToken);
+      }
+    }
+
     // FIX #4: Always include credentials so session cookie is sent
-    const res = await fetch(url, { credentials: "include", ...options });
+    const res = await fetch(url, {
+      credentials: "include",
+      ...(options || {}),
+      headers,
+    });
     status = res.status;
     const ms = Date.now() - t0;
     logEntry?.({ method: options?.method || "GET", url, status, ms });
@@ -905,32 +975,46 @@ const FieldEditor = React.memo(function FieldEditor({
 // ─────────────────────────────────────────────────────────────────────────────
 
 function CollectionCard({
-  item, section, onFieldSave, onDelete, onLog,
+  item, section, onFieldSave, onEnsureField, onDelete, onLog,
   dragHandleProps,
 }: {
   item: CollectionItem;
   section: CollectionSection;
   onFieldSave: (contentItem: ContentItem, value: string) => Promise<void>;
+  onEnsureField: (section: string, key: string, value: string) => Promise<ContentItem>;
   onDelete: () => void;
   onLog?: (e: Partial<ApiLogEntry>) => void;
   dragHandleProps?: React.HTMLAttributes<HTMLDivElement>;
 }) {
-  const fieldDefs = section === "portfolio" ? PORTFOLIO_FIELDS : TEAM_FIELDS;
+  const coreFieldDefs = section === "portfolio" ? PORTFOLIO_FIELDS : TEAM_FIELDS;
+  const [runtimeFields, setRuntimeFields] = useState<Record<string, ContentItem>>({});
   const [localValues, setLocalValues] = useState<Record<string, string>>(item.values);
   const [saving, setSaving] = useState<Set<string>>(new Set());
   const [saved, setSaved] = useState<Set<string>>(new Set());
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
+  const mergedFields = useMemo(() => ({ ...item.fields, ...runtimeFields }), [item.fields, runtimeFields]);
+
+  const fieldDefs = useMemo<CollectionFieldDef[]>(() => {
+    const knownKeys = new Set(coreFieldDefs.map((field) => field.key));
+    const extraDefs = Object.keys(localValues)
+      .filter((key) => !knownKeys.has(key))
+      .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
+      .map((key) => ({
+        key,
+        label: humanKey(key),
+        type: inferCollectionFieldType(key, localValues[key] || ""),
+      }));
+    return [...coreFieldDefs, ...extraDefs];
+  }, [coreFieldDefs, localValues]);
+
   useEffect(() => {
     setLocalValues(item.values);
     setFieldErrors({});
-  }, [item.values]);
+    setRuntimeFields({});
+  }, [item.fields, item.values]);
 
   const saveField = useCallback(async (fieldKey: string, val: string) => {
-    const contentItem = item.fields[fieldKey];
-    if (!contentItem) return;
-    if (val === contentItem.value) return;
-
     const normalizedKey = `${COLLECTION_META[section].prefix}_${item.index}_${fieldKey}`;
     const validationError = validateAdminContentInput(section, normalizedKey, val);
     if (validationError) {
@@ -952,7 +1036,16 @@ function CollectionCard({
 
     setSaving(prev => new Set(prev).add(fieldKey));
     try {
-      await onFieldSave(contentItem, val);
+      let contentItem = mergedFields[fieldKey];
+      if (!contentItem) {
+        contentItem = await onEnsureField(section, normalizedKey, val);
+        setRuntimeFields((prev) => ({ ...prev, [fieldKey]: contentItem as ContentItem }));
+      }
+
+      if (val !== contentItem.value) {
+        await onFieldSave(contentItem, val);
+      }
+
       setSaved(prev => { const s = new Set(prev).add(fieldKey); return s; });
       setTimeout(() => setSaved(prev => { const s = new Set(prev); s.delete(fieldKey); return s; }), 2000);
     } catch (e) {
@@ -968,7 +1061,7 @@ function CollectionCard({
     } finally {
       setSaving(prev => { const s = new Set(prev); s.delete(fieldKey); return s; });
     }
-  }, [item.fields, item.index, onFieldSave, onLog, section]);
+  }, [item.index, mergedFields, onEnsureField, onFieldSave, onLog, section]);
 
   const prefix = COLLECTION_META[section].prefix;
 
@@ -1011,7 +1104,7 @@ function CollectionCard({
           const val = localValues[fd.key] ?? "";
           const isSaving = saving.has(fd.key);
           const isDone = saved.has(fd.key);
-          const isDirty = val !== (item.fields[fd.key]?.value ?? "");
+          const isDirty = val !== (mergedFields[fd.key]?.value ?? "");
           const recommendedMax = getRecommendedMax(fd.key);
           const isOverRecommended = recommendedMax ? val.length > recommendedMax : false;
           return (
@@ -1144,25 +1237,38 @@ const SubmissionsPanel = React.memo(function SubmissionsPanel({
     <div className="flex flex-col gap-2">
       {submissions.map(sub => (
         <div key={sub.id} className="bg-white/[0.03] rounded-2xl border border-white/6 overflow-hidden">
-          <button type="button" onClick={() => setExpanded(p => p === sub.id ? null : sub.id)}
-            className="w-full px-4 py-3.5 flex items-center justify-between gap-3 text-left hover:bg-white/2 transition-colors">
-            <div className="flex items-center gap-3 min-w-0">
-              <div className={`w-2 h-2 rounded-full shrink-0 ${sub.status === "new" ? "bg-accent animate-pulse" : "bg-white/15"}`} />
-              <div className="min-w-0">
-                <p className="text-[14px] font-medium text-white truncate">{sub.name}</p>
-                <p className="text-[12px] text-white/40 truncate">{sub.email}</p>
+          <div className="w-full px-4 py-3.5 flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setExpanded(p => p === sub.id ? null : sub.id)}
+              className="flex-1 min-w-0 flex items-center justify-between gap-3 text-left hover:bg-white/2 transition-colors rounded-xl px-1.5 py-1"
+            >
+              <div className="flex items-center gap-3 min-w-0">
+                <div className={`w-2 h-2 rounded-full shrink-0 ${sub.status === "new" ? "bg-accent animate-pulse" : "bg-white/15"}`} />
+                <div className="min-w-0">
+                  <p className="text-[14px] font-medium text-white truncate">{sub.name}</p>
+                  <p className="text-[12px] text-white/40 truncate">{sub.email}</p>
+                </div>
               </div>
-            </div>
-            <div className="flex items-center gap-2 shrink-0">
-              <span className={`px-2 py-0.5 rounded-full text-[11px] border ${statusColors[sub.status] || ""}`}>{sub.status}</span>
-              <span className="px-2 py-0.5 rounded-full text-[11px] bg-white/5 text-white/40 border border-white/8">
-                {PROJECT_TYPE_LABELS[sub.project_type] || sub.project_type}
-              </span>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={`text-white/25 transition-transform ${expanded === sub.id ? "rotate-180" : ""}`}>
-                <polyline points="6 9 12 15 18 9" />
-              </svg>
-            </div>
-          </button>
+              <div className="flex items-center gap-2 shrink-0">
+                <span className={`px-2 py-0.5 rounded-full text-[11px] border ${statusColors[sub.status] || ""}`}>{sub.status}</span>
+                <span className="px-2 py-0.5 rounded-full text-[11px] bg-white/5 text-white/40 border border-white/8">
+                  {PROJECT_TYPE_LABELS[sub.project_type] || sub.project_type}
+                </span>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={`text-white/25 transition-transform ${expanded === sub.id ? "rotate-180" : ""}`}>
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              </div>
+            </button>
+            <button
+              type="button"
+              onClick={() => onDelete(sub.id, sub.name)}
+              className="px-2.5 py-1.5 rounded-lg border border-red-500/20 text-[11px] text-red-400/80 hover:border-red-500/40 hover:text-red-400 transition-all shrink-0"
+              title="Delete submission"
+            >
+              Delete
+            </button>
+          </div>
 
           <AnimatePresence>
             {expanded === sub.id && (
@@ -1906,10 +2012,20 @@ export default function AdminDashboard() {
 
     // Find max index in DB
     const existingIndices: number[] = [];
+    const itemFieldMap = new Map<number, Record<string, ContentItem>>();
+
     content.forEach(c => {
       if (c.section !== section) return;
-      const m = c.key.match(new RegExp(`^${meta.prefix}_(\\d+)_`));
-      if (m) existingIndices.push(parseInt(m[1], 10));
+      const m = c.key.match(new RegExp(`^${meta.prefix}_(\\d+)_(.+)$`));
+      if (!m) return;
+
+      const idx = parseInt(m[1], 10);
+      const fieldKey = m[2];
+      existingIndices.push(idx);
+
+      const existingBucket = itemFieldMap.get(idx) || {};
+      existingBucket[fieldKey] = c;
+      itemFieldMap.set(idx, existingBucket);
     });
 
     // FIX #7: safe int parsing
@@ -1919,14 +2035,20 @@ export default function AdminDashboard() {
 
     return Array.from({ length: count }, (_, i) => {
       const idx = i + 1;
-      const fields: Record<string, ContentItem | undefined> = {};
+      const indexedFields = itemFieldMap.get(idx) || {};
+      const fields: Record<string, ContentItem | undefined> = { ...indexedFields };
       const values: Record<string, string> = {};
-      for (const fd of fieldDefs) {
-        const item = lookupContent(contentMap, section, `${meta.prefix}_${idx}_${fd.key}`);
-        fields[fd.key] = item;
-        values[fd.key] = item?.value ?? "";
+
+      for (const [fieldKey, contentItem] of Object.entries(indexedFields)) {
+        values[fieldKey] = contentItem.value;
       }
-      const label = values[meta.primaryField] || `${meta.itemLabel} ${idx}`;
+
+      for (const fd of fieldDefs) {
+        if (!(fd.key in fields)) fields[fd.key] = undefined;
+        if (!(fd.key in values)) values[fd.key] = "";
+      }
+
+      const label = (values[meta.primaryField] || `${meta.itemLabel} ${idx}`).trim() || `${meta.itemLabel} ${idx}`;
       return { index: idx, label, fields, values };
     });
   }
@@ -2345,7 +2467,22 @@ export default function AdminDashboard() {
   // FIX #1 & #5: Unified, atomic collection reorder/save
   async function saveCollectionItems(section: CollectionSection, items: CollectionItem[]) {
     const meta = COLLECTION_META[section];
-    const fieldDefs = section === "portfolio" ? PORTFOLIO_FIELDS : TEAM_FIELDS;
+    const knownFieldDefs = section === "portfolio" ? PORTFOLIO_FIELDS : TEAM_FIELDS;
+    const knownFieldKeys = knownFieldDefs.map((field) => field.key);
+    const allFieldKeys = new Set<string>(knownFieldKeys);
+
+    for (const collectionItem of items) {
+      for (const key of Object.keys(collectionItem.values)) {
+        allFieldKeys.add(key);
+      }
+    }
+
+    const orderedFieldKeys = [
+      ...knownFieldKeys,
+      ...Array.from(allFieldKeys)
+        .filter((key) => !knownFieldKeys.includes(key))
+        .sort((a, b) => a.localeCompare(b, undefined, { numeric: true })),
+    ];
 
     setLoading(true);
     setError("");
@@ -2355,11 +2492,11 @@ export default function AdminDashboard() {
       for (let i = 0; i < items.length; i++) {
         const item = items[i];
         const newIdx = i + 1;
-        for (const fd of fieldDefs) {
+        for (const fieldKey of orderedFieldKeys) {
           upsertItems.push({
             section,
-            key: `${meta.prefix}_${newIdx}_${fd.key}`,
-            value: item.values[fd.key] || "",
+            key: `${meta.prefix}_${newIdx}_${fieldKey}`,
+            value: item.values[fieldKey] || "",
           });
         }
       }
@@ -2370,8 +2507,7 @@ export default function AdminDashboard() {
       const idsToDelete: number[] = [];
       for (const existing of existingItems) {
         if (existing.index > items.length) {
-          for (const fd of fieldDefs) {
-            const contentItem = existing.fields[fd.key];
+          for (const contentItem of Object.values(existing.fields)) {
             if (contentItem) idsToDelete.push(contentItem.id);
           }
         }
@@ -2787,6 +2923,7 @@ export default function AdminDashboard() {
                         item={item}
                         section={activeSection as CollectionSection}
                         onFieldSave={handleFieldSave}
+                        onEnsureField={upsertField}
                         onDelete={() => setConfirm({ kind: "collection_item", section: activeSection, index: item.index, label: item.label })}
                         onLog={addLog}
                         dragHandleProps={{

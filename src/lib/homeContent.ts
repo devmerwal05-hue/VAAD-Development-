@@ -445,6 +445,7 @@ const workPageFields: AdminFieldDefinition[] = [
   { key: 'title_before', label: 'Hero title before highlight', fallback: 'Sites and products that had to' },
   { key: 'title_highlight', label: 'Hero highlighted title', fallback: 'ship on time' },
   { key: 'description', label: 'Hero description', fallback: 'These are the kinds of builds we take on: lean teams, real delivery pressure, and a clear need for design and engineering to move in the same sprint.', type: 'textarea' },
+  { key: 'project_link_label', label: 'Project link button label', fallback: 'View live project' },
   { key: 'cta_title', label: 'CTA title', fallback: 'Have a build that needs traction?' },
   { key: 'cta_description', label: 'CTA description', fallback: 'We can scope the work, call out the risks, and tell you what should happen in the first release.', type: 'textarea' },
   { key: 'cta_button', label: 'CTA button label', fallback: 'Start the conversation' },
@@ -492,6 +493,94 @@ const contactPageFields: AdminFieldDefinition[] = [
   { key: 'title_before', label: 'Hero title before highlight', fallback: 'Bring the requirements. We will bring a' },
   { key: 'title_highlight', label: 'Hero highlighted title', fallback: 'real plan' },
   { key: 'description', label: 'Hero description', fallback: 'Share what needs to launch, where the current setup is failing, and what kind of timeline you are working against.', type: 'textarea' },
+];
+
+const uiFields: AdminFieldDefinition[] = [
+  { key: 'home_skip_link', label: 'Home skip-link text', fallback: 'Skip to content' },
+  { key: 'route_loading_label', label: 'Route loader label', fallback: 'Loading' },
+  { key: 'cms_loading_title', label: 'CMS loading card title', fallback: 'Loading Content' },
+  { key: 'cms_loading_description', label: 'CMS loading card description', fallback: 'Pulling the latest CMS values. If this takes too long, retry.', type: 'textarea' },
+  { key: 'cms_syncing_title', label: 'CMS syncing title', fallback: 'Syncing CMS Data' },
+  { key: 'cms_fallback_title', label: 'CMS fallback title', fallback: 'Fallback Content Active' },
+  { key: 'cms_retry_button', label: 'CMS retry button label', fallback: 'Retry now' },
+  { key: 'cms_fallback_description', label: 'CMS fallback description', fallback: 'Showing the latest safe content while reconnecting to the CMS.', type: 'textarea' },
+  { key: 'cms_fallback_with_error_prefix', label: 'CMS error prefix', fallback: 'Live content is unavailable:', description: 'Shown before the live error details when content fetch fails.' },
+  { key: 'cms_site_available_note', label: 'CMS availability note', fallback: 'Site remains available with defaults.' },
+  { key: 'page_hero_meta_left', label: 'Page hero meta left', fallback: 'page.hero' },
+  { key: 'page_hero_meta_right', label: 'Page hero meta right', fallback: 'layout // 12-col' },
+  { key: 'page_hero_panel_top_left', label: 'Page hero panel top-left label', fallback: '00 / 01' },
+  { key: 'page_hero_panel_top_right', label: 'Page hero panel top-right label', fallback: '01' },
+  { key: 'page_hero_panel_grid_1', label: 'Page hero panel grid label 1', fallback: '01' },
+  { key: 'page_hero_panel_grid_2', label: 'Page hero panel grid label 2', fallback: '02' },
+  { key: 'page_hero_panel_grid_3', label: 'Page hero panel grid label 3', fallback: '03' },
+  { key: 'page_hero_panel_bottom', label: 'Page hero panel bottom label', fallback: '00 / 00' },
+];
+
+const seoFields: AdminFieldDefinition[] = [
+  { key: 'home_title', label: 'Home meta title', fallback: 'VAAD Development | Fast websites and web apps' },
+  { key: 'home_description', label: 'Home meta description', fallback: 'VAAD Development designs, builds, and ships conversion-focused websites and operational web apps for small teams that need momentum.', type: 'textarea' },
+  { key: 'work_title', label: 'Work page meta title', fallback: 'VAAD Development | Selected projects' },
+  { key: 'work_description', label: 'Work page meta description', fallback: 'Recent website and web application builds from VAAD Development, including e-commerce, operations tooling, and launch-focused product work.', type: 'textarea' },
+  { key: 'services_title', label: 'Services page meta title', fallback: 'VAAD Development | Services' },
+  { key: 'services_description', label: 'Services page meta description', fallback: 'Website builds, product interfaces, internal tools, and launch support from VAAD Development.', type: 'textarea' },
+  { key: 'process_title', label: 'Process page meta title', fallback: 'VAAD Development | Process' },
+  { key: 'process_description', label: 'Process page meta description', fallback: 'How VAAD Development scopes, designs, builds, and launches projects without losing visibility or momentum.', type: 'textarea' },
+  { key: 'team_title', label: 'Team page meta title', fallback: 'VAAD Development | Team' },
+  { key: 'team_description', label: 'Team page meta description', fallback: 'Meet the small delivery team behind VAAD Development and how the work is split across design, engineering, and project delivery.', type: 'textarea' },
+  { key: 'pricing_title', label: 'Pricing page meta title', fallback: 'VAAD Development | Pricing' },
+  { key: 'pricing_description', label: 'Pricing page meta description', fallback: 'Project pricing, delivery ranges, and what is included in a typical VAAD Development engagement.', type: 'textarea' },
+  { key: 'contact_title', label: 'Contact page meta title', fallback: 'VAAD Development | Contact' },
+  { key: 'contact_description', label: 'Contact page meta description', fallback: 'Contact VAAD Development to scope a website, internal tool, or web application build.', type: 'textarea' },
+  { key: 'not_found_title', label: '404 page meta title', fallback: 'VAAD Development | Page not found' },
+  { key: 'not_found_description', label: '404 page meta description', fallback: 'The page you requested could not be found.', type: 'textarea' },
+];
+
+const contactFormFields: AdminFieldDefinition[] = [
+  { key: 'name_label', label: 'Name field label', fallback: 'Name' },
+  { key: 'name_placeholder', label: 'Name placeholder', fallback: 'Your name' },
+  { key: 'email_label', label: 'Email field label', fallback: 'Email' },
+  { key: 'email_placeholder', label: 'Email placeholder', fallback: 'you@company.com' },
+  { key: 'phone_label', label: 'Phone field label', fallback: 'Phone number' },
+  { key: 'phone_placeholder', label: 'Phone placeholder', fallback: '+91 98765 43210' },
+  { key: 'phone_help', label: 'Phone help text', fallback: 'Optional. Include the country code so we can reach you on WhatsApp or by phone.', type: 'textarea' },
+  { key: 'company_label', label: 'Company field label', fallback: 'Company or brand' },
+  { key: 'company_placeholder', label: 'Company placeholder', fallback: 'Optional' },
+  { key: 'project_type_label', label: 'Project type field label', fallback: 'Project type' },
+  { key: 'project_type_placeholder', label: 'Project type placeholder', fallback: 'Select one' },
+  { key: 'project_type_website', label: 'Project type option: website', fallback: 'Website' },
+  { key: 'project_type_web_application', label: 'Project type option: web application', fallback: 'Web Application' },
+  { key: 'project_type_ecommerce', label: 'Project type option: e-commerce', fallback: 'E-commerce Store' },
+  { key: 'project_type_not_sure', label: 'Project type option: not sure', fallback: 'Not sure yet' },
+  { key: 'budget_range_label', label: 'Budget range field label', fallback: 'Budget range' },
+  { key: 'budget_range_placeholder', label: 'Budget range placeholder', fallback: 'Select one' },
+  { key: 'budget_under_500', label: 'Budget option: under 500', fallback: 'Under $500' },
+  { key: 'budget_between_500_1500', label: 'Budget option: 500-1500', fallback: '$500-$1,500' },
+  { key: 'budget_between_1500_3000', label: 'Budget option: 1500-3000', fallback: '$1,500-$3,000' },
+  { key: 'budget_above_3000', label: 'Budget option: above 3000', fallback: '$3,000+' },
+  { key: 'budget_lets_discuss', label: 'Budget option: lets discuss', fallback: "Let's discuss" },
+  { key: 'message_label', label: 'Message field label', fallback: 'Project details' },
+  { key: 'message_placeholder', label: 'Message placeholder', fallback: 'What are you building, who is it for, and what should happen next?', type: 'textarea' },
+  { key: 'message_help', label: 'Message helper text', fallback: 'Include launch pressure, approvals, integrations, or anything else that affects delivery.', type: 'textarea' },
+  { key: 'sending_label', label: 'Submitting button label', fallback: 'Sending...' },
+];
+
+const introSplashFields: AdminFieldDefinition[] = [
+  { key: 'tagline', label: 'Splash tagline', fallback: 'Development' },
+];
+
+const notFoundFields: AdminFieldDefinition[] = [
+  { key: 'code_label', label: '404 code label', fallback: '404' },
+  { key: 'title', label: '404 title', fallback: 'Page not found' },
+  { key: 'description', label: '404 description', fallback: 'The route does not exist, or the page was removed while the site structure changed.', type: 'textarea' },
+  { key: 'button_label', label: '404 button label', fallback: 'Return home' },
+];
+
+const errorBoundaryFields: AdminFieldDefinition[] = [
+  { key: 'title', label: 'Error title', fallback: 'Something went wrong' },
+  { key: 'route_description', label: 'Route error description', fallback: 'This section failed to render. You can retry or continue browsing.', type: 'textarea' },
+  { key: 'app_description', label: 'App error description', fallback: 'An unexpected error occurred. Please refresh the page.', type: 'textarea' },
+  { key: 'refresh_button', label: 'Refresh button label', fallback: 'Refresh Page' },
+  { key: 'home_button', label: 'Go-home button label', fallback: 'Go Home' },
 ];
 
 export const homeSectionDefinitions: Record<string, AdminSectionDefinition> = {
@@ -559,6 +648,36 @@ export const homeSectionDefinitions: Record<string, AdminSectionDefinition> = {
     title: 'Footer',
     description: 'Footer CTA and supporting footer copy.',
     fields: footerFields,
+  },
+  ui: {
+    title: 'UI Copy',
+    description: 'Shared labels and status copy used across loaders, utility UI, and decorative page chrome.',
+    fields: uiFields,
+  },
+  seo: {
+    title: 'SEO',
+    description: 'Meta titles and descriptions used for page metadata.',
+    fields: seoFields,
+  },
+  contact_form: {
+    title: 'Contact Form',
+    description: 'Labels, placeholders, and option labels used in the contact form fields.',
+    fields: contactFormFields,
+  },
+  intro_splash: {
+    title: 'Intro Splash',
+    description: 'Text shown in the opening splash screen.',
+    fields: introSplashFields,
+  },
+  not_found: {
+    title: '404 Page',
+    description: 'Copy used on the not-found route.',
+    fields: notFoundFields,
+  },
+  error_boundary: {
+    title: 'Error Page',
+    description: 'Copy displayed by route/app error boundaries.',
+    fields: errorBoundaryFields,
   },
   work_page: {
     title: 'Work Page',

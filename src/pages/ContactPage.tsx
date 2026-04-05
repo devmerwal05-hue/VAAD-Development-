@@ -10,8 +10,8 @@ export default function ContactPage() {
   const { getContentValue } = useContent();
 
   usePageMetadata({
-    title: 'VAAD Development | Contact',
-    description: 'Contact VAAD Development to scope a website, internal tool, or web application build.',
+    title: getContentValue('seo', 'contact_title', 'VAAD Development | Contact'),
+    description: getContentValue('seo', 'contact_description', 'Contact VAAD Development to scope a website, internal tool, or web application build.'),
     path: '/contact',
   });
 

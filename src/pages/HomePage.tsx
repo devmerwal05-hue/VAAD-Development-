@@ -12,11 +12,14 @@ import FAQ from '../components/FAQ';
 import Contact from '../components/Contact';
 import Footer from '../components/Footer';
 import { usePageMetadata } from '../hooks/usePageMetadata';
+import { useContent } from '../lib/useContent';
 
 export default function HomePage() {
+  const { getContentValue } = useContent();
+
   usePageMetadata({
-    title: 'VAAD Development | Fast websites and web apps',
-    description: 'VAAD Development designs, builds, and ships conversion-focused websites and operational web apps for small teams that need momentum.',
+    title: getContentValue('seo', 'home_title', 'VAAD Development | Fast websites and web apps'),
+    description: getContentValue('seo', 'home_description', 'VAAD Development designs, builds, and ships conversion-focused websites and operational web apps for small teams that need momentum.'),
     path: '/',
   });
 
@@ -26,7 +29,7 @@ export default function HomePage() {
         href="#page-content"
         className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[120] focus:rounded-lg focus:bg-page-bg focus:px-4 focus:py-2 focus:text-text-primary focus:shadow-[0_0_0_2px_rgba(124,111,247,0.35)]"
       >
-        Skip to content
+        {getContentValue('ui', 'home_skip_link', 'Skip to content')}
       </a>
       <Navigation />
       <main id="page-content">

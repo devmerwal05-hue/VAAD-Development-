@@ -7,6 +7,7 @@ import HomePage from './pages/HomePage';
 import AdminDashboard from './pages/AdminDashboard';
 import RouteEffects from './components/RouteEffects';
 import PublicSiteGuard from './components/PublicSiteGuard';
+import { useContent } from './lib/useContent';
 
 const WorkPage = lazy(() => import('./pages/WorkPage'));
 const ServicesPage = lazy(() => import('./pages/ServicesPage'));
@@ -17,11 +18,15 @@ const ContactPage = lazy(() => import('./pages/ContactPage'));
 const NotFound = lazy(() => import('./components/NotFound'));
 
 function PageLoader() {
+  const { getContentValue } = useContent();
+
   return (
     <div className="min-h-screen bg-page-bg flex items-center justify-center">
       <div className="flex flex-col items-center gap-3">
         <div className="w-6 h-6 border-2 border-accent border-t-transparent rounded-full animate-spin" />
-        <span className="text-[11px] text-text-tertiary uppercase tracking-[0.1em]" style={{ fontFamily: 'DM Sans' }}>Loading</span>
+        <span className="text-[11px] text-text-tertiary uppercase tracking-[0.1em]" style={{ fontFamily: 'DM Sans' }}>
+          {getContentValue('ui', 'route_loading_label', 'Loading')}
+        </span>
       </div>
     </div>
   );

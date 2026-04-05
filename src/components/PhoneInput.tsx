@@ -2,9 +2,12 @@ interface PhoneInputProps {
   descriptionId: string;
   error?: string;
   errorId: string;
+  helpText?: string;
   id: string;
+  label?: string;
   onChange: (value: string) => void;
   onClearError?: () => void;
+  placeholder?: string;
   value: string;
 }
 
@@ -12,9 +15,12 @@ export default function PhoneInput({
   descriptionId,
   error,
   errorId,
+  helpText,
   id,
+  label,
   onChange,
   onClearError,
+  placeholder,
   value,
 }: PhoneInputProps) {
   const describedBy = [descriptionId, error ? errorId : ''].filter(Boolean).join(' ');
@@ -26,7 +32,7 @@ export default function PhoneInput({
         className="block text-[13px] text-text-secondary mb-2"
         style={{ fontFamily: 'DM Sans', fontWeight: 500 }}
       >
-        Phone number
+        {label || 'Phone number'}
       </label>
       <input
         id={id}
@@ -34,7 +40,7 @@ export default function PhoneInput({
         type="tel"
         autoComplete="tel"
         inputMode="tel"
-        placeholder="+91 98765 43210"
+        placeholder={placeholder || '+91 98765 43210'}
         value={value}
         onChange={(event) => {
           onChange(event.target.value);
@@ -50,7 +56,7 @@ export default function PhoneInput({
         style={{ fontFamily: 'DM Sans', fontWeight: 400 }}
       />
       <p id={descriptionId} className="text-[12px] text-text-tertiary mt-2" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>
-        Optional. Include the country code so we can reach you on WhatsApp or by phone.
+        {helpText || 'Optional. Include the country code so we can reach you on WhatsApp or by phone.'}
       </p>
       {error && (
         <p id={errorId} className="text-[12px] text-red-400 mt-1" style={{ fontFamily: 'DM Sans', fontWeight: 400 }}>

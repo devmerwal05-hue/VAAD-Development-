@@ -54,6 +54,14 @@ export default function Contact() {
   const [serverError, setServerError] = useState('');
 
   const contactEmail = getContentValue('contact', 'email', 'hello@vaad.dev');
+  const projectTypeOptions = PROJECT_TYPE_OPTIONS.map((option) => ({
+    ...option,
+    label: getContentValue('contact_form', `project_type_${option.value}`, option.label),
+  }));
+  const budgetRangeOptions = BUDGET_RANGE_OPTIONS.map((option) => ({
+    ...option,
+    label: getContentValue('contact_form', `budget_${option.value}`, option.label),
+  }));
 
   function setField<K extends keyof FormData>(field: K, value: FormData[K]) {
     setForm((current) => ({ ...current, [field]: value }));
@@ -215,14 +223,14 @@ export default function Contact() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label htmlFor="contact-name" className="block text-[13px] text-text-secondary mb-2" style={{ fontFamily: 'DM Sans', fontWeight: 500 }}>
-                      Name
+                      {getContentValue('contact_form', 'name_label', 'Name')}
                     </label>
                     <input
                       id="contact-name"
                       name="name"
                       type="text"
                       autoComplete="name"
-                      placeholder="Your name"
+                      placeholder={getContentValue('contact_form', 'name_placeholder', 'Your name')}
                       value={form.name}
                       onChange={(event) => {
                         setField('name', event.target.value);
@@ -238,14 +246,14 @@ export default function Contact() {
 
                   <div>
                     <label htmlFor="contact-email" className="block text-[13px] text-text-secondary mb-2" style={{ fontFamily: 'DM Sans', fontWeight: 500 }}>
-                      Email
+                      {getContentValue('contact_form', 'email_label', 'Email')}
                     </label>
                     <input
                       id="contact-email"
                       name="email"
                       type="email"
                       autoComplete="email"
-                      placeholder="you@company.com"
+                      placeholder={getContentValue('contact_form', 'email_placeholder', 'you@company.com')}
                       value={form.email}
                       onChange={(event) => {
                         setField('email', event.target.value);
@@ -268,18 +276,21 @@ export default function Contact() {
                   onClearError={() => clearFieldError('phone')}
                   descriptionId="contact-phone-help"
                   errorId="contact-phone-error"
+                  label={getContentValue('contact_form', 'phone_label', 'Phone number')}
+                  placeholder={getContentValue('contact_form', 'phone_placeholder', '+91 98765 43210')}
+                  helpText={getContentValue('contact_form', 'phone_help', 'Optional. Include the country code so we can reach you on WhatsApp or by phone.')}
                 />
 
                 <div>
                   <label htmlFor="contact-company" className="block text-[13px] text-text-secondary mb-2" style={{ fontFamily: 'DM Sans', fontWeight: 500 }}>
-                    Company or brand
+                    {getContentValue('contact_form', 'company_label', 'Company or brand')}
                   </label>
                   <input
                     id="contact-company"
                     name="company"
                     type="text"
                     autoComplete="organization"
-                    placeholder="Optional"
+                    placeholder={getContentValue('contact_form', 'company_placeholder', 'Optional')}
                     value={form.company}
                     onChange={(event) => setField('company', event.target.value)}
                     className={`${baseInputClass} border-[rgba(255,255,255,0.06)] focus:border-[rgba(124,111,247,0.4)] focus:shadow-[0_0_0_3px_rgba(124,111,247,0.08)]`}
@@ -290,7 +301,7 @@ export default function Contact() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label htmlFor="contact-project-type" className="block text-[13px] text-text-secondary mb-2" style={{ fontFamily: 'DM Sans', fontWeight: 500 }}>
-                      Project type
+                      {getContentValue('contact_form', 'project_type_label', 'Project type')}
                     </label>
                     <select
                       id="contact-project-type"
@@ -306,9 +317,9 @@ export default function Contact() {
                       style={{ fontFamily: 'DM Sans', fontWeight: 400, color: form.project_type ? '#F0EDE6' : '#706C86' }}
                     >
                       <option value="" disabled>
-                        Select one
+                        {getContentValue('contact_form', 'project_type_placeholder', 'Select one')}
                       </option>
-                      {PROJECT_TYPE_OPTIONS.map((option) => (
+                      {projectTypeOptions.map((option) => (
                         <option key={option.value} value={option.value}>
                           {option.label}
                         </option>
@@ -319,7 +330,7 @@ export default function Contact() {
 
                   <div>
                     <label htmlFor="contact-budget-range" className="block text-[13px] text-text-secondary mb-2" style={{ fontFamily: 'DM Sans', fontWeight: 500 }}>
-                      Budget range
+                      {getContentValue('contact_form', 'budget_range_label', 'Budget range')}
                     </label>
                     <select
                       id="contact-budget-range"
@@ -335,9 +346,9 @@ export default function Contact() {
                       style={{ fontFamily: 'DM Sans', fontWeight: 400, color: form.budget_range ? '#F0EDE6' : '#706C86' }}
                     >
                       <option value="" disabled>
-                        Select one
+                        {getContentValue('contact_form', 'budget_range_placeholder', 'Select one')}
                       </option>
-                      {BUDGET_RANGE_OPTIONS.map((option) => (
+                      {budgetRangeOptions.map((option) => (
                         <option key={option.value} value={option.value}>
                           {option.label}
                         </option>
@@ -349,13 +360,13 @@ export default function Contact() {
 
                 <div>
                   <label htmlFor="contact-message" className="block text-[13px] text-text-secondary mb-2" style={{ fontFamily: 'DM Sans', fontWeight: 500 }}>
-                    Project details
+                    {getContentValue('contact_form', 'message_label', 'Project details')}
                   </label>
                   <textarea
                     id="contact-message"
                     name="message"
                     rows={5}
-                    placeholder="What are you building, who is it for, and what should happen next?"
+                    placeholder={getContentValue('contact_form', 'message_placeholder', 'What are you building, who is it for, and what should happen next?')}
                     value={form.message}
                     onChange={(event) => {
                       setField('message', event.target.value);
@@ -367,7 +378,7 @@ export default function Contact() {
                     style={{ fontFamily: 'DM Sans', fontWeight: 400 }}
                   />
                   <p id="contact-message-help" className="text-[12px] text-text-tertiary mt-2" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>
-                    Include launch pressure, approvals, integrations, or anything else that affects delivery.
+                    {getContentValue('contact_form', 'message_help', 'Include launch pressure, approvals, integrations, or anything else that affects delivery.')}
                   </p>
                   {errors.message && <p id="contact-message-error" className="text-[12px] text-red-400 mt-1">{errors.message}</p>}
                 </div>
@@ -390,7 +401,7 @@ export default function Contact() {
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                       </svg>
-                      Sending...
+                      {getContentValue('contact_form', 'sending_label', 'Sending...')}
                     </span>
                   ) : (
                     getContentValue('contact', 'submit_button', 'Send project brief')
