@@ -1418,6 +1418,7 @@ export default function AdminDashboard() {
   const [password, setPassword] = useState("");
   const [csrfToken, setCsrfToken] = useState("");
   const [checking, setChecking] = useState(true);
+  const [sessionProbeKey, setSessionProbeKey] = useState(0);
   const [authenticated, setAuthenticated] = useState(false);
 
   // Data
@@ -1667,7 +1668,20 @@ export default function AdminDashboard() {
     }
   }
 
+  const retrySessionProbe = useCallback(() => {
+    setError("");
+    setChecking(true);
+    setSessionProbeKey((prev) => prev + 1);
+  }, []);
+
   useEffect(() => {
+    let cancelled = false;
+    const timeoutId = window.setTimeout(() => {
+      if (cancelled) return;
+      setChecking(false);
+      setError("Admin session check timed out. Try signing in, or click Retry connection.");
+    }, 8000);
+
     (async () => {
       try {
         const sess = await apiFetchLogged<{
@@ -1676,15 +1690,42 @@ export default function AdminDashboard() {
           user?: { email?: string | null };
         }>("/api/admin/session");
 
+        if (cancelled) return;
+
         if (sess.csrfToken) setCsrfToken(sess.csrfToken);
 
         if (sess.authenticated) {
           setAuthenticated(true);
           await loadAll();
         }
-      } catch { setAuthenticated(false); } finally { setChecking(false); }
+      } catch (probeError) {
+        if (cancelled) return;
+        setAuthenticated(false);
+        const message = getErrorMessage(probeError);
+        if (/origin is not allowed/i.test(message)) {
+          setError("Admin API blocked for this domain. Check SITE_URL and ALLOWED_ORIGINS in deployment settings.");
+        } else if (/failed to fetch/i.test(message) || /networkerror/i.test(message)) {
+          const isLocal = typeof window !== "undefined"
+            && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
+          setError(
+            isLocal
+              ? "Admin API not reachable. Start `vercel dev --local --yes --listen 3000` in the project root, then refresh and try again."
+              : "Admin API is not reachable from this domain right now. Retry, then verify deployment env vars if it persists."
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          window.clearTimeout(timeoutId);
+          setChecking(false);
+        }
+      }
     })();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timeoutId);
+    };
+  }, [sessionProbeKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchFreshCsrfToken = useCallback(async () => {
     const sess = await apiFetch<{
@@ -2065,6 +2106,14 @@ export default function AdminDashboard() {
             <button type="submit" disabled={loading}
               className="w-full bg-gradient-to-r from-accent to-accent/80 text-white py-3 rounded-xl text-[14px] font-medium disabled:opacity-50 hover:opacity-90 transition-opacity">
               {loading ? "Signing in..." : "Sign in"}
+            </button>
+            <button
+              type="button"
+              onClick={retrySessionProbe}
+              disabled={loading}
+              className="w-full py-2.5 rounded-xl text-[13px] text-white/80 border border-white/12 hover:border-white/20 hover:text-white transition-colors disabled:opacity-50"
+            >
+              Retry connection
             </button>
           </form>
         </motion.div>
