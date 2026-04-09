@@ -1,3 +1,4 @@
+import { useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowUpRight } from 'lucide-react';
@@ -20,7 +21,33 @@ export default function Footer() {
   const { getContentValue } = useContent();
   const contactEmail = getContentValue('contact', 'email', 'hello@vaad.dev');
 
-  const ctaTitle = getContentValue('footer', 'cta_title', 'Ready to build?');
+  const legacyFooterCopyMap = useMemo(() => {
+    return new Map<string, string>([
+      ['Need a site or app that can ship fast?', 'Ready to build?'],
+      [
+        'Share the scope, timeline, and blockers. We will reply with a clear build path instead of a vague pitch deck.',
+        "Let's turn your idea into a live product.",
+      ],
+      ['Start a project', 'Get In Touch'],
+      [
+        'VAAD Development builds launch-ready websites and internal tools for small teams that need clarity, speed, and a maintainable handoff.',
+        'Building the web for businesses that mean it.',
+      ],
+      ['Built for teams that want fewer meetings and stronger execution.', 'Made by VAAD — obviously.'],
+    ]);
+  }, []);
+
+  const normalizeLegacyFooterCopy = useCallback(
+    (value: string) => {
+      const trimmed = value.trim();
+      return legacyFooterCopyMap.get(trimmed) ?? value;
+    },
+    [legacyFooterCopyMap]
+  );
+
+  const ctaTitle = normalizeLegacyFooterCopy(
+    getContentValue('footer', 'cta_title', 'Ready to build?')
+  );
   const ctaHighlight = getContentValue('footer', 'cta_title_highlight', 'build?');
 
   const renderCtaTitle = () => {
@@ -135,14 +162,20 @@ export default function Footer() {
             className="text-[15px] md:text-[16px] text-text-secondary mb-8 max-w-[400px] mx-auto"
             style={{ fontFamily: 'DM Sans', fontWeight: 300 }}
           >
-            {getContentValue('footer', 'cta_description', 'Share the scope, timeline, and blockers. We will reply with a clear build path instead of a vague pitch deck.')}
+            {normalizeLegacyFooterCopy(
+              getContentValue(
+                'footer',
+                'cta_description',
+                "Let's turn your idea into a live product."
+              )
+            )}
           </p>
           <Link
             to="/contact"
             className="shimmer-btn inline-flex items-center gap-2.5 gradient-bg text-white px-8 py-4 rounded-2xl text-[15px] font-medium shadow-[0_4px_40px_rgba(124,111,247,0.3)] hover:shadow-[0_4px_60px_rgba(124,111,247,0.45)] hover:scale-[1.03] active:scale-[0.98] transition-all duration-300"
             style={{ fontFamily: 'DM Sans', fontWeight: 500 }}
           >
-            {getContentValue('footer', 'cta_button', 'Start a project')}
+            {normalizeLegacyFooterCopy(getContentValue('footer', 'cta_button', 'Get In Touch'))}
             <ArrowUpRight size={16} />
           </Link>
         </motion.div>
@@ -160,7 +193,9 @@ export default function Footer() {
             className="text-[14px] text-text-tertiary max-w-[320px]"
             style={{ fontFamily: 'DM Sans', fontWeight: 300 }}
           >
-            {getContentValue('footer', 'tagline', 'Building the web for businesses that mean it.')}
+            {normalizeLegacyFooterCopy(
+              getContentValue('footer', 'tagline', 'Building the web for businesses that mean it.')
+            )}
           </p>
         </div>
 
@@ -222,7 +257,9 @@ export default function Footer() {
             {getContentValue('footer', 'copyright', 'Copyright 2026 VAAD Development. All rights reserved.')}
           </span>
           <span className="text-[12px] text-text-tertiary" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>
-            {getContentValue('footer', 'made_by', 'Built for teams that want fewer meetings and stronger execution.')}
+            {normalizeLegacyFooterCopy(
+              getContentValue('footer', 'made_by', 'Made by VAAD — obviously.')
+            )}
           </span>
         </div>
       </div>
