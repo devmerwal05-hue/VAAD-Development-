@@ -12,12 +12,22 @@ export type FloatingDockItem = {
 function DockLink({ item }: { item: FloatingDockItem }) {
   const content = (
     <>
-      <span className="relative z-10 flex h-10 w-10 items-center justify-center rounded-2xl transition-transform duration-200 motion-reduce:transition-none group-hover:scale-[1.06] group-focus-visible:scale-[1.06]">
+      <span className="relative z-10 flex h-9 w-9 items-center justify-center transition-transform duration-200 group-hover:scale-[1.05]">
         {item.icon}
       </span>
       <span
-        className="pointer-events-none absolute -top-9 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-xl border border-white/10 bg-surface-1 px-2.5 py-1 text-[11px] tracking-[0.12em] uppercase text-text-primary opacity-0 transition-opacity duration-200 motion-reduce:transition-none group-hover:opacity-100 group-focus-visible:opacity-100"
-        style={{ fontFamily: 'DM Sans', fontWeight: 500 }}
+        className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap opacity-0 transition-opacity duration-200 group-hover:opacity-100"
+        style={{
+          fontFamily: 'JetBrains Mono',
+          fontSize: '9px',
+          letterSpacing: '0.14em',
+          textTransform: 'uppercase',
+          color: '#00B4FF',
+          background: 'rgba(4,4,8,0.92)',
+          border: '1px solid rgba(0,180,255,0.2)',
+          padding: '3px 8px',
+          borderRadius: '2px',
+        }}
         role="tooltip"
       >
         {item.title}
@@ -31,9 +41,12 @@ function DockLink({ item }: { item: FloatingDockItem }) {
         href={item.href}
         target="_blank"
         rel="noreferrer"
-        className="group relative flex items-center justify-center rounded-2xl p-1 text-text-secondary transition-colors duration-200 motion-reduce:transition-none hover:text-text-primary focus-visible:text-text-primary"
+        className="group relative flex items-center justify-center p-1 transition-colors duration-200"
+        style={{ color: '#55556A' }}
         aria-label={item.title}
         title={item.title}
+        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#00B4FF'; }}
+        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = '#55556A'; }}
       >
         {content}
       </a>
@@ -46,10 +59,8 @@ function DockLink({ item }: { item: FloatingDockItem }) {
       aria-label={item.title}
       title={item.title}
       className={({ isActive }) =>
-        `group relative flex items-center justify-center rounded-2xl p-1 transition-colors duration-200 motion-reduce:transition-none ${
-          isActive
-            ? 'text-text-primary bg-accent/10'
-            : 'text-text-secondary hover:text-text-primary hover:bg-white/5'
+        `group relative flex items-center justify-center p-1 transition-colors duration-200 ${
+          isActive ? 'text-[#00B4FF]' : 'text-[#55556A] hover:text-[#00B4FF]'
         }`
       }
     >
@@ -61,10 +72,14 @@ function DockLink({ item }: { item: FloatingDockItem }) {
 function FloatingDockImpl({ items, className }: { items: FloatingDockItem[]; className?: string }) {
   return (
     <div
-      className={
-        `relative inline-flex items-center gap-1 rounded-full border border-white/10 bg-surface-1/70 px-2 py-1 backdrop-blur ${className || ''}`
-      }
-      style={{ WebkitBackdropFilter: 'blur(18px)' }}
+      className={`relative inline-flex items-center gap-1 px-2 py-1.5 ${className || ''}`}
+      style={{
+        background: 'rgba(4,4,8,0.85)',
+        backdropFilter: 'blur(24px)',
+        WebkitBackdropFilter: 'blur(24px)',
+        border: '1px solid rgba(0,180,255,0.1)',
+        borderRadius: '2px',
+      }}
     >
       {items.map((item) => (
         <DockLink key={`${item.title}-${item.href}`} item={item} />

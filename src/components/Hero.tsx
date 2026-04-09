@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Sparkles } from 'lucide-react';
+import { ArrowRight, Zap } from 'lucide-react';
 import { buildPortfolioProjects } from '../lib/portfolio';
 import { useContent } from '../lib/useContent';
 
@@ -15,149 +15,267 @@ export default function Hero() {
 
   const statDefaults = [
     { value: '5', label: 'Senior builders' },
-    { value: '1-3', label: 'Week delivery' },
-    { value: 'Always', label: 'Post-launch iteration' },
+    { value: '1–3', label: 'Week delivery' },
+    { value: 'Always', label: 'Post-launch support' },
   ];
-  
+
   const storedStatCount = Number(getContentValue('hero', 'stat_count', ''));
   const statCount = (!isNaN(storedStatCount) && storedStatCount > 0) ? storedStatCount : statDefaults.length;
-
   const stats = Array.from({ length: statCount }, (_, index) => ({
     value: getContentValue('hero', `stat_${index + 1}_number`, statDefaults[index]?.value || ''),
     label: getContentValue('hero', `stat_${index + 1}_label`, statDefaults[index]?.label || ''),
   })).filter(s => s.value);
 
   return (
-    <section className="relative min-h-[92svh] md:min-h-[100svh] overflow-hidden px-5 pt-24 pb-14 md:pt-36 md:pb-24">
-      <div className="absolute inset-0 grid-pattern opacity-20" />
+    <section className="relative min-h-[100svh] overflow-hidden px-6 md:px-10 pt-28 pb-16 md:pt-40 md:pb-28">
+
+      {/* Scan-line grid */}
+      <div className="absolute inset-0 grid-pattern opacity-40" />
+
+      {/* Ambient gradients */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="hero-gradient-1 absolute inset-0" />
         <div className="hero-gradient-2 absolute inset-0" />
       </div>
-      
-      {/* Floating orbs */}
-      <div className="absolute top-20 left-[10%] w-[220px] h-[220px] md:w-[300px] md:h-[300px] rounded-full pointer-events-none opacity-20 md:opacity-30">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#7C6FF7] to-[#A855F7] rounded-full blur-[80px] float-orb" />
-      </div>
-      <div className="absolute bottom-16 right-[5%] w-[180px] h-[180px] md:bottom-20 md:w-[250px] md:h-[250px] rounded-full pointer-events-none opacity-15 md:opacity-20">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#22D3EE] to-[#7C6FF7] rounded-full blur-[60px] float-orb-slow" />
-      </div>
-      
-      <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 50% 20%, rgba(255,255,255,0.04), transparent 35%), radial-gradient(ellipse at center, transparent 18%, #06060C 78%)' }} />
 
-      <div className="relative z-10 max-w-[1360px] mx-auto grid grid-cols-1 xl:grid-cols-[1.08fr_0.92fr] gap-8 xl:gap-10 items-center">
+      {/* Floating orbs */}
+      <div className="absolute top-16 left-[8%] w-[280px] h-[280px] rounded-full pointer-events-none opacity-20" style={{ background: 'radial-gradient(circle, rgba(0,180,255,0.35) 0%, transparent 70%)', filter: 'blur(60px)' }} />
+      <div className="absolute bottom-20 right-[4%] w-[220px] h-[220px] rounded-full pointer-events-none opacity-15" style={{ background: 'radial-gradient(circle, rgba(255,45,85,0.3) 0%, transparent 70%)', filter: 'blur(50px)' }} />
+
+      <div className="relative z-10 max-w-[1440px] mx-auto grid grid-cols-1 xl:grid-cols-[1.1fr_0.9fr] gap-10 xl:gap-14 items-center">
+
+        {/* LEFT: Copy */}
         <div>
+          {/* Eyebrow badge */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.55, ease, delay: 0.05 }}
-            className="inline-flex items-center gap-2.5 mb-8 px-4 py-2 rounded-full glass border-shimmer"
-            style={{ background: 'rgba(124,111,247,0.08)' }}
+            transition={{ duration: 0.5, ease, delay: 0.05 }}
+            className="inline-flex items-center gap-2.5 mb-10 border-shimmer"
+            style={{
+              background: 'rgba(0,180,255,0.06)',
+              border: '1px solid rgba(0,180,255,0.15)',
+              padding: '6px 14px',
+              borderRadius: '2px',
+            }}
           >
-            <Sparkles size={13} className="text-accent-light animate-pulse" />
-            <span className="text-[10px] md:text-[11px] font-medium tracking-[0.14em] uppercase text-accent-light" style={{ fontFamily: 'DM Sans', fontWeight: 500 }}>
+            <Zap size={11} style={{ color: '#00B4FF' }} />
+            <span style={{ fontFamily: 'JetBrains Mono', fontSize: '10px', fontWeight: 500, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'rgba(0,180,255,0.8)' }}>
               {getContentValue('hero', 'eyebrow', 'Web Design + Web App Delivery')}
             </span>
           </motion.div>
 
+          {/* Headline */}
           <motion.h1
-            initial={{ opacity: 0, y: 28 }}
+            initial={{ opacity: 0, y: 32 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.72, ease, delay: 0.12 }}
-            className="text-text-primary"
-            style={{ fontFamily: 'Syne', fontWeight: 800, lineHeight: 1.06, letterSpacing: '-0.02em', fontSize: 'clamp(34px, 10.8vw, 108px)' }}
+            transition={{ duration: 0.75, ease, delay: 0.12 }}
+            style={{
+              fontFamily: 'Bebas Neue',
+              fontWeight: 400,
+              letterSpacing: '0.03em',
+              textTransform: 'uppercase',
+              lineHeight: 0.92,
+              fontSize: 'clamp(58px, 10vw, 116px)',
+              color: '#F0EDE6',
+            }}
           >
             <span className="block">{line1}</span>
-            <span className="block gradient-text-enhanced">{line2}</span>
+            <span className="block" style={{ color: '#00B4FF' }}>{line2}</span>
           </motion.h1>
 
+          {/* Sub */}
           <motion.p
             initial={{ opacity: 0, y: 22 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.62, ease, delay: 0.28 }}
-            className="text-[14px] sm:text-[15px] md:text-[18px] text-text-secondary max-w-[620px] mt-6 md:mt-7 leading-[1.8]"
-            style={{ fontFamily: 'DM Sans', fontWeight: 300 }}
+            className="max-w-[560px] mt-7 md:mt-8"
+            style={{ fontFamily: 'Space Grotesk', fontSize: 'clamp(14px,1.1vw,17px)', fontWeight: 300, color: '#8A8AA0', lineHeight: 1.8 }}
           >
             {getContentValue('hero', 'subheadline', 'Conversion-focused websites and operational web apps for teams that need a tight scope, a fast build window, and a handoff they can actually maintain.')}
           </motion.p>
 
+          {/* CTAs */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.55, ease, delay: 0.4 }}
-            className="flex flex-col sm:flex-row gap-3 mt-7 md:mt-8"
+            className="flex flex-col sm:flex-row gap-3 mt-8 md:mt-10"
           >
-            <Link to="/contact" className="shimmer-btn gradient-bg text-white px-7 md:px-8 py-4 rounded-2xl text-[14px] md:text-[15px] font-medium shadow-[0_8px_50px_rgba(124,111,247,0.28)] flex items-center gap-2.5 w-full sm:w-auto justify-center btn-glow" style={{ fontFamily: 'DM Sans', fontWeight: 500 }}>
-              {getContentValue('hero', 'cta_primary', 'Start a project')} <ArrowRight size={16} className="btn-arrow-icon" />
+            <Link
+              to="/contact"
+              className="shimmer-btn inline-flex items-center justify-center gap-2.5"
+              style={{
+                fontFamily: 'JetBrains Mono',
+                fontSize: '12px',
+                fontWeight: 500,
+                letterSpacing: '0.14em',
+                textTransform: 'uppercase',
+                color: '#040408',
+                background: '#00B4FF',
+                padding: '14px 28px',
+                borderRadius: '2px',
+                boxShadow: '0 0 40px rgba(0,180,255,0.25)',
+              }}
+            >
+              {getContentValue('hero', 'cta_primary', 'Start a project')}
+              <ArrowRight size={14} />
             </Link>
-            <Link to="/work" className="text-text-primary px-7 md:px-8 py-4 rounded-2xl text-[14px] md:text-[15px] font-medium border border-[rgba(255,255,255,0.08)] hover:bg-[rgba(255,255,255,0.04)] transition-all duration-300 w-full sm:w-auto text-center btn-arrow" style={{ fontFamily: 'DM Sans', fontWeight: 500 }}>
+            <Link
+              to="/work"
+              className="inline-flex items-center justify-center gap-2.5 transition-colors duration-200"
+              style={{
+                fontFamily: 'JetBrains Mono',
+                fontSize: '12px',
+                fontWeight: 500,
+                letterSpacing: '0.14em',
+                textTransform: 'uppercase',
+                color: '#8A8AA0',
+                border: '1px solid rgba(255,255,255,0.08)',
+                padding: '14px 28px',
+                borderRadius: '2px',
+              }}
+              onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.color = '#F0EDE6'; el.style.borderColor = 'rgba(255,255,255,0.18)'; }}
+              onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.color = '#8A8AA0'; el.style.borderColor = 'rgba(255,255,255,0.08)'; }}
+            >
               {getContentValue('hero', 'cta_secondary', 'See shipped work')}
             </Link>
           </motion.div>
 
+          {/* Stats */}
           <motion.div
-            initial={{ opacity: 0, y: 22 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease, delay: 0.5 }}
-            className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-8 md:mt-10"
+            transition={{ duration: 0.6, ease, delay: 0.52 }}
+            className="grid grid-cols-3 gap-px mt-10 md:mt-12"
+            style={{ border: '1px solid rgba(255,255,255,0.06)', borderRadius: '2px', overflow: 'hidden' }}
           >
             {stats.map((stat, index) => (
-              <div key={stat.label + index} className="rounded-2xl border border-[rgba(255,255,255,0.06)] bg-[rgba(10,10,20,0.72)] px-4 py-4 backdrop-blur-sm glass card-hover">
-                <p className="text-[24px] md:text-[30px] text-text-primary gradient-text-enhanced" style={{ fontFamily: 'Syne', fontWeight: 800 }}>{stat.value}</p>
-                <p className="text-[11px] uppercase tracking-[0.12em] text-text-tertiary mt-2">{stat.label}</p>
+              <div
+                key={stat.label + index}
+                className="px-4 py-5"
+                style={{
+                  background: '#07070F',
+                  borderRight: index < stats.length - 1 ? '1px solid rgba(255,255,255,0.06)' : 'none',
+                }}
+              >
+                <p style={{ fontFamily: 'Bebas Neue', fontSize: 'clamp(28px,3.5vw,44px)', letterSpacing: '0.04em', color: '#00B4FF', lineHeight: 1 }}>
+                  {stat.value}
+                </p>
+                <p style={{ fontFamily: 'JetBrains Mono', fontSize: '9px', letterSpacing: '0.14em', textTransform: 'uppercase', color: '#55556A', marginTop: '6px' }}>
+                  {stat.label}
+                </p>
               </div>
             ))}
           </motion.div>
         </div>
 
+        {/* RIGHT: Featured project card */}
         <motion.div
-          initial={{ opacity: 0, y: 26 }}
+          initial={{ opacity: 0, y: 28 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.72, ease, delay: 0.2 }}
           className="relative"
         >
-          <div className="absolute -top-10 -right-6 w-36 h-36 rounded-full bg-[rgba(236,72,153,0.12)] blur-3xl" />
-          <div className="absolute -bottom-8 -left-4 w-44 h-44 rounded-full bg-[rgba(34,211,238,0.1)] blur-3xl" />
+          {/* Corner decorations */}
+          <div className="absolute -top-3 -left-3 w-6 h-6 border-t border-l pointer-events-none" style={{ borderColor: 'rgba(0,180,255,0.4)' }} />
+          <div className="absolute -top-3 -right-3 w-6 h-6 border-t border-r pointer-events-none" style={{ borderColor: 'rgba(0,180,255,0.4)' }} />
+          <div className="absolute -bottom-3 -left-3 w-6 h-6 border-b border-l pointer-events-none" style={{ borderColor: 'rgba(0,180,255,0.4)' }} />
+          <div className="absolute -bottom-3 -right-3 w-6 h-6 border-b border-r pointer-events-none" style={{ borderColor: 'rgba(0,180,255,0.4)' }} />
 
-          <div className="relative rounded-[32px] border border-[rgba(255,255,255,0.08)] bg-[rgba(8,8,14,0.86)] backdrop-blur-md overflow-hidden">
-            <div className="px-5 py-4 border-b border-[rgba(255,255,255,0.06)] flex items-center justify-between gap-4">
+          <div
+            className="overflow-hidden"
+            style={{
+              background: '#07070F',
+              border: '1px solid rgba(255,255,255,0.07)',
+              borderRadius: '4px',
+            }}
+          >
+            {/* Card header */}
+            <div
+              className="px-5 py-4 flex items-center justify-between gap-4"
+              style={{ borderBottom: '1px solid rgba(0,180,255,0.08)' }}
+            >
               <div>
-                <p className="text-[11px] uppercase tracking-[0.16em] text-accent-light" style={{ fontFamily: 'JetBrains Mono' }}>
+                <p style={{ fontFamily: 'JetBrains Mono', fontSize: '10px', letterSpacing: '0.18em', textTransform: 'uppercase', color: 'rgba(0,180,255,0.7)' }}>
                   {getContentValue('hero', 'proof_kicker', 'Live delivery board')}
                 </p>
-                <p className="text-[13px] text-text-secondary mt-1">
-                  {getContentValue('hero', 'proof_title', 'Creative builds that still respect real deadlines.')}
+                <p style={{ fontFamily: 'Space Grotesk', fontSize: '12px', fontWeight: 300, color: '#55556A', marginTop: '2px' }}>
+                  {getContentValue('hero', 'proof_title', 'Creative builds that respect real deadlines.')}
                 </p>
               </div>
-              <span className="text-[12px] text-text-tertiary">Home</span>
+              <div className="flex items-center gap-1.5">
+                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#FF2D55', flexShrink: 0 }} />
+                <span style={{ fontFamily: 'JetBrains Mono', fontSize: '9px', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(255,45,85,0.7)' }}>Live</span>
+              </div>
             </div>
 
-            <div className="grid grid-cols-1">
-              <div className="relative min-h-[320px]">
-                {featuredProject?.image ? (
-                  <img src={featuredProject.image} alt={featuredProject.name} loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover opacity-80" />
-                ) : (
-                  <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(124,111,247,0.32), rgba(34,211,238,0.12), rgba(236,72,153,0.18))' }} />
-                )}
-                <div className="absolute inset-0 bg-gradient-to-t from-[rgba(5,5,9,0.95)] via-[rgba(5,5,9,0.24)] to-transparent" />
-                <div className="absolute left-5 right-5 bottom-5">
-                  <p className="text-[11px] uppercase tracking-[0.14em] text-accent-light mb-2">{featuredProject?.tag || 'Featured release'}</p>
-                  <h2 className="text-[28px] md:text-[36px] text-text-primary" style={{ fontFamily: 'Syne', fontWeight: 800, lineHeight: 0.95, letterSpacing: '-0.04em' }}>
-                    {featuredProject?.name || 'Launch-ready systems'}
-                  </h2>
-                  <p className="text-[14px] text-text-secondary mt-3 max-w-[40ch]" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>
-                    {getContentValue('hero', 'proof_description', 'Each release is scoped against launch pressure, content reality, and what your team can maintain after handoff.')}
-                  </p>
-                </div>
+            {/* Project image */}
+            <div className="relative" style={{ minHeight: '340px' }}>
+              {featuredProject?.image ? (
+                <img
+                  src={featuredProject.image}
+                  alt={featuredProject.name}
+                  loading="lazy"
+                  decoding="async"
+                  className="absolute inset-0 h-full w-full object-cover opacity-80"
+                  style={{ transition: 'opacity 0.4s' }}
+                />
+              ) : (
+                <div
+                  className="absolute inset-0"
+                  style={{ background: 'linear-gradient(135deg, rgba(0,180,255,0.2) 0%, rgba(0,80,120,0.15) 50%, rgba(255,45,85,0.12) 100%)' }}
+                />
+              )}
+              {/* Overlay */}
+              <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(4,4,8,0.96) 0%, rgba(4,4,8,0.2) 50%, transparent 100%)' }} />
+
+              {/* Tag */}
+              <span
+                className="absolute top-4 left-4"
+                style={{
+                  fontFamily: 'JetBrains Mono',
+                  fontSize: '9px',
+                  letterSpacing: '0.18em',
+                  textTransform: 'uppercase',
+                  color: '#040408',
+                  background: '#00B4FF',
+                  padding: '3px 8px',
+                  borderRadius: '2px',
+                }}
+              >
+                {featuredProject?.tag || 'Featured release'}
+              </span>
+
+              {/* Project info */}
+              <div className="absolute left-5 right-5 bottom-5">
+                <h2
+                  style={{
+                    fontFamily: 'Bebas Neue',
+                    fontSize: 'clamp(32px,4vw,52px)',
+                    letterSpacing: '0.03em',
+                    textTransform: 'uppercase',
+                    color: '#F0EDE6',
+                    lineHeight: 0.95,
+                  }}
+                >
+                  {featuredProject?.name || 'Launch-ready systems'}
+                </h2>
+                <p
+                  style={{ fontFamily: 'Space Grotesk', fontSize: '13px', fontWeight: 300, color: '#8A8AA0', marginTop: '8px', maxWidth: '38ch' }}
+                >
+                  {getContentValue('hero', 'proof_description', 'Each release is scoped against launch pressure, content reality, and what your team can maintain after handoff.')}
+                </p>
               </div>
             </div>
           </div>
         </motion.div>
       </div>
 
-      <div className="absolute bottom-6 md:bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2">
-        <span className="text-[9px] uppercase tracking-[0.2em] text-text-secondary" style={{ fontFamily: 'DM Sans', fontWeight: 500 }}>scroll</span>
-        <div className="w-[1px] h-[24px] bg-accent/30 scroll-indicator-line" />
+      {/* Scroll hint */}
+      <div className="absolute bottom-7 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2">
+        <span style={{ fontFamily: 'JetBrains Mono', fontSize: '9px', letterSpacing: '0.22em', textTransform: 'uppercase', color: '#55556A' }}>scroll</span>
+        <div className="w-px h-6 scroll-indicator-line" style={{ background: 'rgba(0,180,255,0.4)' }} />
       </div>
     </section>
   );

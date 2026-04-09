@@ -5,6 +5,7 @@ import SectionTitle from './SectionTitle';
 import { useContent } from '../lib/useContent';
 
 const iconComponents = [Globe, Code2, ShoppingBag, Wrench];
+const ease: [number, number, number, number] = [0.16, 0.77, 0.47, 0.97];
 
 const serviceDefaults = [
   { title: 'High-conviction websites', description: 'Marketing sites with strong information hierarchy, custom visuals, and a CMS handoff your team can actually maintain.' },
@@ -16,10 +17,10 @@ const serviceDefaults = [
 export default function Services() {
   const { getContentValue } = useContent();
   const labelParts = getContentValue('services', 'label', '01 / Services').split(' / ');
-  
+
   const storedCardCount = Number(getContentValue('services', 'card_count', ''));
   const cardCount = (!isNaN(storedCardCount) && storedCardCount > 0) ? storedCardCount : serviceDefaults.length;
-  
+
   const services = Array.from({ length: cardCount }, (_, index) => {
     const fallback = serviceDefaults[index];
     return {
@@ -29,41 +30,82 @@ export default function Services() {
   }).filter(s => s.title);
 
   return (
-    <section className="py-20 md:py-32 relative">
-      {/* Background glow */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[420px] h-[240px] md:w-[800px] md:h-[400px] rounded-full pointer-events-none opacity-12 md:opacity-20">
-        <div className="absolute inset-0 bg-gradient-to-b from-[#7C6FF7] to-transparent rounded-full blur-[100px]" />
-      </div>
-      
-      <div className="max-w-[1280px] mx-auto px-5 md:px-6 relative z-10">
+    <section className="py-24 md:py-36 relative">
+      {/* background */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] pointer-events-none" style={{ background: 'radial-gradient(ellipse at center, rgba(0,180,255,0.04), transparent 70%)' }} />
+
+      <div className="max-w-[1440px] mx-auto px-6 md:px-10 relative z-10">
         <SectionLabel number={labelParts[0] || '01'} label={labelParts[1] || 'Services'} />
         <SectionTitle>{getContentValue('services', 'title', 'What we build')}</SectionTitle>
-        <motion.p initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.55 }} className="text-[14px] sm:text-[15px] md:text-[17px] text-text-secondary mb-10 md:mb-12 -mt-4 md:-mt-6 max-w-[620px] leading-[1.75]" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>
+
+        <motion.p
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.55 }}
+          className="-mt-4 md:-mt-6 mb-12 md:mb-16 max-w-[580px]"
+          style={{ fontFamily: 'Space Grotesk', fontSize: 'clamp(14px,1.1vw,16px)', fontWeight: 300, color: '#8A8AA0', lineHeight: 1.75 }}
+        >
           {getContentValue('services', 'subtitle', 'Delivery is structured around what your team actually needs to launch, maintain, and extend after handoff.')}
         </motion.p>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-px" style={{ border: '1px solid rgba(255,255,255,0.05)', borderRadius: '4px', overflow: 'hidden' }}>
           {services.map((service, index) => {
             const Icon = iconComponents[index % iconComponents.length];
             return (
               <motion.div
                 key={service.title}
-                initial={{ opacity: 0, y: 28 }}
+                initial={{ opacity: 0, y: 24 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.15 }}
-                transition={{ duration: 0.6, ease: [0.16, 0.77, 0.47, 0.97] as [number, number, number, number], delay: index * 0.08 }}
-                className="perspective-container"
+                transition={{ duration: 0.6, ease, delay: index * 0.07 }}
+                className="group relative p-8 md:p-10 card-accent-top"
+                style={{
+                  background: '#07070F',
+                  borderRight: index % 2 === 0 ? '1px solid rgba(255,255,255,0.05)' : 'none',
+                  borderBottom: index < services.length - 2 ? '1px solid rgba(255,255,255,0.05)' : 'none',
+                  transition: 'background 0.3s',
+                }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(0,180,255,0.02)'; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '#07070F'; }}
               >
-                <div className="tilt-card bg-surface-1 rounded-2xl p-6 md:p-10 min-h-[220px] md:min-h-[240px] flex flex-col border border-[rgba(255,255,255,0.04)] card-hover relative overflow-hidden group glass">
-                  <span className="absolute top-4 right-5 text-[52px] md:text-[72px] font-[800] text-[rgba(255,255,255,0.015)] pointer-events-none select-none transition-all duration-500 group-hover:text-[rgba(124,111,247,0.04)]" style={{ fontFamily: 'Syne' }}>
-                    0{index + 1}
-                  </span>
-                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" style={{ background: `radial-gradient(ellipse at ${index % 2 === 0 ? '20% 0%' : '80% 100%'}, rgba(124,111,247,0.06), transparent 60%)` }} />
-                  <div className="relative z-10">
-                    <div className="w-12 h-12 rounded-xl bg-[rgba(124,111,247,0.08)] flex items-center justify-center mb-6 group-hover:bg-[rgba(124,111,247,0.14)] transition-colors duration-300 glow-ring">
-                      <Icon size={22} className="text-accent" />
-                    </div>
-                    <h3 className="text-[20px] md:text-[22px] text-text-primary mb-3 gradient-text-enhanced" style={{ fontFamily: 'Syne', fontWeight: 700 }}>{service.title}</h3>
-                    <p className="text-[14px] md:text-[15px] text-text-secondary leading-[1.75] flex-1" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>{service.description}</p>
+                {/* Big index number */}
+                <span
+                  className="absolute top-5 right-6 pointer-events-none select-none"
+                  style={{ fontFamily: 'Bebas Neue', fontSize: '80px', letterSpacing: '0.03em', color: 'rgba(0,180,255,0.025)', lineHeight: 1 }}
+                >
+                  {String(index + 1).padStart(2, '0')}
+                </span>
+
+                <div className="relative z-10">
+                  {/* Icon */}
+                  <div
+                    className="w-11 h-11 flex items-center justify-center mb-7 transition-all duration-300"
+                    style={{
+                      background: 'rgba(0,180,255,0.07)',
+                      border: '1px solid rgba(0,180,255,0.12)',
+                      borderRadius: '2px',
+                    }}
+                  >
+                    <Icon size={19} style={{ color: '#00B4FF' }} />
+                  </div>
+
+                  <h3
+                    style={{ fontFamily: 'Bebas Neue', fontSize: 'clamp(24px,2.5vw,32px)', letterSpacing: '0.04em', textTransform: 'uppercase', color: '#F0EDE6', marginBottom: '12px', lineHeight: 1 }}
+                  >
+                    {service.title}
+                  </h3>
+                  <p style={{ fontFamily: 'Space Grotesk', fontSize: '14px', fontWeight: 300, color: '#8A8AA0', lineHeight: 1.75 }}>
+                    {service.description}
+                  </p>
+
+                  {/* Hover detail */}
+                  <div
+                    className="mt-6 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                    style={{ fontFamily: 'JetBrains Mono', fontSize: '10px', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(0,180,255,0.6)' }}
+                  >
+                    <span style={{ display: 'inline-block', width: '12px', height: '1px', background: 'rgba(0,180,255,0.5)' }} />
+                    Learn more
                   </div>
                 </div>
               </motion.div>

@@ -13,49 +13,139 @@ export default function Footer() {
     { label: c('nav', 'link_1', 'Work'), href: c('nav', 'link_1_href', '/work') },
     { label: c('nav', 'link_2', 'Services'), href: c('nav', 'link_2_href', '/services') },
     { label: c('nav', 'link_3', 'Process'), href: c('nav', 'link_3_href', '/process') },
-    { label: c('nav', 'link_4', 'Team'), href: c('nav', 'link_4_href', '/team') },
     { label: c('nav', 'link_5', 'Pricing'), href: c('nav', 'link_5_href', '/pricing') },
     { label: c('nav', 'link_6', 'Contact'), href: c('nav', 'link_6_href', '/contact') },
   ];
-  const serviceLinks = [c('services', 'card_1_title', 'Websites'), c('services', 'card_2_title', 'Web Apps'), c('services', 'card_3_title', 'E-commerce'), c('services', 'card_4_title', 'Maintenance')];
-  const teamLinks = [c('team', 'member_1_name', ''), c('team', 'member_2_name', ''), c('team', 'member_3_name', ''), c('team', 'member_4_name', '')];
-  const connectLinks = ['LinkedIn', 'Instagram', 'GitHub', c('contact', 'email', 'vaaddevelopment@gmail.com')];
+  const serviceLinks = [
+    c('services', 'card_1_title', 'Websites'),
+    c('services', 'card_2_title', 'Web Apps'),
+    c('services', 'card_3_title', 'E-commerce'),
+    c('services', 'card_4_title', 'Maintenance'),
+  ];
+  const connectLinks = [
+    { label: 'LinkedIn', href: '#' },
+    { label: 'Instagram', href: '#' },
+    { label: 'GitHub', href: '#' },
+    { label: c('contact', 'email', 'vaaddevelopment@gmail.com'), href: `mailto:${c('contact', 'email', 'vaaddevelopment@gmail.com')}` },
+  ];
+
   const columns = [
-    { title: 'Pages', items: pageLinks.map(l => ({ label: l.label, href: l.href })) },
+    { title: 'Pages', items: pageLinks },
     { title: 'Services', items: serviceLinks.map(l => ({ label: l, href: '/services' })) },
-    { title: 'Team', items: teamLinks.map(l => ({ label: l, href: '/team' })) },
-    { title: 'Connect', items: connectLinks.map(l => ({ label: l, href: l.includes('@') ? `mailto:${l}` : '#' })) },
+    { title: 'Connect', items: connectLinks },
   ];
 
   return (
-    <footer className="bg-footer-bg pt-0 pb-8 relative">
+    <footer className="relative" style={{ background: '#020205', borderTop: '1px solid rgba(0,180,255,0.08)' }}>
+
       {/* CTA band */}
-      <div className="relative overflow-hidden" style={{ borderTop: '1px solid rgba(124,111,247,0.08)' }}>
-        <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 50% 100%, rgba(124,111,247,0.06), transparent 60%)' }} />
-        <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.8, ease }}
-          className="max-w-[1320px] mx-auto px-5 md:px-6 py-16 md:py-20 text-center relative z-10">
-          <h2 className="text-[clamp(32px,6vw,60px)] text-text-primary mb-4" style={{ fontFamily: 'Syne', fontWeight: 800, lineHeight: 0.95, letterSpacing: '-0.04em' }}>Ready to <span className="gradient-text">build?</span></h2>
-          <p className="text-[15px] md:text-[16px] text-text-secondary mb-8 max-w-[400px] mx-auto" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>Let's turn your idea into a live product.</p>
-          <Link to="/contact" className="shimmer-btn inline-flex items-center gap-2.5 gradient-bg text-white px-8 py-4 rounded-2xl text-[15px] font-medium shadow-[0_4px_40px_rgba(124,111,247,0.3)] hover:shadow-[0_4px_60px_rgba(124,111,247,0.45)] hover:scale-[1.03] active:scale-[0.98] transition-all duration-300" style={{ fontFamily: 'DM Sans', fontWeight: 500 }}>Get In Touch <ArrowUpRight size={16} /></Link>
+      <div className="relative overflow-hidden">
+        {/* Background electric mesh */}
+        <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 50% 100%, rgba(0,180,255,0.06), transparent 60%)' }} />
+        <div className="absolute inset-x-0 top-0 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(0,180,255,0.3) 40%, rgba(0,180,255,0.3) 60%, transparent)' }} />
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.75, ease }}
+          className="max-w-[1440px] mx-auto px-6 md:px-10 py-20 md:py-28 relative z-10"
+        >
+          {/* Catalog label */}
+          <p className="mb-6" style={{ fontFamily: 'JetBrains Mono', fontSize: '10px', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(0,180,255,0.5)' }}>
+            — Begin a project
+          </p>
+
+          <h2
+            className="text-text-primary mb-5"
+            style={{
+              fontFamily: 'Bebas Neue',
+              fontSize: 'clamp(56px, 9vw, 120px)',
+              letterSpacing: '0.03em',
+              lineHeight: 0.95,
+              textTransform: 'uppercase',
+            }}
+          >
+            {c('footer', 'cta_headline', 'Ready to')}{' '}
+            <span style={{ color: '#00B4FF' }}>
+              {c('footer', 'cta_highlight', 'Build?')}
+            </span>
+          </h2>
+
+          <p
+            className="mb-10 max-w-[380px]"
+            style={{ fontFamily: 'Space Grotesk', fontSize: '15px', fontWeight: 300, color: '#8A8AA0', lineHeight: 1.7 }}
+          >
+            {c('footer', 'cta_sub', "Turn your idea into a live product — scoped, built, and shipped by a team that means it.")}
+          </p>
+
+          <Link
+            to="/contact"
+            className="shimmer-btn inline-flex items-center gap-3 text-[#040408] font-medium transition-all duration-300"
+            style={{
+              fontFamily: 'JetBrains Mono',
+              fontSize: '12px',
+              letterSpacing: '0.14em',
+              textTransform: 'uppercase',
+              background: '#00B4FF',
+              padding: '14px 28px',
+              borderRadius: '2px',
+              boxShadow: '0 0 40px rgba(0,180,255,0.2)',
+            }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.boxShadow = '0 0 60px rgba(0,180,255,0.4)'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.boxShadow = '0 0 40px rgba(0,180,255,0.2)'; }}
+          >
+            Get In Touch <ArrowUpRight size={15} />
+          </Link>
         </motion.div>
       </div>
 
-      <div className="max-w-[1320px] mx-auto px-5 md:px-6 relative pt-12 md:pt-14" style={{ borderTop: '1px solid rgba(255,255,255,0.04)' }}>
-        <div className="mb-12 md:mb-14">
-          <div className="mb-3"><Logo size="lg" /></div>
-          <p className="text-[14px] text-text-tertiary max-w-[320px]" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>{c('footer', 'tagline', 'Building the web for businesses that mean it.')}</p>
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12 md:mb-14">
+      {/* Link columns */}
+      <div
+        className="max-w-[1440px] mx-auto px-6 md:px-10 pt-14 pb-10 relative"
+        style={{ borderTop: '1px solid rgba(255,255,255,0.04)' }}
+      >
+        <div className="grid grid-cols-1 md:grid-cols-[1.5fr_1fr_1fr_1fr] gap-12 mb-14">
+          {/* Brand */}
+          <div>
+            <div className="mb-4"><Logo size="lg" /></div>
+            <p style={{ fontFamily: 'Space Grotesk', fontSize: '13px', fontWeight: 300, color: '#55556A', maxWidth: '240px', lineHeight: 1.7 }}>
+              {c('footer', 'tagline', 'Building the web for businesses that mean it.')}
+            </p>
+
+            <div className="mt-8 flex items-center gap-3">
+              <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', background: '#00B4FF', boxShadow: '0 0 8px rgba(0,180,255,0.6)', flexShrink: 0 }} />
+              <span style={{ fontFamily: 'JetBrains Mono', fontSize: '10px', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(0,180,255,0.7)' }}>
+                Available for projects
+              </span>
+            </div>
+          </div>
+
+          {/* Link columns */}
           {columns.map(col => (
             <div key={col.title}>
-              <h4 className="text-[11px] uppercase tracking-[0.12em] text-text-tertiary mb-4" style={{ fontFamily: 'DM Sans', fontWeight: 500 }}>{col.title}</h4>
-              <ul className="flex flex-col gap-2.5">
+              <h4 style={{ fontFamily: 'JetBrains Mono', fontSize: '10px', letterSpacing: '0.18em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.25)', marginBottom: '20px' }}>
+                {col.title}
+              </h4>
+              <ul className="flex flex-col gap-3">
                 {col.items.map(item => (
                   <li key={item.label}>
-                    {item.href.startsWith('mailto:') || item.href === '#' ? (
-                      <a href={item.href} className="text-[14px] text-text-secondary hover:text-text-primary transition-colors duration-200" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>{item.label}</a>
+                    {('href' in item) && (item.href.startsWith('mailto:') || item.href === '#') ? (
+                      <a
+                        href={(item as { label: string; href: string }).href}
+                        className="transition-colors duration-200 hover:text-[#00B4FF]"
+                        style={{ fontFamily: 'Space Grotesk', fontSize: '13px', fontWeight: 300, color: '#8A8AA0' }}
+                      >
+                        {item.label}
+                      </a>
                     ) : (
-                      <Link to={item.href} className="text-[14px] text-text-secondary hover:text-text-primary transition-colors duration-200" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>{item.label}</Link>
+                      <Link
+                        to={('href' in item) ? (item as { label: string; href: string }).href : '/'}
+                        className="transition-colors duration-200 hover:text-[#00B4FF]"
+                        style={{ fontFamily: 'Space Grotesk', fontSize: '13px', fontWeight: 300, color: '#8A8AA0' }}
+                      >
+                        {item.label}
+                      </Link>
                     )}
                   </li>
                 ))}
@@ -63,9 +153,18 @@ export default function Footer() {
             </div>
           ))}
         </div>
-        <div className="pt-6 flex flex-col md:flex-row items-center justify-between gap-2" style={{ borderTop: '1px solid rgba(255,255,255,0.04)' }}>
-          <span className="text-[12px] text-text-tertiary" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>{c('footer', 'copyright', '\u00a9 2025 VAAD Development. All rights reserved.')}</span>
-          <span className="text-[12px] text-text-tertiary" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>{c('footer', 'made_by', 'Made by VAAD \u2014 obviously.')}</span>
+
+        {/* Bottom bar */}
+        <div
+          className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
+          style={{ borderTop: '1px solid rgba(255,255,255,0.04)', paddingTop: '24px' }}
+        >
+          <span style={{ fontFamily: 'JetBrains Mono', fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase', color: '#55556A' }}>
+            {c('footer', 'copyright', '© 2025 VAAD Development')}
+          </span>
+          <span style={{ fontFamily: 'JetBrains Mono', fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase', color: '#55556A' }}>
+            {c('footer', 'made_by', 'Made by VAAD — obviously.')}
+          </span>
         </div>
       </div>
     </footer>

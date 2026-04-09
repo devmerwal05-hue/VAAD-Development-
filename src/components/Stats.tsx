@@ -4,6 +4,8 @@ import SectionLabel from './SectionLabel';
 import SectionTitle from './SectionTitle';
 import { useContent } from '../lib/useContent';
 
+const ease: [number, number, number, number] = [0.16, 0.77, 0.47, 0.97];
+
 function AnimatedStat({ value, suffix = '' }: { value: string; suffix?: string }) {
   const ref = useRef<HTMLSpanElement>(null);
   const [inView, setInView] = useState(false);
@@ -14,7 +16,6 @@ function AnimatedStat({ value, suffix = '' }: { value: string; suffix?: string }
     const observer = new IntersectionObserver(([entry]) => {
       if (entry.isIntersecting && !inView) setInView(true);
     }, { threshold: 0.5 });
-
     if (ref.current) observer.observe(ref.current);
     return () => observer.disconnect();
   }, [inView]);
@@ -29,12 +30,14 @@ function AnimatedStat({ value, suffix = '' }: { value: string; suffix?: string }
   }, [count, inView, value]);
 
   const numericValue = Number.parseInt(value, 10);
-  if (Number.isNaN(numericValue)) return <span ref={ref} className="gradient-text">{value}</span>;
+  if (Number.isNaN(numericValue)) {
+    return <span ref={ref} style={{ color: '#00B4FF' }}>{value}</span>;
+  }
 
   return (
     <span ref={ref}>
-      <motion.span className="gradient-text">{rounded}</motion.span>
-      {suffix && <span className="gradient-text">{suffix}</span>}
+      <motion.span style={{ color: '#00B4FF' }}>{rounded}</motion.span>
+      {suffix && <span style={{ color: '#00B4FF' }}>{suffix}</span>}
     </span>
   );
 }
@@ -42,17 +45,17 @@ function AnimatedStat({ value, suffix = '' }: { value: string; suffix?: string }
 export default function Stats() {
   const { getContentValue } = useContent();
   const labelParts = getContentValue('stats', 'label', '02 / Why Us').split(' / ');
-  
+
   const statDefaults = [
     { value: '7', suffix: '', label: 'Days to first milestone', sublabel: 'Delivery', description: 'Projects start with a clearly defined first ship target instead of an open-ended discovery loop.' },
     { value: '48', suffix: 'h', label: 'Typical response window', sublabel: 'Communication', description: 'You are not waiting days for a status update when decisions are blocking progress.' },
     { value: '90', suffix: '%', label: 'Mobile traffic share considered', sublabel: 'Real usage', description: 'Layouts are designed around the traffic mix most small businesses actually see.' },
     { value: '1', suffix: '', label: 'Single accountable team', sublabel: 'Ownership', description: 'Design, development, and launch decisions are owned by the same small team.' },
   ];
-  
+
   const storedStatCount = Number(getContentValue('stats', 'stat_count', ''));
   const statCount = (!isNaN(storedStatCount) && storedStatCount > 0) ? storedStatCount : statDefaults.length;
-  
+
   const stats = Array.from({ length: statCount }, (_, index) => {
     const fallback = statDefaults[index];
     return {
@@ -66,32 +69,60 @@ export default function Stats() {
 
   return (
     <section className="py-20 md:py-32 relative">
-      <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(124,111,247,0.03), transparent 60%)' }} />
-      {/* Accent glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[320px] h-[320px] md:w-[600px] md:h-[600px] rounded-full pointer-events-none opacity-10 md:opacity-15">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#7C6FF7] via-[#A855F7] to-[#EC4899] rounded-full blur-[120px] pulse-glow" />
-      </div>
-      <div className="max-w-[1280px] mx-auto px-5 md:px-6 relative z-10">
+      <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 50% 50%, rgba(0,180,255,0.03), transparent 60%)' }} />
+
+      <div className="max-w-[1440px] mx-auto px-6 md:px-10 relative z-10">
         <SectionLabel number={labelParts[0] || '02'} label={labelParts[1] || 'Why Us'} />
         <SectionTitle>{getContentValue('stats', 'title', 'Why teams choose VAAD')}</SectionTitle>
-        <div className={`grid grid-cols-1 ${statCount <= 2 ? 'sm:grid-cols-2' : 'sm:grid-cols-2 lg:grid-cols-4'} gap-5`}>
+
+        {/* Stat grid — seamless panel layout */}
+        <div
+          className={`grid grid-cols-1 ${statCount <= 2 ? 'sm:grid-cols-2' : 'sm:grid-cols-2 lg:grid-cols-4'} gap-px`}
+          style={{ border: '1px solid rgba(255,255,255,0.05)', borderRadius: '4px', overflow: 'hidden' }}
+        >
           {stats.map((stat, index) => (
             <motion.div
               key={stat.label}
-              initial={{ opacity: 0, y: 28 }}
+              initial={{ opacity: 0, y: 24 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.2 }}
-              transition={{ duration: 0.6, ease: [0.16, 0.77, 0.47, 0.97] as [number, number, number, number], delay: index * 0.08 }}
-              className="perspective-container"
+              transition={{ duration: 0.55, ease, delay: index * 0.08 }}
+              className="group relative p-7 md:p-8 card-accent-top transition-colors duration-300"
+              style={{
+                background: '#07070F',
+                borderRight: (statCount <= 2 ? index % 2 === 0 : index % 4 !== 3) ? '1px solid rgba(255,255,255,0.05)' : 'none',
+              }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(0,180,255,0.025)'; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '#07070F'; }}
             >
-              <div className="tilt-card p-6 rounded-2xl bg-surface-1 border border-[rgba(255,255,255,0.04)] card-hover relative overflow-hidden glass">
-                <div className="absolute top-0 left-0 w-full h-[2px] gradient-bg opacity-80" />
-                <div className="text-[40px] md:text-[48px] leading-none mb-2" style={{ fontFamily: 'Syne', fontWeight: 800 }}>
-                  <AnimatedStat value={stat.value} suffix={stat.suffix} />
-                </div>
-                <div className="text-[11px] uppercase tracking-[0.1em] text-text-secondary mb-3" style={{ fontFamily: 'DM Sans', fontWeight: 500 }}>{stat.sublabel} - {stat.label}</div>
-                <p className="text-[13px] md:text-[14px] text-text-secondary leading-[1.7]" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>{stat.description}</p>
+              {/* Sublabel */}
+              <p
+                className="mb-4"
+                style={{ fontFamily: 'JetBrains Mono', fontSize: '9px', letterSpacing: '0.18em', textTransform: 'uppercase', color: 'rgba(255,45,85,0.6)' }}
+              >
+                {stat.sublabel}
+              </p>
+
+              {/* Number */}
+              <div
+                style={{ fontFamily: 'Bebas Neue', fontSize: 'clamp(48px,4.5vw,68px)', letterSpacing: '0.02em', lineHeight: 1 }}
+              >
+                <AnimatedStat value={stat.value} suffix={stat.suffix} />
               </div>
+
+              {/* Label */}
+              <p
+                className="mt-3 mb-4"
+                style={{ fontFamily: 'Space Grotesk', fontSize: '12px', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#55556A' }}
+              >
+                {stat.label}
+              </p>
+
+              <div style={{ width: '20px', height: '1px', background: 'rgba(0,180,255,0.3)', marginBottom: '12px' }} />
+
+              <p style={{ fontFamily: 'Space Grotesk', fontSize: '13px', fontWeight: 300, color: '#8A8AA0', lineHeight: 1.7 }}>
+                {stat.description}
+              </p>
             </motion.div>
           ))}
         </div>

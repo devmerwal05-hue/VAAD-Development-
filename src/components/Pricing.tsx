@@ -10,16 +10,16 @@ const ease: [number, number, number, number] = [0.16, 0.77, 0.47, 0.97];
 export default function Pricing() {
   const { getContentValue } = useContent();
   const labelParts = getContentValue('pricing', 'label', '06 / Pricing').split(' / ');
-  
+
   const planDefaults = [
     { name: 'Starter site', price: '900', description: 'For focused marketing sites that need clarity, speed, and a CMS handoff.', features: 'Strategy workshop|Custom UI direction|CMS setup|Vercel deployment', highlighted: 'false' },
     { name: 'Growth build', price: '1900', description: 'For businesses that need a stronger funnel, more pages, and clearer conversion flows.', features: 'Multi-page build|Analytics setup|Structured content model|Launch QA', highlighted: 'true' },
     { name: 'Operational system', price: '3900', description: 'For teams replacing manual workflows with a tailored internal or client-facing system.', features: 'Workflow mapping|Admin dashboard|Role-aware logic|Post-launch support', highlighted: 'false' },
   ];
-  
+
   const storedPlanCount = Number(getContentValue('pricing', 'plan_count', ''));
   const planCount = (!isNaN(storedPlanCount) && storedPlanCount > 0) ? storedPlanCount : planDefaults.length;
-  
+
   const plans = Array.from({ length: planCount }, (_, index) => {
     const fallback = planDefaults[index];
     return {
@@ -33,49 +33,186 @@ export default function Pricing() {
 
   return (
     <section className="py-20 md:py-32 relative">
-      {/* Background effects */}
-      <div className="absolute top-0 left-0 w-full h-[280px] md:h-[400px] pointer-events-none opacity-14 md:opacity-20">
-        <div className="absolute top-12 md:top-20 left-1/4 w-[220px] h-[220px] md:w-[400px] md:h-[400px] rounded-full bg-gradient-to-br from-[#7C6FF7] to-transparent blur-[100px]" />
-      </div>
-      
-      <div className="max-w-[1280px] mx-auto px-5 md:px-6 relative z-10">
+      {/* Background */}
+      <div className="absolute top-0 left-1/4 w-[300px] h-[300px] pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(0,180,255,0.05), transparent 70%)', filter: 'blur(60px)' }} />
+
+      <div className="max-w-[1440px] mx-auto px-6 md:px-10 relative z-10">
         <SectionLabel number={labelParts[0] || '06'} label={labelParts[1] || 'Pricing'} />
         <SectionTitle>{getContentValue('pricing', 'title', 'Transparent pricing')}</SectionTitle>
-        <motion.p initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, ease }} className="text-[14px] md:text-[15px] text-text-secondary mb-10 md:mb-12 -mt-4 md:-mt-6" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>
+
+        <motion.p
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, ease }}
+          className="-mt-4 md:-mt-6 mb-12 md:mb-16 max-w-[560px]"
+          style={{ fontFamily: 'Space Grotesk', fontSize: '14px', fontWeight: 300, color: '#8A8AA0', lineHeight: 1.75 }}
+        >
           {getContentValue('pricing', 'subtitle', 'Clear ranges for common scopes. Final pricing depends on content volume, integrations, and operational complexity.')}
         </motion.p>
-        <div className={`grid grid-cols-1 ${planCount <= 2 ? 'sm:grid-cols-2 max-w-3xl mx-auto' : 'lg:grid-cols-3'} gap-5`}>
+
+        <div
+          className={`grid grid-cols-1 ${planCount <= 2 ? 'sm:grid-cols-2 max-w-3xl mx-auto' : 'lg:grid-cols-3'} gap-px`}
+          style={{ border: '1px solid rgba(255,255,255,0.05)', borderRadius: '4px', overflow: 'hidden' }}
+        >
           {plans.map((plan, index) => (
-            <motion.div key={plan.name} initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.2 }} transition={{ duration: 0.5, delay: index * 0.06 }} className={`relative bg-surface-1 rounded-2xl p-6 md:p-8 flex flex-col border transition-all duration-300 overflow-hidden glass card-hover ${plan.highlighted ? 'border-[rgba(124,111,247,0.3)] shadow-[0_0_50px_rgba(124,111,247,0.06)]' : 'border-[rgba(255,255,255,0.04)] hover:border-[rgba(255,255,255,0.08)]'}`}>
-              {plan.highlighted && <div className="absolute top-0 left-0 w-full h-[2px] gradient-bg" />}
-              {plan.highlighted && <span className="absolute top-4 right-4 text-[10px] uppercase tracking-[0.08em] px-3 py-1 rounded-full z-10 badge-glow badge-glow-pulse" style={{ fontFamily: 'DM Sans', fontWeight: 500, background: 'rgba(124,111,247,0.12)', color: '#A89AF9' }}>{getContentValue('pricing', 'popular_badge', 'Popular')}</span>}
-              <div className="relative z-10">
-                <h3 className="text-[18px] text-text-primary mb-3 gradient-text-enhanced" style={{ fontFamily: 'Syne', fontWeight: 700 }}>{plan.name}</h3>
-                <div className="text-[36px] md:text-[42px] text-text-primary mb-1" style={{ fontFamily: 'Syne', fontWeight: 800 }}>
-                  <span className="text-text-secondary text-[20px] md:text-[22px]">$</span>{plan.price.replace('$', '')}
+            <motion.div
+              key={plan.name}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.2 }}
+              transition={{ duration: 0.5, ease, delay: index * 0.07 }}
+              className="relative flex flex-col p-7 md:p-9 card-accent-top"
+              style={{
+                background: plan.highlighted ? 'rgba(0,180,255,0.03)' : '#07070F',
+                borderRight: index < plans.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none',
+                transition: 'background 0.3s',
+              }}
+            >
+              {/* Popular badge */}
+              {plan.highlighted && (
+                <span
+                  className="absolute top-4 right-4"
+                  style={{
+                    fontFamily: 'JetBrains Mono',
+                    fontSize: '9px',
+                    letterSpacing: '0.14em',
+                    textTransform: 'uppercase',
+                    color: '#040408',
+                    background: '#00B4FF',
+                    padding: '3px 8px',
+                    borderRadius: '2px',
+                  }}
+                >
+                  {getContentValue('pricing', 'popular_badge', 'Popular')}
+                </span>
+              )}
+
+              {/* Index number */}
+              <span
+                className="absolute top-4 left-7 pointer-events-none select-none"
+                style={{ fontFamily: 'JetBrains Mono', fontSize: '10px', letterSpacing: '0.2em', textTransform: 'uppercase', color: '#55556A' }}
+              >
+                {String(index + 1).padStart(2, '0')}
+              </span>
+
+              <div className="mt-6">
+                {/* Plan name */}
+                <h3
+                  style={{ fontFamily: 'Bebas Neue', fontSize: '28px', letterSpacing: '0.04em', textTransform: 'uppercase', color: '#F0EDE6', marginBottom: '12px' }}
+                >
+                  {plan.name}
+                </h3>
+
+                {/* Price */}
+                <div className="flex items-baseline gap-1 mb-4">
+                  <span style={{ fontFamily: 'Bebas Neue', fontSize: '52px', letterSpacing: '0.02em', color: plan.highlighted ? '#00B4FF' : '#F0EDE6', lineHeight: 1 }}>
+                    ${plan.price.replace('$', '')}
+                  </span>
+                  <span style={{ fontFamily: 'JetBrains Mono', fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase', color: '#55556A', marginBottom: '4px' }}>
+                    /project
+                  </span>
                 </div>
-                <p className="text-[13px] md:text-[14px] text-text-secondary mb-6" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>{plan.description}</p>
-                <div className="w-full h-[1px] mb-6" style={{ background: 'rgba(255,255,255,0.05)' }} />
+
+                <p style={{ fontFamily: 'Space Grotesk', fontSize: '13px', fontWeight: 300, color: '#8A8AA0', lineHeight: 1.75, marginBottom: '20px' }}>
+                  {plan.description}
+                </p>
+
+                {/* Divider */}
+                <div style={{ width: '100%', height: '1px', background: 'rgba(255,255,255,0.05)', marginBottom: '20px' }} />
+
+                {/* Features */}
                 <ul className="flex flex-col gap-3 flex-1 mb-8">
                   {plan.features.map((feature) => (
-                    <li key={feature} className="flex items-start gap-3 text-[13px] md:text-[14px] text-text-secondary" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>
-                      <Check size={15} className="text-accent shrink-0 mt-0.5" />
-                      {feature}
+                    <li key={feature} className="flex items-start gap-3">
+                      <span
+                        className="shrink-0 mt-0.5"
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          width: '16px',
+                          height: '16px',
+                          background: 'rgba(0,180,255,0.08)',
+                          border: '1px solid rgba(0,180,255,0.2)',
+                          borderRadius: '2px',
+                          flexShrink: 0,
+                        }}
+                      >
+                        <Check size={10} style={{ color: '#00B4FF' }} />
+                      </span>
+                      <span style={{ fontFamily: 'Space Grotesk', fontSize: '13px', fontWeight: 300, color: '#8A8AA0' }}>
+                        {feature}
+                      </span>
                     </li>
                   ))}
                 </ul>
-                <Link to="/contact" className={`w-full py-3.5 rounded-xl text-[15px] font-medium transition-all duration-300 text-center block btn-glow ${plan.highlighted ? 'shimmer-btn gradient-bg text-white shadow-[0_0_30px_rgba(124,111,247,0.2)]' : 'border-2 border-[rgba(255,255,255,0.08)] text-text-primary hover:border-[rgba(255,255,255,0.2)] hover:bg-[rgba(255,255,255,0.03)]'}`} style={{ fontFamily: 'DM Sans', fontWeight: 500 }}>
+
+                {/* CTA */}
+                <Link
+                  to="/contact"
+                  className="shimmer-btn w-full py-3.5 text-center block transition-all duration-300"
+                  style={{
+                    fontFamily: 'JetBrains Mono',
+                    fontSize: '11px',
+                    fontWeight: 500,
+                    letterSpacing: '0.14em',
+                    textTransform: 'uppercase',
+                    borderRadius: '2px',
+                    ...(plan.highlighted
+                      ? {
+                          background: '#00B4FF',
+                          color: '#040408',
+                          boxShadow: '0 0 30px rgba(0,180,255,0.18)',
+                        }
+                      : {
+                          background: 'transparent',
+                          color: '#8A8AA0',
+                          border: '1px solid rgba(255,255,255,0.08)',
+                        }
+                    ),
+                  }}
+                  onMouseEnter={e => {
+                    if (!plan.highlighted) {
+                      const el = e.currentTarget as HTMLElement;
+                      el.style.borderColor = 'rgba(0,180,255,0.3)';
+                      el.style.color = '#00B4FF';
+                    }
+                  }}
+                  onMouseLeave={e => {
+                    if (!plan.highlighted) {
+                      const el = e.currentTarget as HTMLElement;
+                      el.style.borderColor = 'rgba(255,255,255,0.08)';
+                      el.style.color = '#8A8AA0';
+                    }
+                  }}
+                >
                   {getContentValue('pricing', 'plan_button', 'Get Started')}
                 </Link>
               </div>
             </motion.div>
           ))}
         </div>
-        <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, ease, delay: 0.3 }} className="text-center mt-10 md:mt-12">
-          <p className="text-[14px] md:text-[15px] text-text-secondary mb-4" style={{ fontFamily: 'DM Sans', fontWeight: 300 }}>
+
+        {/* Footer CTA */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, ease, delay: 0.3 }}
+          className="text-center mt-10 md:mt-12"
+        >
+          <p style={{ fontFamily: 'Space Grotesk', fontSize: '14px', fontWeight: 300, color: '#55556A', marginBottom: '12px' }}>
             {getContentValue('pricing', 'cta_text', 'If the scope is unusual, we price it from the workflow backward instead of forcing it into a generic package.')}
           </p>
-          <Link to="/contact" className="text-accent hover:text-accent-light text-[14px] font-medium transition-colors underline underline-offset-4 decoration-accent/30 hover:decoration-accent/60 btn-arrow" style={{ fontFamily: 'DM Sans', fontWeight: 500 }}>
+          <Link
+            to="/contact"
+            className="inline-flex items-center gap-2 transition-colors duration-200"
+            style={{ fontFamily: 'JetBrains Mono', fontSize: '11px', letterSpacing: '0.14em', textTransform: 'uppercase', color: '#00B4FF' }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#33C8FF'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = '#00B4FF'; }}
+          >
+            <span style={{ display: 'inline-block', width: '14px', height: '1px', background: '#00B4FF' }} />
             {getContentValue('pricing', 'cta_button', 'Request a scoped estimate')}
           </Link>
         </motion.div>
