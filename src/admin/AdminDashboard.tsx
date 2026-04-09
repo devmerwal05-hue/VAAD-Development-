@@ -99,7 +99,7 @@ const AUDIT_TAB = "audit";
 const ADMIN_LOAD_TIMEOUT_MS = 8000;
 
 const SECTION_ORDER = [
-  "nav", "hero", "marquee", "services", "techstack", "stats",
+  "entry", "nav", "hero", "marquee", "services", "techstack", "stats",
   "process", "portfolio", "pricing", "faq", "contact", "footer",
   "ui", "seo", "contact_form", "intro_splash", "not_found", "error_boundary",
   "work_page", "services_page", "process_page", "pricing_page", "contact_page",
@@ -112,6 +112,7 @@ const DEPRECATED_SECTION_KEYS: Record<string, Set<string>> = {
 };
 
 const SECTION_LABELS: Record<string, string> = {
+  entry: "Entry / Launch",
   nav: "Navigation", hero: "Hero", marquee: "Marquee", services: "Services",
   techstack: "Tech Stack", stats: "Stats", process: "Process",
   portfolio: "Work / Projects", pricing: "Pricing", faq: "FAQ",
@@ -127,6 +128,7 @@ const SECTION_LABELS: Record<string, string> = {
 };
 
 const SECTION_ICONS: Record<string, string> = {
+  entry: "🚀",
   nav: "⚓", hero: "✦", marquee: "▶▶", services: "◈", techstack: "⬡",
   stats: "▦", process: "◉", portfolio: "◻", pricing: "◇",
   faq: "?", contact: "✉", footer: "▁", work_page: "☰", services_page: "☰",
@@ -2142,7 +2144,7 @@ export default function AdminDashboard() {
 
   const sidebarGroups = useMemo((): SidebarGroup[] => {
     const site = new Set([
-      'nav', 'hero', 'marquee', 'services', 'techstack', 'stats', 'process',
+      'entry', 'nav', 'hero', 'marquee', 'services', 'techstack', 'stats', 'process',
       'portfolio', 'pricing', 'faq', 'contact', 'footer',
     ]);
     const pages = new Set(Object.keys(PAGE_SECTIONS));

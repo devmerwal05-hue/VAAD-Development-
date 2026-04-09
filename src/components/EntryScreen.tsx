@@ -21,13 +21,15 @@ export default function EntryScreen({ onComplete }: { onComplete: () => void }) 
     return coarsePointer || navigator.maxTouchPoints > 0;
   }, []);
 
+  const brandLabel = getContentValue('entry', 'brand_label', 'VAAD Development');
   const title = getContentValue('entry', 'title', 'Launch into build mode');
   const subtitle = getContentValue(
     'entry',
     'subtitle',
-    'An immersive intro — no WebGL, just disciplined motion.'
+    ''
   );
   const buttonLabel = getContentValue('entry', 'launch_button', 'Launch');
+  const launchingLabel = getContentValue('entry', 'launching_label', 'Launching…');
   const hintKeyboard = getContentValue('entry', 'hint_keyboard', 'Press Enter');
   const hintTouch = getContentValue('entry', 'hint_touch', 'Tap to launch');
 
@@ -120,16 +122,16 @@ export default function EntryScreen({ onComplete }: { onComplete: () => void }) 
       <div className="relative h-full w-full flex items-center justify-center px-6">
         <div className="max-w-[760px] w-full text-center">
           <p className="text-[11px] uppercase tracking-[0.28em] text-white/40">
-            VAAD Development
+            {brandLabel}
           </p>
 
           <h1 className="mt-4 text-4xl sm:text-5xl md:text-6xl font-semibold leading-[1.05]">
             {title}
           </h1>
 
-          <p className="mt-4 text-base sm:text-lg text-white/60">
-            {subtitle}
-          </p>
+          {subtitle.trim().length > 0 ? (
+            <p className="mt-4 text-base sm:text-lg text-white/60">{subtitle}</p>
+          ) : null}
 
           <div className="mt-8 flex items-center justify-center">
             <button
@@ -141,7 +143,7 @@ export default function EntryScreen({ onComplete }: { onComplete: () => void }) 
               disabled={isLaunching}
               className="shimmer-btn px-5 py-3 rounded-xl border border-white/10 bg-white/[0.04] hover:bg-white/[0.06] text-sm sm:text-base transition-all disabled:opacity-50"
             >
-              {isLaunching ? 'Launching…' : buttonLabel}
+              {isLaunching ? launchingLabel : buttonLabel}
             </button>
           </div>
 

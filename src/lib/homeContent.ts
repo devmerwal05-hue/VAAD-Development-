@@ -229,9 +229,11 @@ export const footerDefaults = {
 };
 
 const entryFields: AdminFieldDefinition[] = [
+  { key: 'brand_label', label: 'Brand label', fallback: 'VAAD Development', description: 'Small label shown above the entry title.' },
   { key: 'title', label: 'Entry title', fallback: 'Launch into build mode' },
-  { key: 'subtitle', label: 'Entry subtitle', fallback: 'An immersive intro — no WebGL, just disciplined motion.', type: 'textarea' },
+  { key: 'subtitle', label: 'Entry subtitle', fallback: '', type: 'textarea' },
   { key: 'launch_button', label: 'Launch button label', fallback: 'Launch' },
+  { key: 'launching_label', label: 'Launching label', fallback: 'Launching…', description: 'Shown while the launch animation is running.' },
   { key: 'hint_keyboard', label: 'Keyboard hint', fallback: 'Press Enter', description: 'Shown on desktop devices.' },
   { key: 'hint_touch', label: 'Touch hint', fallback: 'Tap to launch', description: 'Shown on touch devices.' },
 ];
