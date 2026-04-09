@@ -254,6 +254,29 @@ function normalizeSubmissionId(value: unknown): number | null {
   return null;
 }
 
+function getSubmissionIdentityKey(value: unknown): string | null {
+  const normalized = normalizeSubmissionId(value);
+  if (normalized !== null) return `n:${normalized}`;
+
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (trimmed) return `s:${trimmed}`;
+  }
+
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return `n:${Math.trunc(value)}`;
+  }
+
+  return null;
+}
+
+function submissionIdsMatch(left: unknown, right: unknown): boolean {
+  const leftKey = getSubmissionIdentityKey(left);
+  const rightKey = getSubmissionIdentityKey(right);
+  if (!leftKey || !rightKey) return false;
+  return leftKey === rightKey;
+}
+
 const CONTENT_KEY_PATTERN = /^[a-z0-9_]+$/;
 const URL_SCHEME_PATTERN = /^(https?:\/\/|\/|mailto:|tel:)/i;
 
@@ -1326,12 +1349,12 @@ const SubmissionsPanel = React.memo(function SubmissionsPanel({
   submissions, onStatusChange, onDelete,
 }: {
   submissions: Submission[];
-  onStatusChange: (id: number, status: Submission["status"]) => Promise<void>;
-  onDelete: (id: number, name: string) => void;
+  onStatusChange: (id: number | string, status: Submission["status"]) => Promise<void>;
+  onDelete: (id: number | string, name: string) => Promise<void> | void;
 }) {
   const [expandedKey, setExpandedKey] = useState<string | null>(null);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
-  const [pendingStatusIds, setPendingStatusIds] = useState<Set<number>>(new Set());
+  const [pendingRowKeys, setPendingRowKeys] = useState<Set<string>>(new Set());
 
   const getCopyStateKey = useCallback((sub: Submission) => {
     const normalizedId = normalizeSubmissionId(sub.id);
@@ -1342,8 +1365,8 @@ const SubmissionsPanel = React.memo(function SubmissionsPanel({
   }, []);
 
   const getSubmissionRowKey = useCallback((sub: Submission) => {
-    const normalizedId = normalizeSubmissionId(sub.id);
-    if (normalizedId !== null) return `id:${normalizedId}`;
+    const identity = getSubmissionIdentityKey(sub.id);
+    if (identity) return `id:${identity}`;
 
     const idPart = String(sub.id || "").trim();
     if (idPart) return `raw:${idPart}`;
@@ -1354,8 +1377,16 @@ const SubmissionsPanel = React.memo(function SubmissionsPanel({
     return `fallback:${emailPart}:${datePart}:${namePart}`;
   }, []);
 
-  const getSubmissionId = useCallback((sub: Submission) => {
-    return normalizeSubmissionId(sub.id);
+  const getSubmissionActionId = useCallback((sub: Submission): number | string | null => {
+    const identity = getSubmissionIdentityKey(sub.id);
+    if (!identity) return null;
+
+    if (identity.startsWith("n:")) {
+      const parsed = Number.parseInt(identity.slice(2), 10);
+      return Number.isFinite(parsed) ? parsed : identity.slice(2);
+    }
+
+    return identity.slice(2);
   }, []);
 
   const formatReceivedDate = useCallback((raw: string) => {
@@ -1373,6 +1404,24 @@ const SubmissionsPanel = React.memo(function SubmissionsPanel({
       // Clipboard may be blocked by browser policy or insecure context.
     });
   };
+
+  const withPendingRow = useCallback(async (rowKey: string, action: () => Promise<void>) => {
+    setPendingRowKeys((prev) => {
+      const next = new Set(prev);
+      next.add(rowKey);
+      return next;
+    });
+
+    try {
+      await action();
+    } finally {
+      setPendingRowKeys((prev) => {
+        const next = new Set(prev);
+        next.delete(rowKey);
+        return next;
+      });
+    }
+  }, []);
 
   const statusColors: Record<string, string> = {
     new: "bg-accent/15 text-accent border-accent/20",
@@ -1396,8 +1445,9 @@ const SubmissionsPanel = React.memo(function SubmissionsPanel({
       {submissions.map((sub) => {
         const rowKey = getSubmissionRowKey(sub);
         const expandable = expandedKey === rowKey;
-        const submissionId = getSubmissionId(sub);
-        const statusPending = submissionId !== null && pendingStatusIds.has(submissionId);
+        const submissionId = getSubmissionActionId(sub);
+        const statusPending = pendingRowKeys.has(rowKey);
+        const actionsDisabled = submissionId === null || statusPending;
 
         return (
         <div key={rowKey} className="bg-white/[0.03] rounded-2xl border border-white/6 overflow-hidden">
@@ -1432,11 +1482,11 @@ const SubmissionsPanel = React.memo(function SubmissionsPanel({
             </button>
             <button
               type="button"
-              disabled={submissionId === null || statusPending}
+              disabled={actionsDisabled}
               onClick={() => {
                 if (submissionId !== null) {
                   if (expandable) setExpandedKey(null);
-                  onDelete(submissionId, sub.name);
+                  void Promise.resolve(onDelete(submissionId, sub.name));
                 }
               }}
               className="px-2.5 py-1.5 rounded-lg border border-red-500/20 text-[11px] text-red-400/80 hover:border-red-500/40 hover:text-red-400 transition-all shrink-0 disabled:opacity-40"
@@ -1446,12 +1496,8 @@ const SubmissionsPanel = React.memo(function SubmissionsPanel({
             </button>
           </div>
 
-          <AnimatePresence>
-            {expandable && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }}
-                className="overflow-hidden border-t border-white/5">
+          {expandable && (
+              <div className="border-t border-white/5">
                 <div className="px-4 py-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {sub.company && (
                     <div>
@@ -1488,48 +1534,26 @@ const SubmissionsPanel = React.memo(function SubmissionsPanel({
                     )}
                   </button>
                   {sub.status !== "reviewed" && (
-                    <button type="button" onClick={async () => {
+                    <button type="button" onClick={() => {
                       if (submissionId === null) return;
-                      setPendingStatusIds((prev) => {
-                        const next = new Set(prev);
-                        next.add(submissionId);
-                        return next;
-                      });
-                      try {
+                      void withPendingRow(rowKey, async () => {
                         await onStatusChange(submissionId, "reviewed");
-                      } finally {
-                        setPendingStatusIds((prev) => {
-                          const next = new Set(prev);
-                          next.delete(submissionId);
-                          return next;
-                        });
-                      }
+                      });
                     }}
-                      disabled={submissionId === null || statusPending}
+                      disabled={actionsDisabled}
                       className="px-3 py-1.5 rounded-lg border border-emerald-500/25 text-[12px] text-emerald-400 hover:border-emerald-500/40 flex items-center gap-1.5 transition-all disabled:opacity-40">
                       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12" /></svg>
                       {statusPending ? "Saving..." : "Mark reviewed"}
                     </button>
                   )}
                   {sub.status !== "archived" && (
-                    <button type="button" onClick={async () => {
+                    <button type="button" onClick={() => {
                       if (submissionId === null) return;
-                      setPendingStatusIds((prev) => {
-                        const next = new Set(prev);
-                        next.add(submissionId);
-                        return next;
-                      });
-                      try {
+                      void withPendingRow(rowKey, async () => {
                         await onStatusChange(submissionId, "archived");
-                      } finally {
-                        setPendingStatusIds((prev) => {
-                          const next = new Set(prev);
-                          next.delete(submissionId);
-                          return next;
-                        });
-                      }
+                      });
                     }}
-                      disabled={submissionId === null || statusPending}
+                      disabled={actionsDisabled}
                       className="px-3 py-1.5 rounded-lg border border-white/10 text-[12px] text-white/40 hover:border-white/20 hover:text-white/60 flex items-center gap-1.5 transition-all disabled:opacity-40">
                       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect width="20" height="5" x="2" y="3" rx="1" /><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8" /><path d="M10 12h4" /></svg>
                       {statusPending ? "Saving..." : "Archive"}
@@ -1538,18 +1562,17 @@ const SubmissionsPanel = React.memo(function SubmissionsPanel({
                   <button type="button" onClick={() => {
                     if (submissionId !== null) {
                       setExpandedKey(null);
-                      onDelete(submissionId, sub.name);
+                      void Promise.resolve(onDelete(submissionId, sub.name));
                     }
                   }}
-                    disabled={submissionId === null || statusPending}
+                    disabled={actionsDisabled}
                     className="px-3 py-1.5 rounded-lg border border-red-500/20 text-[12px] text-red-400/80 hover:border-red-500/40 hover:text-red-400 flex items-center gap-1.5 transition-all ml-auto disabled:opacity-40">
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /></svg>
                     Delete
                   </button>
                 </div>
-              </motion.div>
+              </div>
             )}
-          </AnimatePresence>
         </div>
       );
       })}
@@ -2090,7 +2113,7 @@ export default function AdminDashboard() {
   // Confirm modal
   const [confirm, setConfirm] = useState<{
     kind: "submission" | "field" | "collection_item";
-    id?: number; key?: string; label?: string; section?: string; index?: number;
+    id?: number | string; key?: string; label?: string; section?: string; index?: number;
   } | null>(null);
 
   // Debug log
@@ -2226,9 +2249,20 @@ export default function AdminDashboard() {
     setConfirm({ kind: "field", id, key, label: key });
   }, []);
 
-  const handleSubmissionDeleteRequest = useCallback((id: number, label: string) => {
-    setConfirm({ kind: "submission", id, label });
-  }, []);
+  async function handleSubmissionDeleteRequest(id: number | string, label: string) {
+    const approved = typeof window === "undefined"
+      ? true
+      : window.confirm(`Delete submission from ${label || "this contact"}?`);
+
+    if (!approved) return;
+
+    try {
+      await deleteSubmission(id);
+      setError("");
+    } catch (e) {
+      setError(getErrorMessage(e));
+    }
+  }
 
   // Collection items for portfolio
   function getCollectionItems(section: CollectionSection): CollectionItem[] {
@@ -2763,14 +2797,14 @@ export default function AdminDashboard() {
   }
 
   // Submissions
-  const setSubmissionStatus = useCallback(async (id: number, status: Submission["status"]) => {
+  const setSubmissionStatus = useCallback(async (id: number | string, status: Submission["status"]) => {
     try {
       const updated = await apiFetchLogged<Submission>("/api/contact", {
         method: "PUT", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id, status }),
       });
       setSubmissions((prev) => prev.map((submission) => (
-        normalizeSubmissionId(submission.id) === id ? { ...submission, ...updated } : submission
+        submissionIdsMatch(submission.id, id) ? { ...submission, ...updated } : submission
       )));
       setError("");
     } catch (e) {
@@ -2778,20 +2812,20 @@ export default function AdminDashboard() {
     }
   }, [apiFetchLogged]);
 
-  async function deleteSubmission(id: number) {
+  async function deleteSubmission(id: number | string) {
     await apiFetchLogged("/api/contact", {
       method: "DELETE", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id }),
     });
-    setSubmissions((prev) => prev.filter((submission) => normalizeSubmissionId(submission.id) !== id));
+    setSubmissions((prev) => prev.filter((submission) => !submissionIdsMatch(submission.id, id)));
   }
 
   // Confirm action handler
   async function handleConfirm() {
     if (!confirm) return;
     try {
-      if (confirm.kind === "submission" && confirm.id) await deleteSubmission(confirm.id);
-      if (confirm.kind === "field" && confirm.id) await deleteField(confirm.id);
+      if (confirm.kind === "submission" && confirm.id !== undefined) await deleteSubmission(confirm.id);
+      if (confirm.kind === "field" && typeof confirm.id === "number") await deleteField(confirm.id);
       if (confirm.kind === "collection_item" && confirm.section && confirm.index) {
         await deleteCollectionItem(confirm.section as CollectionSection, confirm.index);
       }
