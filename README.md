@@ -37,6 +37,19 @@ This repo includes version hints in `.nvmrc` and `.node-version`.
 
 Optional (frontend-only): You can run `npm run dev` to start Vite on `http://127.0.0.1:5173/`, but admin/content APIs require `vercel dev`.
 
+### Local full-stack (no Vercel CLI)
+
+If you don't want to install/use `vercel`, you can run the same serverless handlers locally with a tiny Node server.
+
+1. Terminal A (API): `npm run dev:api` (runs on `http://localhost:3000`)
+2. Terminal B (frontend): `npm run dev` (Vite on `http://127.0.0.1:5173`)
+
+Vite is already configured to proxy `/api/*` requests to `http://localhost:3000` by default (see [vite.config.ts](vite.config.ts)).
+
+Notes:
+- This is intended for local debugging only.
+- You still need the `.env` values (Supabase + admin secrets) for admin/content uploads to fully work.
+
 ## Supabase setup
 
 - Run [supabase/schema.sql](supabase/schema.sql) in the Supabase SQL editor.
