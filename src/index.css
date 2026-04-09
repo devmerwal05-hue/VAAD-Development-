@@ -41,7 +41,10 @@
 }
 
 /* ── BASE ────────────────────────────────────── */
-html { scroll-behavior: smooth; }
+html {
+  scroll-behavior: smooth;
+  overflow-x: hidden;
+}
 
 body {
   background-color: #040408;
@@ -50,9 +53,14 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   position: relative;
+  overflow-x: hidden;
 }
 
-#root { position: relative; z-index: 2; }
+#root {
+  position: relative;
+  z-index: 2;
+  overflow-x: hidden;
+}
 
 /* focus ring */
 a:focus-visible,
