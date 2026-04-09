@@ -228,6 +228,14 @@ export const footerDefaults = {
   made_by: 'Built for teams that want fewer meetings and stronger execution.',
 };
 
+const entryFields: AdminFieldDefinition[] = [
+  { key: 'title', label: 'Entry title', fallback: 'Launch into build mode' },
+  { key: 'subtitle', label: 'Entry subtitle', fallback: 'An immersive intro — no WebGL, just disciplined motion.', type: 'textarea' },
+  { key: 'launch_button', label: 'Launch button label', fallback: 'Launch' },
+  { key: 'hint_keyboard', label: 'Keyboard hint', fallback: 'Press Enter', description: 'Shown on desktop devices.' },
+  { key: 'hint_touch', label: 'Touch hint', fallback: 'Tap to launch', description: 'Shown on touch devices.' },
+];
+
 const navFields: AdminFieldDefinition[] = [
   { key: 'logo_text', label: 'Logo text', fallback: 'VAAD' },
   { key: 'link_1', label: 'Link 1 label', fallback: 'Work' },
@@ -525,6 +533,11 @@ const errorBoundaryFields: AdminFieldDefinition[] = [
 ];
 
 export const homeSectionDefinitions: Record<string, AdminSectionDefinition> = {
+  entry: {
+    title: 'Entry / Launch',
+    description: 'Full-screen intro shown before the homepage sections (desktop Enter key + mobile tap).',
+    fields: entryFields,
+  },
   nav: {
     title: 'Navigation',
     description: 'Logo text and primary navigation labels/links used across the main website.',

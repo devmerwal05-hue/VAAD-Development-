@@ -12,15 +12,39 @@ import Contact from '../components/Contact';
 import Footer from '../components/Footer';
 import { usePageMetadata } from '../hooks/usePageMetadata';
 import { useContent } from '../lib/useContent';
+import { useState } from 'react';
+import EntryScreen from '../components/EntryScreen';
 
 export default function HomePage() {
   const { getContentValue } = useContent();
+  const [launchComplete, setLaunchComplete] = useState(() => {
+    try {
+      return sessionStorage.getItem('vaad_home_launch_complete') === '1';
+    } catch {
+      return false;
+    }
+  });
 
   usePageMetadata({
     title: getContentValue('seo', 'home_title', 'VAAD Development | Fast websites and web apps'),
     description: getContentValue('seo', 'home_description', 'VAAD Development designs, builds, and ships conversion-focused websites and operational web apps for small teams that need momentum.'),
     path: '/',
   });
+
+  if (!launchComplete) {
+    return (
+      <EntryScreen
+        onComplete={() => {
+          try {
+            sessionStorage.setItem('vaad_home_launch_complete', '1');
+          } catch {
+            // Ignore storage failures and continue without blocking usage.
+          }
+          setLaunchComplete(true);
+        }}
+      />
+    );
+  }
 
   return (
     <>
