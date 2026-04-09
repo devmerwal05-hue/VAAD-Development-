@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { lazy, Suspense, useState, useCallback, type ReactNode } from 'react';
-import { ContentProvider } from './lib/ContentContext';
+import { ContentProvider } from './lib/ContentProvider';
 import ErrorBoundary from './components/ErrorBoundary';
 import IntroSplash from './components/IntroSplash';
 import HomePage from './pages/HomePage';
