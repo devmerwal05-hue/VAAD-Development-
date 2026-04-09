@@ -651,6 +651,25 @@ function SeedDefaultsButton({ onSeed, disabled }: { onSeed: () => void; disabled
   );
 }
 
+function OverwriteDefaultsButton({ onOverwrite, disabled }: { onOverwrite: () => void; disabled: boolean }) {
+  return (
+    <button
+      type="button"
+      onClick={onOverwrite}
+      disabled={disabled}
+      className="px-3 py-1.5 rounded-lg border border-white/12 text-white/70 text-[12px] flex items-center gap-1.5 hover:border-white/20 hover:text-white/85 transition-all disabled:opacity-50"
+      title="Overwrite this section with the current default values"
+    >
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+        <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+        <path d="M21 3v5h-5" />
+      </svg>
+      Overwrite defaults
+    </button>
+  );
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // IMAGE UPLOADER
 // ─────────────────────────────────────────────────────────────────────────────
@@ -2706,6 +2725,35 @@ export default function AdminDashboard() {
     }
   }
 
+  async function overwriteSectionDefaults(section: string) {
+    if (section !== 'footer') return;
+    if (!homeSectionDefinitions[section]) return;
+
+    const approved = typeof window === 'undefined'
+      ? true
+      : window.confirm('Overwrite Footer fields with current defaults? This will replace your existing Footer CMS values.');
+
+    if (!approved) return;
+
+    setSeeding(true);
+    setError('');
+
+    try {
+      const definition = homeSectionDefinitions[section];
+      const items: Array<{ section: string; key: string; value: string }> = definition.fields.map((field) => ({
+        section,
+        key: field.key,
+        value: field.fallback ?? '',
+      }));
+
+      await bulkUpsertContent(items, 'upsert');
+    } catch (e) {
+      setError(getErrorMessage(e));
+    } finally {
+      setSeeding(false);
+    }
+  }
+
   async function deleteField(id: number) {
     const existing = content.find((item) => item.id === id);
 
@@ -3099,6 +3147,12 @@ export default function AdminDashboard() {
                 {showSeedDefaults && (
                   <SeedDefaultsButton
                     onSeed={() => seedSectionDefaults(activeSection)}
+                    disabled={loading || seeding}
+                  />
+                )}
+                {activeSection === 'footer' && !!homeSectionDefinitions[activeSection] && (
+                  <OverwriteDefaultsButton
+                    onOverwrite={() => overwriteSectionDefaults(activeSection)}
                     disabled={loading || seeding}
                   />
                 )}
