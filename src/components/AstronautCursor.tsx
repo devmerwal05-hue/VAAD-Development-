@@ -11,13 +11,15 @@ export default function AstronautCursor() {
   const currentPos = useRef<CursorPosition>({ x: -1000, y: -1000 });
   const [isVisible, setIsVisible] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
+  const [isTouch, setIsTouch] = useState(false);
   const animationRef = useRef<number | null>(null);
-  const isTouchDevice = useRef(false);
 
   useEffect(() => {
-    isTouchDevice.current = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    // Use CSS media query - more accurate than JS detection
+    const mediaQuery = window.matchMedia('(hover: none) and (pointer: coarse)');
+    setIsTouch(mediaQuery.matches);
     
-    if (isTouchDevice.current) return;
+    if (mediaQuery.matches) return;
 
     const handleMouseMove = (e: MouseEvent) => {
       targetPos.current = { x: e.clientX - 14, y: e.clientY - 16 };
@@ -47,7 +49,8 @@ export default function AstronautCursor() {
   }, [isVisible]);
 
   useEffect(() => {
-    if (isTouchDevice.current) return;
+    const mediaQuery = window.matchMedia('(hover: none) and (pointer: coarse)');
+    if (mediaQuery.matches) return;
 
     const animate = () => {
       const dx = targetPos.current.x - currentPos.current.x;
@@ -70,7 +73,7 @@ export default function AstronautCursor() {
     };
   }, []);
 
-  if (isTouchDevice.current) return null;
+  if (isTouch) return null;
 
   return (
     <div
