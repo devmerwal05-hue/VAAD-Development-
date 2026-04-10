@@ -7,8 +7,8 @@ interface CursorPosition {
 
 export default function AstronautCursor() {
   const cursorRef = useRef<HTMLDivElement>(null);
-  const targetPos = useRef<CursorPosition>({ x: -100, y: -100 });
-  const currentPos = useRef<CursorPosition>({ x: -100, y: -100 });
+  const targetPos = useRef<CursorPosition>({ x: -1000, y: -1000 });
+  const currentPos = useRef<CursorPosition>({ x: -1000, y: -1000 });
   const [isVisible, setIsVisible] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
   const animationRef = useRef<number | null>(null);
@@ -20,12 +20,9 @@ export default function AstronautCursor() {
     if (isTouchDevice.current) return;
 
     const handleMouseMove = (e: MouseEvent) => {
-      targetPos.current = { x: e.clientX, y: e.clientY };
+      targetPos.current = { x: e.clientX - 14, y: e.clientY - 16 };
       if (!isVisible) setIsVisible(true);
     };
-
-    const handleMouseEnter = () => setIsVisible(true);
-    const handleMouseLeave = () => setIsVisible(false);
 
     const handleMouseOver = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
@@ -33,16 +30,18 @@ export default function AstronautCursor() {
       setIsHovering(Boolean(isInteractive));
     };
 
+    const handleMouseOut = () => {
+      setIsHovering(false);
+    };
+
     document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseenter', handleMouseEnter);
-    document.addEventListener('mouseleave', handleMouseLeave);
     document.addEventListener('mouseover', handleMouseOver);
+    document.addEventListener('mouseout', handleMouseOut);
 
     return () => {
       document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseenter', handleMouseEnter);
-      document.removeEventListener('mouseleave', handleMouseLeave);
       document.removeEventListener('mouseover', handleMouseOver);
+      document.removeEventListener('mouseout', handleMouseOut);
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
     };
   }, [isVisible]);
@@ -54,11 +53,11 @@ export default function AstronautCursor() {
       const dx = targetPos.current.x - currentPos.current.x;
       const dy = targetPos.current.y - currentPos.current.y;
       
-      currentPos.current.x += dx * 0.15;
-      currentPos.current.y += dy * 0.15;
+      currentPos.current.x += dx * 0.12;
+      currentPos.current.y += dy * 0.12;
 
       if (cursorRef.current) {
-        cursorRef.current.style.transform = `translate(${currentPos.current.x}px, ${currentPos.current.y}px)`;
+        cursorRef.current.style.transform = `translate3d(${currentPos.current.x}px, ${currentPos.current.y}px, 0)`;
       }
 
       animationRef.current = requestAnimationFrame(animate);
@@ -76,11 +75,8 @@ export default function AstronautCursor() {
   return (
     <div
       ref={cursorRef}
-      className="astronaut-cursor"
-      style={{
-        opacity: isVisible ? 1 : 0,
-        '--hover-scale': isHovering ? 1.3 : 1,
-      } as React.CSSProperties}
+      className={`astronaut-cursor ${isHovering ? 'hovering' : ''}`}
+      style={{ opacity: isVisible ? 1 : 0 }}
     >
       <svg
         width="28"
@@ -125,7 +121,6 @@ export default function AstronautCursor() {
         <circle cx="24" cy="2" r="1.5" fill="#00B4FF" filter="url(#glow)" />
       </svg>
       
-      {/* Ring indicator for hover state */}
       <div className="cursor-ring" />
     </div>
   );
