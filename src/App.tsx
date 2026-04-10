@@ -3,6 +3,7 @@ import { lazy, Suspense, useState, useCallback, type ReactNode } from 'react';
 import { ContentProvider } from './lib/ContentProvider';
 import ErrorBoundary from './components/ErrorBoundary';
 import IntroSplash from './components/IntroSplash';
+import AstronautCursor from './components/AstronautCursor';
 import HomePage from './pages/HomePage';
 import AdminDashboard from './pages/AdminDashboard';
 import RouteEffects from './components/RouteEffects';
@@ -80,6 +81,7 @@ export default function App() {
         <BrowserRouter>
           <RouteEffects />
           <PublicSiteGuard>
+            <AstronautCursor />
             <Suspense fallback={<PageLoader />}>
               <Routes>
                 <Route path="/" element={withRouteBoundary(<HomePage />)} />

@@ -62,6 +62,20 @@ body {
   overflow-x: hidden;
 }
 
+/* Hide default cursor on public site */
+body:not(.admin-mode) {
+  cursor: none;
+}
+
+body:not(.admin-mode) a,
+body:not(.admin-mode) button,
+body:not(.admin-mode) input,
+body:not(.admin-mode) select,
+body:not(.admin-mode) textarea,
+body:not(.admin-mode) [role="button"] {
+  cursor: pointer;
+}
+
 /* focus ring */
 a:focus-visible,
 button:focus-visible,
@@ -474,4 +488,64 @@ body.admin-mode::after { display: none; }
   .gradient-text-enhanced { animation: none; }
   .card-hover:hover { transform: none; box-shadow: none; }
   .perspective-container:hover .tilt-card { transform: none; }
+}
+
+/* ── ASTRONAUT CURSOR ──────────────────────────── */
+.astronaut-cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 28px;
+  height: 32px;
+  pointer-events: none;
+  z-index: 9999;
+  will-change: transform;
+  transition: opacity 0.3s ease, transform 0.1s linear;
+  mix-blend-mode: difference;
+}
+
+.astronaut-cursor .astronaut-svg {
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.3));
+}
+
+.astronaut-cursor .cursor-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 40px;
+  height: 40px;
+  border: 1px solid rgba(0, 180, 255, 0.4);
+  border-radius: 50%;
+  opacity: 0;
+  transition: opacity 0.2s ease, transform 0.2s ease, width 0.2s ease, height 0.2s ease;
+}
+
+.astronaut-cursor:hover .cursor-ring,
+.astronaut-cursor:has(+ *) .cursor-ring {
+  /* Ring appears on hover via JS state */
+}
+
+/* Hover state applied via inline style from React */
+.astronaut-cursor[style*="--hover-scale"] .cursor-ring {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(var(--hover-scale, 1));
+  width: 50px;
+  height: 50px;
+}
+
+/* Hide on admin mode */
+body.admin-mode .astronaut-cursor {
+  display: none;
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .astronaut-cursor {
+    transition: opacity 0.1s ease;
+  }
+  
+  .astronaut-cursor .astronaut-svg {
+    animation: none;
+  }
 }
