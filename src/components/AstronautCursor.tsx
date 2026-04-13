@@ -2,18 +2,40 @@ import { useEffect, useRef } from 'react';
 
 export default function AstronautCursor() {
   const cursorRef = useRef<HTMLDivElement>(null);
+  const pos = useRef({ x: -50, y: -50 });
+  const target = useRef({ x: -50, y: -50 });
+  const rafRef = useRef<number>();
 
   useEffect(() => {
     const cursor = cursorRef.current;
     if (!cursor) return;
 
     const updateCursor = (e: MouseEvent) => {
-      cursor.style.left = `${e.clientX}px`;
-      cursor.style.top = `${e.clientY}px`;
+      target.current = { x: e.clientX, y: e.clientY };
     };
 
     document.addEventListener('mousemove', updateCursor);
-    return () => document.removeEventListener('mousemove', updateCursor);
+
+    const animate = () => {
+      const dx = target.current.x - pos.current.x;
+      const dy = target.current.y - pos.current.y;
+      
+      pos.current.x += dx * 0.15;
+      pos.current.y += dy * 0.15;
+
+      if (cursor) {
+        cursor.style.transform = `translate(${pos.current.x - 20}px, ${pos.current.y - 22}px)`;
+      }
+
+      rafRef.current = requestAnimationFrame(animate);
+    };
+
+    rafRef.current = requestAnimationFrame(animate);
+
+    return () => {
+      document.removeEventListener('mousemove', updateCursor);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
   }, []);
 
   return (
@@ -21,12 +43,13 @@ export default function AstronautCursor() {
       ref={cursorRef}
       style={{
         position: 'fixed',
-        left: '-20px',
-        top: '-20px',
+        left: 0,
+        top: 0,
         width: '40px',
         height: '44px',
         zIndex: 999999,
         pointerEvents: 'none',
+        willChange: 'transform',
       }}
     >
       <svg
