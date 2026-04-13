@@ -9,6 +9,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import RouteEffects from './components/RouteEffects';
 import PublicSiteGuard from './components/PublicSiteGuard';
 import { useContent } from './lib/useContent';
+import { useLenis } from './hooks/useLenis';
 
 const WorkPage = lazy(() => import('./pages/WorkPage'));
 const ServicesPage = lazy(() => import('./pages/ServicesPage'));
@@ -36,13 +37,14 @@ function withRouteBoundary(element: ReactNode) {
   return <ErrorBoundary scope="route">{element}</ErrorBoundary>;
 }
 
-export default function App() {
+function PublicSite() {
+  useLenis();
+  
   const normalizedPath = typeof window !== 'undefined'
     ? window.location.pathname.toLowerCase()
     : '';
   const isAdminPath = normalizedPath.startsWith('/admin');
 
-  // Show intro only on first visit per session
   const [introComplete, setIntroComplete] = useState(() => {
     if (isAdminPath) return true;
     try {
@@ -56,10 +58,40 @@ export default function App() {
     try {
       sessionStorage.setItem('vaad_intro_seen', '1');
     } catch {
-      // Ignore storage failures and continue without blocking app usage.
+      // Ignore
     }
     setIntroComplete(true);
   }, []);
+
+  return (
+    <ContentProvider>
+      {!isAdminPath && !introComplete && <IntroSplash onComplete={handleIntroComplete} />}
+      <BrowserRouter>
+        <RouteEffects />
+        <PublicSiteGuard>
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
+              <Route path="/" element={withRouteBoundary(<HomePage />)} />
+              <Route path="/work" element={withRouteBoundary(<WorkPage />)} />
+              <Route path="/services" element={withRouteBoundary(<ServicesPage />)} />
+              <Route path="/process" element={withRouteBoundary(<ProcessPage />)} />
+              <Route path="/pricing" element={withRouteBoundary(<PricingPage />)} />
+              <Route path="/contact" element={withRouteBoundary(<ContactPage />)} />
+              <Route path="/admin/*" element={withRouteBoundary(<AdminDashboard />)} />
+              <Route path="*" element={withRouteBoundary(<NotFound />)} />
+            </Routes>
+          </Suspense>
+        </PublicSiteGuard>
+      </BrowserRouter>
+    </ContentProvider>
+  );
+}
+
+export default function App() {
+  const normalizedPath = typeof window !== 'undefined'
+    ? window.location.pathname.toLowerCase()
+    : '';
+  const isAdminPath = normalizedPath.startsWith('/admin');
 
   if (isAdminPath) {
     if (typeof window !== 'undefined' && normalizedPath !== '/admin' && !normalizedPath.startsWith('/admin/')) {
@@ -69,6 +101,7 @@ export default function App() {
 
     return (
       <ErrorBoundary>
+        <AstronautCursor />
         {withRouteBoundary(<AdminDashboard />)}
       </ErrorBoundary>
     );
@@ -76,27 +109,8 @@ export default function App() {
 
   return (
     <ErrorBoundary>
-      <ContentProvider>
-        {!isAdminPath && !introComplete && <IntroSplash onComplete={handleIntroComplete} />}
-        <BrowserRouter>
-          <RouteEffects />
-          <AstronautCursor />
-          <PublicSiteGuard>
-            <Suspense fallback={<PageLoader />}>
-              <Routes>
-                <Route path="/" element={withRouteBoundary(<HomePage />)} />
-                <Route path="/work" element={withRouteBoundary(<WorkPage />)} />
-                <Route path="/services" element={withRouteBoundary(<ServicesPage />)} />
-                <Route path="/process" element={withRouteBoundary(<ProcessPage />)} />
-                <Route path="/pricing" element={withRouteBoundary(<PricingPage />)} />
-                <Route path="/contact" element={withRouteBoundary(<ContactPage />)} />
-                <Route path="/admin/*" element={withRouteBoundary(<AdminDashboard />)} />
-                <Route path="*" element={withRouteBoundary(<NotFound />)} />
-              </Routes>
-            </Suspense>
-          </PublicSiteGuard>
-        </BrowserRouter>
-      </ContentProvider>
+      <AstronautCursor />
+      <PublicSite />
     </ErrorBoundary>
   );
 }
