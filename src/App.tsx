@@ -80,8 +80,8 @@ export default function App() {
         {!isAdminPath && !introComplete && <IntroSplash onComplete={handleIntroComplete} />}
         <BrowserRouter>
           <RouteEffects />
+          <AstronautCursor />
           <PublicSiteGuard>
-            <AstronautCursor />
             <Suspense fallback={<PageLoader />}>
               <Routes>
                 <Route path="/" element={withRouteBoundary(<HomePage />)} />
