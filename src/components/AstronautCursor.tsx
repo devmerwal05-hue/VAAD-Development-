@@ -4,7 +4,7 @@ export default function AstronautCursor() {
   const cursorRef = useRef<HTMLDivElement>(null);
   const pos = useRef({ x: -50, y: -50 });
   const target = useRef({ x: -50, y: -50 });
-  const rafRef = useRef<number>();
+  const rafRef = useRef<number | undefined>(undefined);
 
   const isTouchDevice = useMemo(() => {
     if (typeof window === 'undefined') return false;
