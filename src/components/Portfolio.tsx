@@ -36,12 +36,20 @@ export default function Portfolio() {
                 style={{
                   background: '#07070F',
                   borderRight: featured ? '1px solid rgba(255,255,255,0.05)' : 'none',
-                  transition: 'background 0.3s',
+                  transition: 'transform 0.25s ease, background 0.3s',
                   display: 'flex',
                   flexDirection: 'column',
                 }}
-                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(0,180,255,0.015)'; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '#07070F'; }}
+                onMouseEnter={e => { 
+                  const el = e.currentTarget as HTMLElement;
+                  el.style.background = 'rgba(0,180,255,0.015)';
+                  el.style.transform = 'translateY(-4px)';
+                }}
+                onMouseLeave={e => { 
+                  const el = e.currentTarget as HTMLElement;
+                  el.style.background = '#07070F';
+                  el.style.transform = 'translateY(0)';
+                }}
               >
                 {/* Image area */}
                 <div

@@ -103,7 +103,7 @@ export default function Hero() {
           >
             <Link
               to="/contact"
-              className="shimmer-btn inline-flex items-center justify-center gap-2.5"
+              className="shimmer-btn inline-flex items-center justify-center gap-2.5 hover:scale-[1.03] transition-transform duration-150"
               style={{
                 fontFamily: 'JetBrains Mono',
                 fontSize: '12px',
@@ -114,7 +114,7 @@ export default function Hero() {
                 background: '#00B4FF',
                 padding: '14px 28px',
                 borderRadius: '2px',
-                boxShadow: '0 0 40px rgba(0,180,255,0.25)',
+                boxShadow: '0 0 30px rgba(0,180,255,0.2)',
               }}
             >
               {getContentValue('hero', 'cta_primary', 'Start a project')}
@@ -122,7 +122,7 @@ export default function Hero() {
             </Link>
             <Link
               to="/work"
-              className="inline-flex items-center justify-center gap-2.5 transition-colors duration-200"
+              className="inline-flex items-center justify-center gap-2.5 hover:scale-[1.03] transition-transform duration-150"
               style={{
                 fontFamily: 'JetBrains Mono',
                 fontSize: '12px',
@@ -134,8 +134,8 @@ export default function Hero() {
                 padding: '14px 28px',
                 borderRadius: '2px',
               }}
-              onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.color = '#F0EDE6'; el.style.borderColor = 'rgba(255,255,255,0.18)'; }}
-              onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.color = '#8A8AA0'; el.style.borderColor = 'rgba(255,255,255,0.08)'; }}
+              onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.color = '#F0EDE6'; el.style.borderColor = 'rgba(255,255,255,0.18)'; el.style.transform = 'scale(1.03)'; }}
+              onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.color = '#8A8AA0'; el.style.borderColor = 'rgba(255,255,255,0.08)'; el.style.transform = 'scale(1)'; }}
             >
               {getContentValue('hero', 'cta_secondary', 'See shipped work')}
             </Link>
