@@ -4,6 +4,7 @@ import { ContentProvider } from './lib/ContentProvider';
 import ErrorBoundary from './components/ErrorBoundary';
 import IntroSplash from './components/IntroSplash';
 import AstronautCursor from './components/AstronautCursor';
+import ScrollProgressIndicator from './components/ScrollProgressIndicator';
 import HomePage from './pages/HomePage';
 import AdminDashboard from './pages/AdminDashboard';
 import RouteEffects from './components/RouteEffects';
@@ -38,54 +39,55 @@ function withRouteBoundary(element: ReactNode) {
 }
 
 function PublicSite() {
-  useLenis();
-  
-  const normalizedPath = typeof window !== 'undefined'
-    ? window.location.pathname.toLowerCase()
-    : '';
-  const isAdminPath = normalizedPath.startsWith('/admin');
+    useLenis();
+   
+    const normalizedPath = typeof window !== 'undefined'
+      ? window.location.pathname.toLowerCase()
+      : '';
+    const isAdminPath = normalizedPath.startsWith('/admin');
 
-  const [introComplete, setIntroComplete] = useState(() => {
-    if (isAdminPath) return true;
-    try {
-      return sessionStorage.getItem('vaad_intro_seen') === '1';
-    } catch {
-      return true;
-    }
-  });
+    const [introComplete, setIntroComplete] = useState(() => {
+      if (isAdminPath) return true;
+      try {
+        return sessionStorage.getItem('vaad_intro_seen') === '1';
+      } catch {
+        return true;
+      }
+    });
 
-  const handleIntroComplete = useCallback(() => {
-    try {
-      sessionStorage.setItem('vaad_intro_seen', '1');
-    } catch {
-      // Ignore
-    }
-    setIntroComplete(true);
-  }, []);
+    const handleIntroComplete = useCallback(() => {
+      try {
+        sessionStorage.setItem('vaad_intro_seen', '1');
+      } catch {
+        // Ignore
+      }
+      setIntroComplete(true);
+    }, []);
 
-  return (
-    <ContentProvider>
-      {!isAdminPath && !introComplete && <IntroSplash onComplete={handleIntroComplete} />}
-      <BrowserRouter>
-        <RouteEffects />
-        <PublicSiteGuard>
-          <Suspense fallback={<PageLoader />}>
-            <Routes>
-              <Route path="/" element={withRouteBoundary(<HomePage />)} />
-              <Route path="/work" element={withRouteBoundary(<WorkPage />)} />
-              <Route path="/services" element={withRouteBoundary(<ServicesPage />)} />
-              <Route path="/process" element={withRouteBoundary(<ProcessPage />)} />
-              <Route path="/pricing" element={withRouteBoundary(<PricingPage />)} />
-              <Route path="/contact" element={withRouteBoundary(<ContactPage />)} />
-              <Route path="/admin/*" element={withRouteBoundary(<AdminDashboard />)} />
-              <Route path="*" element={withRouteBoundary(<NotFound />)} />
-            </Routes>
-          </Suspense>
-        </PublicSiteGuard>
-      </BrowserRouter>
-    </ContentProvider>
-  );
-}
+    return (
+      <ContentProvider>
+        {!isAdminPath && !introComplete && <IntroSplash onComplete={handleIntroComplete} />}
+        <BrowserRouter>
+          <RouteEffects />
+          <ScrollProgressIndicator />
+          <PublicSiteGuard>
+            <Suspense fallback={<PageLoader />}>
+              <Routes>
+                <Route path="/" element={withRouteBoundary(<HomePage />)} />
+                <Route path="/work" element={withRouteBoundary(<WorkPage />)} />
+                <Route path="/services" element={withRouteBoundary(<ServicesPage />)} />
+                <Route path="/process" element={withRouteBoundary(<ProcessPage />)} />
+                <Route path="/pricing" element={withRouteBoundary(<PricingPage />)} />
+                <Route path="/contact" element={withRouteBoundary(<ContactPage />)} />
+                <Route path="/admin/*" element={withRouteBoundary(<AdminDashboard />)} />
+                <Route path="*" element={withRouteBoundary(<NotFound />)} />
+              </Routes>
+            </Suspense>
+          </PublicSiteGuard>
+        </BrowserRouter>
+      </ContentProvider>
+    );
+  }
 
 export default function App() {
   const normalizedPath = typeof window !== 'undefined'
