@@ -6,13 +6,15 @@ export default function AstronautCursor() {
   const target = useRef({ x: -50, y: -50 });
   const rafRef = useRef<number | undefined>(undefined);
 
-  const isTouchDevice = useMemo(() => {
+  const shouldShowCursor = useMemo(() => {
     if (typeof window === 'undefined') return false;
-    return window.matchMedia('(hover: none) and (pointer: coarse)').matches;
+    const isTouch = window.matchMedia('(pointer: coarse)').matches;
+    const isFine = window.matchMedia('(pointer: fine)').matches;
+    return isFine && !isTouch;
   }, []);
 
   useEffect(() => {
-    if (isTouchDevice) return;
+    if (!shouldShowCursor) return;
 
     const cursor = cursorRef.current;
     if (!cursor) return;
@@ -43,9 +45,9 @@ export default function AstronautCursor() {
       document.removeEventListener('mousemove', updateCursor);
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
-  }, [isTouchDevice]);
+  }, [shouldShowCursor]);
 
-  if (isTouchDevice) return null;
+  if (!shouldShowCursor) return null;
 
   return (
     <div
