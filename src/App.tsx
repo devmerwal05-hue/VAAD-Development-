@@ -5,6 +5,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 import IntroSplash from './components/IntroSplash';
 import AstronautCursor from './components/AstronautCursor';
 import ScrollProgressIndicator from './components/ScrollProgressIndicator';
+import SkipToContent from './components/SkipToContent';
 import HomePage from './pages/HomePage';
 import AdminDashboard from './pages/AdminDashboard';
 import RouteEffects from './components/RouteEffects';
@@ -111,6 +112,7 @@ export default function App() {
 
   return (
     <ErrorBoundary>
+      <SkipToContent />
       <AstronautCursor />
       <PublicSite />
     </ErrorBoundary>
