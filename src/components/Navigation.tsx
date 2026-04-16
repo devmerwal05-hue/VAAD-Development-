@@ -11,7 +11,6 @@ interface NavLinkItem {
 }
 
 export default function Navigation() {
-  const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const { getContentValue } = useContent();
 
@@ -22,21 +21,6 @@ export default function Navigation() {
     { label: getContentValue('nav', 'link_5', 'Pricing'), href: getContentValue('nav', 'link_5_href', '/pricing') },
     { label: getContentValue('nav', 'link_6', 'Contact'), href: getContentValue('nav', 'link_6_href', '/contact') },
   ];
-
-  useEffect(() => {
-    let ticking = false;
-    const handleScroll = () => {
-      if (ticking) return;
-      ticking = true;
-      requestAnimationFrame(() => {
-        setScrolled(window.scrollY > 60);
-        ticking = false;
-      });
-    };
-    handleScroll();
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
 
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? 'hidden' : '';
@@ -51,34 +35,33 @@ export default function Navigation() {
         aria-label="Primary"
         className="fixed top-0 left-0 right-0 z-50 h-[64px] flex items-center"
         style={{
-          background: scrolled ? 'rgba(4,4,8,0.92)' : 'transparent',
-          backdropFilter: scrolled ? 'blur(24px)' : 'none',
-          WebkitBackdropFilter: scrolled ? 'blur(24px)' : 'none',
-          borderBottom: scrolled ? '1px solid rgba(0,180,255,0.1)' : '1px solid transparent',
-          transition: 'background 0.35s, border-color 0.35s, backdrop-filter 0.35s',
+          background: 'rgba(4,4,8,0.85)',
+          backdropFilter: 'blur(24px)',
+          WebkitBackdropFilter: 'blur(24px)',
+          borderBottom: '1px solid rgba(0,180,255,0.08)',
+          transition: 'border-color 0.3s',
         }}
       >
         <div className="w-full max-w-[1440px] mx-auto px-6 md:px-10 flex items-center justify-between gap-4">
           <Logo size="md" />
 
-          {/* Desktop nav */}
+          {/* Desktop nav with hover animations */}
           <div className="hidden md:flex items-center gap-1">
             {navLinks.map((link) => (
               <NavLink
                 key={link.href}
                 to={link.href}
-                className={({ isActive }) =>
-                  `relative px-4 py-2 text-[12px] uppercase tracking-[0.12em] transition-colors duration-200 ${
-                    isActive
-                      ? 'text-[#00B4FF]'
-                      : 'text-[#55556A] hover:text-[#F0EDE6]'
-                  }`
-                }
+                className="group relative px-4 py-2 text-[12px] uppercase tracking-[0.12em] text-[#55556A] hover:text-[#F0EDE6] transition-colors duration-200"
                 style={{ fontFamily: 'JetBrains Mono', fontWeight: 400 }}
               >
                 {({ isActive }) => (
                   <>
-                    {link.label}
+                    <span className="relative z-10">{link.label}</span>
+                    {/* Animated underline */}
+                    <span 
+                      className="absolute bottom-0 left-4 right-4 h-[1px] bg-[#00B4FF] origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-200 ease-out"
+                      style={{ transformOrigin: 'left' }}
+                    />
                     {isActive && (
                       <span
                         aria-hidden="true"
