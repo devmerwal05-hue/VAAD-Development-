@@ -3,8 +3,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, Zap } from 'lucide-react';
 import { buildPortfolioProjects } from '../lib/portfolio';
 import { useContent } from '../lib/useContent';
-
-const ease: [number, number, number, number] = [0.16, 0.77, 0.47, 0.97];
+import StaggeredText from './StaggeredText';
 
 export default function Hero() {
   const { content, getContentValue, projectCount } = useContent();
@@ -46,11 +45,11 @@ export default function Hero() {
 
         {/* LEFT: Copy */}
         <div>
-          {/* Eyebrow badge */}
+          {/* Eyebrow badge - scale in first */}
           <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, ease, delay: 0.05 }}
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.4, delay: 0 }}
             className="inline-flex items-center gap-2.5 mb-10 border-shimmer"
             style={{
               background: 'rgba(0,180,255,0.06)',
@@ -65,11 +64,11 @@ export default function Hero() {
             </span>
           </motion.div>
 
-          {/* Headline */}
+          {/* Headline with staggered reveal */}
           <motion.h1
-            initial={{ opacity: 0, y: 32 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.75, ease, delay: 0.12 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
             style={{
               fontFamily: 'Bebas Neue',
               fontWeight: 400,
@@ -80,26 +79,26 @@ export default function Hero() {
               color: '#F0EDE6',
             }}
           >
-            <span className="block">{line1}</span>
-            <span className="block" style={{ color: '#00B4FF' }}>{line2}</span>
+            <StaggeredText text={line1} delay={100} staggerDelay={40} className="block" />
+            <span style={{ color: '#00B4FF' }}><StaggeredText text={line2} delay={100 + line1.length * 40} staggerDelay={40} className="block" /></span>
           </motion.h1>
 
-          {/* Sub */}
+          {/* Sub - reveals after headline stagger */}
           <motion.p
-            initial={{ opacity: 0, y: 22 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.62, ease, delay: 0.28 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.8 }}
             className="max-w-[560px] mt-7 md:mt-8"
             style={{ fontFamily: 'Space Grotesk', fontSize: 'clamp(14px,1.1vw,17px)', fontWeight: 300, color: '#8A8AA0', lineHeight: 1.8 }}
           >
             {getContentValue('hero', 'subheadline', 'Conversion-focused websites and operational web apps for teams that need a tight scope, a fast build window, and a handoff they can actually maintain.')}
           </motion.p>
 
-          {/* CTAs */}
+          {/* CTAs - reveal after featured project */}
           <motion.div
-            initial={{ opacity: 0, y: 18 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.55, ease, delay: 0.4 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5, delay: 1.5 }}
             className="flex flex-col sm:flex-row gap-3 mt-8 md:mt-10"
           >
             <Link
@@ -142,11 +141,11 @@ export default function Hero() {
             </Link>
           </motion.div>
 
-          {/* Stats */}
+          {/* Stats - reveal after CTAs */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease, delay: 0.52 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5, delay: 1.8 }}
             className="grid grid-cols-3 gap-px mt-10 md:mt-12"
             style={{ border: '1px solid rgba(255,255,255,0.06)', borderRadius: '2px', overflow: 'hidden' }}
           >
@@ -172,9 +171,9 @@ export default function Hero() {
 
         {/* RIGHT: Featured project card */}
         <motion.div
-          initial={{ opacity: 0, y: 28 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.72, ease, delay: 0.2 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6, delay: 1.2 }}
           className="relative"
         >
           {/* Corner decorations */}
