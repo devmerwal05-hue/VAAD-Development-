@@ -62,20 +62,6 @@ body {
   overflow-x: hidden;
 }
 
-/* Hide default cursor on public site - show custom cursor instead */
-html.app-mounted:not(.admin-mode) {
-  cursor: none;
-}
-
-html.app-mounted:not(.admin-mode) a,
-html.app-mounted:not(.admin-mode) button,
-html.app-mounted:not(.admin-mode) input,
-html.app-mounted:not(.admin-mode) select,
-html.app-mounted:not(.admin-mode) textarea,
-html.app-mounted:not(.admin-mode) [role="button"] {
-  cursor: none;
-}
-
 /* focus ring */
 a:focus-visible,
 button:focus-visible,
@@ -482,69 +468,3 @@ body.admin-mode::after { display: none; }
 .stagger-children > *:nth-child(4) { animation-delay: 0.4s; }
 .stagger-children > *:nth-child(5) { animation-delay: 0.5s; }
 .stagger-children > *:nth-child(6) { animation-delay: 0.6s; }
-
-/* ── RESPONSIVE ──────────────────────────────── */
-@media (max-width: 768px) {
-  .gradient-text-enhanced { animation: none; }
-  .card-hover:hover { transform: none; box-shadow: none; }
-  .perspective-container:hover .tilt-card { transform: none; }
-}
-
-/* ── ASTRONAUT CURSOR ──────────────────────────── */
-.astronaut-cursor {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 28px;
-  height: 32px;
-  pointer-events: none;
-  z-index: 9999;
-  will-change: transform;
-  transition: opacity 0.2s ease;
-  transform: translate3d(-1000px, -1000px, 0);
-}
-
-.astronaut-cursor .astronaut-svg {
-  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.3));
-}
-
-.astronaut-cursor .cursor-ring {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 40px;
-  height: 40px;
-  border: 1px solid rgba(0, 180, 255, 0.5);
-  border-radius: 50%;
-  opacity: 0;
-  transition: all 0.2s ease;
-}
-
-.astronaut-cursor.hovering .cursor-ring {
-  opacity: 1;
-  width: 50px;
-  height: 50px;
-  border-color: rgba(0, 180, 255, 0.8);
-}
-
-.astronaut-cursor.hovering .astronaut-svg {
-  transform: scale(1.15);
-  transition: transform 0.2s ease;
-}
-
-/* Hide on admin mode */
-body.admin-mode .astronaut-cursor {
-  display: none;
-}
-
-/* Reduce motion for accessibility */
-@media (prefers-reduced-motion: reduce) {
-  .astronaut-cursor {
-    transition: none;
-  }
-  
-  .astronaut-cursor .astronaut-svg {
-    animation: none;
-  }
-}
