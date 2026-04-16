@@ -23,17 +23,26 @@ export default function AstronautCursor() {
       target.current = { x: e.clientX, y: e.clientY };
     };
 
-    document.addEventListener('mousemove', updateCursor);
+    document.addEventListener('mousemove', updateCursor, { passive: true });
 
-    const animate = () => {
+    let lastTime = performance.now();
+    const animate = (time: number) => {
+      if (time - lastTime < 16) {
+        rafRef.current = requestAnimationFrame(animate);
+        return;
+      }
+      lastTime = time;
+      
       const dx = target.current.x - pos.current.x;
       const dy = target.current.y - pos.current.y;
       
-      pos.current.x += dx * 0.15;
-      pos.current.y += dy * 0.15;
+      if (Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5) {
+        pos.current.x += dx * 0.12;
+        pos.current.y += dy * 0.12;
 
-      if (cursor) {
-        cursor.style.transform = `translate(${pos.current.x - 20}px, ${pos.current.y - 22}px)`;
+        if (cursor) {
+          cursor.style.transform = `translate(${pos.current.x - 20}px, ${pos.current.y - 22}px)`;
+        }
       }
 
       rafRef.current = requestAnimationFrame(animate);
