@@ -210,15 +210,25 @@ export default function Hero() {
             </div>
 
             {/* Project image */}
-            <div className="relative" style={{ minHeight: '340px' }}>
+            <div 
+              className="relative group cursor-pointer" 
+              style={{ minHeight: '340px' }}
+              onMouseEnter={e => {
+                const overlay = e.currentTarget.querySelector('.hover-reveal') as HTMLElement;
+                if (overlay) overlay.style.opacity = '1';
+              }}
+              onMouseLeave={e => {
+                const overlay = e.currentTarget.querySelector('.hover-reveal') as HTMLElement;
+                if (overlay) overlay.style.opacity = '0';
+              }}
+            >
               {featuredProject?.image ? (
                 <img
                   src={featuredProject.image}
                   alt={featuredProject.name}
                   loading="lazy"
                   decoding="async"
-                  className="absolute inset-0 h-full w-full object-cover opacity-80"
-                  style={{ transition: 'opacity 0.4s' }}
+                  className="absolute inset-0 h-full w-full object-cover opacity-80 group-hover:scale-105 transition-transform duration-500"
                 />
               ) : (
                 <div
@@ -228,6 +238,22 @@ export default function Hero() {
               )}
               {/* Overlay */}
               <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(4,4,8,0.96) 0%, rgba(4,4,8,0.2) 50%, transparent 100%)' }} />
+              
+              {/* Hover reveal - shows view action */}
+              <div 
+                className="hover-reveal absolute inset-0 flex items-center justify-center transition-opacity duration-300"
+                style={{ 
+                  background: 'rgba(4,4,8,0.8)', 
+                  opacity: 0 
+                }}
+              >
+                <span 
+                  className="px-6 py-3 text-xs uppercase tracking-widest"
+                  style={{ fontFamily: 'JetBrains Mono', color: '#00B4FF', border: '1px solid #00B4FF', borderRadius: '2px' }}
+                >
+                  {featuredProject?.url ? 'View Project' : 'Featured'}
+                </span>
+              </div>
 
               {/* Tag */}
               <span
