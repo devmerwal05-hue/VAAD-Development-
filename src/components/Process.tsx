@@ -1,99 +1,150 @@
-import { motion } from 'framer-motion';
+import { motion, useScroll, useTransform, type Variants } from 'framer-motion';
+import { useMemo, useRef } from 'react';
 import SectionLabel from './SectionLabel';
 import SectionTitle from './SectionTitle';
 import { useContent } from '../lib/useContent';
 
-const ease: [number, number, number, number] = [0.16, 0.77, 0.47, 0.97];
+const processIntroVariants: Variants = {
+  hidden: { opacity: 0.2, y: 60 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.85, ease: [0.16, 1, 0.3, 1] },
+  },
+};
 
-export default function Process() {
+const processCardVariants: Variants = {
+  hidden: { opacity: 0, x: 80 },
+  visible: {
+    opacity: 1,
+    x: 0,
+    transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] },
+  },
+};
+
+const processMobileVariants: Variants = {
+  hidden: { opacity: 0.2, y: 30 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.65, ease: [0.16, 1, 0.3, 1] },
+  },
+};
+
+export interface ProcessProps {
+  className?: string;
+}
+
+interface ProcessStep {
+  description: string;
+  title: string;
+}
+
+export default function Process({ className = '' }: ProcessProps) {
   const { getContentValue } = useContent();
   const labelParts = getContentValue('process', 'label', '03 / Process').split(' / ');
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ['start start', 'end end'],
+  });
 
-  const stepDefaults = [
-    { title: 'Scope', description: 'We lock the goals, pages, flows, and timeline before visuals start drifting.' },
-    { title: 'Design', description: 'Core screens and layout direction are approved early so implementation moves with fewer surprises.' },
-    { title: 'Build', description: 'The app or site is built in production-minded slices with content, analytics, and QA included.' },
-    { title: 'Launch', description: 'Deployment, walkthroughs, and next-step recommendations are delivered as part of the release.' },
-  ];
+  const steps = useMemo<ProcessStep[]>(() => {
+    const defaults = [
+      { title: 'Scope', description: 'We lock the goals, pages, flows, and timeline before visuals start drifting.' },
+      { title: 'Design', description: 'Core screens and layout direction are approved early so implementation moves with fewer surprises.' },
+      { title: 'Build', description: 'The app or site is built in production-minded slices with content, analytics, and QA included.' },
+      { title: 'Launch', description: 'Deployment, walkthroughs, and next-step recommendations are delivered as part of the release.' },
+    ];
 
-  const storedStepCount = Number(getContentValue('process', 'step_count', ''));
-  const stepCount = (!isNaN(storedStepCount) && storedStepCount > 0) ? storedStepCount : stepDefaults.length;
+    return [1, 2, 3, 4].map((index) => ({
+      title: getContentValue('process', `step_${index}_title`, defaults[index - 1].title),
+      description: getContentValue('process', `step_${index}_desc`, defaults[index - 1].description),
+    }));
+  }, [getContentValue]);
 
-  const steps = Array.from({ length: stepCount }, (_, index) => {
-    const fallback = stepDefaults[index];
-    return {
-      number: String(index + 1).padStart(2, '0'),
-      title: getContentValue('process', `step_${index + 1}_title`, fallback?.title || ''),
-      description: getContentValue('process', `step_${index + 1}_desc`, fallback?.description || ''),
-    };
-  }).filter(s => s.title);
+  const cardWidth = 418;
+  const cardGap = 28;
+  const desktopOffset = (steps.length - 1) * (cardWidth + cardGap);
+  const desktopX = useTransform(scrollYProgress, [0, 1], [0, -desktopOffset]);
+  const progressScale = useTransform(scrollYProgress, [0, 1], [0.08, 1]);
 
   return (
-    <section className="py-20 md:py-32 relative">
-      <div className="max-w-[1440px] mx-auto px-6 md:px-10">
-        <SectionLabel number={labelParts[0] || '03'} label={labelParts[1] || 'Process'} />
-        <SectionTitle>{getContentValue('process', 'title', 'How a project works')}</SectionTitle>
+    <section ref={sectionRef} className={`relative overflow-hidden px-6 py-24 md:px-10 md:py-36 ${className}`} style={{ minHeight: `${steps.length * 72}vh` }}>
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_78%_18%,rgba(108,99,255,0.14),transparent_20%),radial-gradient(circle_at_12%_72%,rgba(0,212,255,0.12),transparent_18%)]" />
 
-        {/* Timeline */}
-        <div
-          className={`grid grid-cols-1 ${stepCount === 2 ? 'sm:grid-cols-2' : stepCount === 3 ? 'sm:grid-cols-3' : 'md:grid-cols-4'} gap-px`}
-          style={{ border: '1px solid rgba(255,255,255,0.05)', borderRadius: '4px', overflow: 'hidden' }}
+      <div className="relative z-10 mx-auto max-w-[1440px]">
+        <motion.div
+          variants={processIntroVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.18 }}
+          className="mb-12 max-w-[780px]"
         >
+          <SectionLabel number={labelParts[0] || '03'} label={labelParts[1] || 'Process'} />
+          <SectionTitle>{getContentValue('process', 'title', 'How a project works')}</SectionTitle>
+        </motion.div>
+
+        <div className="hidden xl:block">
+          <div className="sticky top-[12vh] overflow-hidden rounded-[36px] border border-[rgba(232,232,240,0.08)] bg-[rgba(8,10,20,0.82)] px-8 py-8">
+            <div className="mb-8">
+              <div className="mb-3 flex items-center justify-between">
+                <p className="editorial-kicker text-[rgba(232,232,240,0.52)]">Countdown timeline</p>
+                <p className="text-[11px] uppercase tracking-[0.28em] text-[rgba(0,212,255,0.82)]" style={{ fontFamily: 'JetBrains Mono, monospace' }}>
+                  Scroll synced
+                </p>
+              </div>
+              <div className="h-1 overflow-hidden rounded-full bg-[rgba(255,255,255,0.06)]">
+                <motion.div className="h-full origin-left gradient-bg" style={{ scaleX: progressScale }} />
+              </div>
+            </div>
+
+            <motion.div style={{ x: desktopX }} className="flex gap-7">
+              {steps.map((step, index) => (
+                <motion.article
+                  key={step.title}
+                  variants={processCardVariants}
+                  initial="hidden"
+                  whileInView="visible"
+                  viewport={{ once: true, amount: 0.18 }}
+                  className="relative h-[460px] w-[418px] shrink-0 overflow-hidden rounded-[34px] border border-[rgba(232,232,240,0.08)] bg-[rgba(10,12,25,0.88)] p-7"
+                >
+                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_14%,rgba(108,99,255,0.2),transparent_24%),radial-gradient(circle_at_82%_78%,rgba(0,212,255,0.12),transparent_22%)]" />
+                  <div className="relative z-10 flex h-full flex-col">
+                    <p className="editorial-kicker text-[rgba(232,232,240,0.46)]">T minus {String(steps.length - index - 1).padStart(2, '0')}</p>
+                    <p className="mt-10 text-[clamp(4rem,7vw,6rem)] font-[800] leading-none tracking-[-0.08em] text-[rgba(232,232,240,0.16)]" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+                      {String(index + 1).padStart(2, '0')}
+                    </p>
+                    <h3 className="mt-6 max-w-[8ch] text-[3rem] font-[800] uppercase leading-[0.92] tracking-[-0.06em] text-text-primary" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+                      {step.title}
+                    </h3>
+                    <div className="mt-auto">
+                      <div className="mb-4 h-px w-16 bg-[rgba(0,212,255,0.42)]" />
+                      <p className="text-[16px] leading-[1.9] text-text-secondary">{step.description}</p>
+                    </div>
+                  </div>
+                </motion.article>
+              ))}
+            </motion.div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 xl:hidden">
           {steps.map((step, index) => (
-            <motion.div
-              key={step.number}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
+            <motion.article
+              key={step.title}
+              variants={processMobileVariants}
+              initial="hidden"
+              whileInView="visible"
               viewport={{ once: true, amount: 0.2 }}
-              transition={{ duration: 0.5, ease, delay: index * 0.08 }}
-              className="group relative p-8 md:p-10 card-accent-top"
-              style={{
-                background: '#07070F',
-                borderRight: index < steps.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none',
-                transition: 'background 0.3s',
-              }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(0,180,255,0.025)'; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '#07070F'; }}
+              className="rounded-[30px] border border-[rgba(232,232,240,0.08)] bg-[rgba(10,12,25,0.84)] p-6"
             >
-              {/* Connector line (right side on desktop) */}
-              {index < steps.length - 1 && (
-                <div
-                  className="hidden md:block absolute top-1/2 -right-px -translate-y-1/2 w-px h-8"
-                  style={{ background: 'linear-gradient(to bottom, transparent, rgba(0,180,255,0.5), transparent)' }}
-                />
-              )}
-
-              {/* Step number */}
-              <span
-                style={{
-                  fontFamily: 'Bebas Neue',
-                  fontSize: '72px',
-                  letterSpacing: '0.02em',
-                  lineHeight: 1,
-                  display: 'block',
-                  marginBottom: '16px',
-                  background: 'linear-gradient(180deg, rgba(0,180,255,0.18), rgba(0,180,255,0.02))',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
-                }}
-              >
-                {step.number}
-              </span>
-
-              <h3
-                className="group-hover:text-[#00B4FF] transition-colors duration-300"
-                style={{ fontFamily: 'Bebas Neue', fontSize: '28px', letterSpacing: '0.04em', textTransform: 'uppercase', color: '#F0EDE6', marginBottom: '12px' }}
-              >
+              <p className="editorial-kicker text-[rgba(232,232,240,0.46)]">Step {String(index + 1).padStart(2, '0')}</p>
+              <h3 className="mt-4 text-[2.2rem] font-[800] uppercase leading-[0.92] tracking-[-0.05em] text-text-primary" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
                 {step.title}
               </h3>
-
-              <div style={{ width: '16px', height: '1px', background: 'rgba(255,45,85,0.5)', marginBottom: '12px' }} />
-
-              <p style={{ fontFamily: 'Space Grotesk', fontSize: '13px', fontWeight: 300, color: '#8A8AA0', lineHeight: 1.7 }}>
-                {step.description}
-              </p>
-            </motion.div>
+              <p className="mt-4 text-[15px] leading-[1.85] text-text-secondary">{step.description}</p>
+            </motion.article>
           ))}
         </div>
       </div>

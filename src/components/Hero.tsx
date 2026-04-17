@@ -1,307 +1,408 @@
-import { motion } from 'framer-motion';
+import {
+  animate,
+  motion,
+  useMotionTemplate,
+  useMotionValue,
+  useSpring,
+  useTransform,
+  useReducedMotion,
+  type Variants,
+} from 'framer-motion';
+import { lazy, Suspense, useEffect } from 'react';
+import { ArrowUpRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Zap } from 'lucide-react';
 import { buildPortfolioProjects } from '../lib/portfolio';
 import { useContent } from '../lib/useContent';
-import StaggeredText from './StaggeredText';
 
-export default function Hero() {
+const StarField = lazy(() => import('./StarField'));
+
+const heroShellVariants: Variants = {
+  hidden: { opacity: 0, y: 40 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.9, ease: [0.16, 1, 0.3, 1] },
+  },
+};
+
+const headlineRowVariants: Variants = {
+  hidden: { opacity: 0.2, y: 60 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { staggerChildren: 0.08, delayChildren: 0.18 },
+  },
+};
+
+const headlineWordVariants: Variants = {
+  hidden: { opacity: 0, y: 72, filter: 'blur(10px)' },
+  visible: {
+    opacity: 1,
+    y: 0,
+    filter: 'blur(0px)',
+    transition: { duration: 0.78, ease: [0.16, 1, 0.3, 1] },
+  },
+};
+
+const glitchFrameVariants: Variants = {
+  hidden: { opacity: 0, x: -12, scaleX: 1.04 },
+  visible: {
+    opacity: [0, 0.65, 0],
+    x: [-14, 8, 0],
+    scaleX: [1.04, 0.98, 1],
+    transition: { duration: 0.42, times: [0, 0.35, 1], ease: 'easeOut' },
+  },
+};
+
+const proofCardVariants: Variants = {
+  hidden: { opacity: 0, y: 64, scale: 0.96 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: { duration: 1, ease: [0.16, 1, 0.3, 1], delay: 0.3 },
+  },
+};
+
+const statGridVariants: Variants = {
+  hidden: { opacity: 0.2, y: 36 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.7, delay: 0.42, staggerChildren: 0.08 },
+  },
+};
+
+const statCardVariants: Variants = {
+  hidden: { opacity: 0, y: 24 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] },
+  },
+};
+
+export interface HeroProps {
+  className?: string;
+}
+
+interface HeadlineWordProps {
+  accent?: boolean;
+  children: string;
+}
+
+function HeadlineWord({ children, accent = false }: HeadlineWordProps) {
+  return (
+    <motion.span
+      variants={headlineWordVariants}
+      className="relative inline-flex overflow-hidden"
+    >
+      <motion.span
+        variants={glitchFrameVariants}
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background: accent
+            ? 'linear-gradient(90deg, transparent, rgba(0,212,255,0.45), transparent)'
+            : 'linear-gradient(90deg, transparent, rgba(108,99,255,0.42), transparent)',
+          mixBlendMode: 'screen',
+        }}
+      />
+      <span
+        className={accent ? 'gradient-text-blue' : 'text-text-primary'}
+        style={{ position: 'relative' }}
+      >
+        {children}
+      </span>
+    </motion.span>
+  );
+}
+
+export default function Hero({ className = '' }: HeroProps) {
   const { content, getContentValue, projectCount } = useContent();
+  const reduceMotion = useReducedMotion();
+
   const hasStoredCount = content.some((item) => item.section === 'portfolio' && item.key === 'project_count');
   const featuredProject = buildPortfolioProjects(getContentValue, projectCount, !hasStoredCount)[0];
-  const line1 = getContentValue('hero', 'headline_line1', 'Small teams need fast systems');
-  const line2 = getContentValue('hero', 'headline_line2', 'not timeline guesswork.');
 
-  const statDefaults = [
-    { value: '5', label: 'Senior builders' },
-    { value: '1–3', label: 'Week delivery' },
-    { value: 'Always', label: 'Post-launch support' },
+  const lineOne = getContentValue('hero', 'headline_line1', 'Small teams need fast systems');
+  const lineTwo = getContentValue('hero', 'headline_line2', 'not vague agency timelines.');
+
+  const stats = [
+    {
+      value: getContentValue('hero', 'stat_1_number', '5'),
+      label: getContentValue('hero', 'stat_1_label', 'Senior builders'),
+    },
+    {
+      value: getContentValue('hero', 'stat_2_number', '1-3'),
+      label: getContentValue('hero', 'stat_2_label', 'Week delivery'),
+    },
+    {
+      value: getContentValue('hero', 'stat_3_number', 'Always'),
+      label: getContentValue('hero', 'stat_3_label', 'Post-launch iteration'),
+    },
   ];
 
-  const storedStatCount = Number(getContentValue('hero', 'stat_count', ''));
-  const statCount = (!isNaN(storedStatCount) && storedStatCount > 0) ? storedStatCount : statDefaults.length;
-  const stats = Array.from({ length: statCount }, (_, index) => ({
-    value: getContentValue('hero', `stat_${index + 1}_number`, statDefaults[index]?.value || ''),
-    label: getContentValue('hero', `stat_${index + 1}_label`, statDefaults[index]?.label || ''),
-  })).filter(s => s.value);
+  const warpStrength = useMotionValue(1);
+  const pointerX = useMotionValue(0);
+  const pointerY = useMotionValue(0);
+  const springX = useSpring(pointerX, { damping: 22, stiffness: 180, mass: 0.8 });
+  const springY = useSpring(pointerY, { damping: 22, stiffness: 180, mass: 0.8 });
+  const cardRotateY = useTransform(springX, [-0.6, 0.6], [10, -10]);
+  const cardRotateX = useTransform(springY, [-0.6, 0.6], [-8, 8]);
+  const cardShiftX = useTransform(springX, [-0.6, 0.6], [-16, 16]);
+  const cardShiftY = useTransform(springY, [-0.6, 0.6], [-10, 10]);
+  const cardTransform = useMotionTemplate`perspective(1800px) rotateX(${cardRotateX}deg) rotateY(${cardRotateY}deg) translate3d(${cardShiftX}px, ${cardShiftY}px, 0px)`;
+
+  useEffect(() => {
+    const controls = animate(warpStrength, reduceMotion ? 0.22 : 0.28, {
+      duration: reduceMotion ? 0.8 : 2.6,
+      ease: [0.16, 1, 0.3, 1],
+    });
+
+    return () => controls.stop();
+  }, [reduceMotion, warpStrength]);
 
   return (
-    <section className="relative min-h-[100svh] overflow-hidden px-6 md:px-10 pt-28 pb-16 md:pt-40 md:pb-28">
-
-      {/* Scan-line grid */}
-      <div className="absolute inset-0 grid-pattern opacity-40" />
-
-      {/* Ambient gradients */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="hero-gradient-1 absolute inset-0" />
-        <div className="hero-gradient-2 absolute inset-0" />
+    <section
+      className={`relative min-h-[100svh] overflow-hidden px-6 pb-20 pt-28 md:px-10 md:pb-28 md:pt-36 ${className}`}
+      onPointerMove={(event) => {
+        const bounds = event.currentTarget.getBoundingClientRect();
+        pointerX.set(((event.clientX - bounds.left) / bounds.width - 0.5) * 1.2);
+        pointerY.set(((event.clientY - bounds.top) / bounds.height - 0.5) * 1.2);
+      }}
+      onPointerLeave={() => {
+        pointerX.set(0);
+        pointerY.set(0);
+      }}
+    >
+      <div className="hero-grid-overlay absolute inset-0 opacity-70" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_18%,rgba(108,99,255,0.22),transparent_30%),radial-gradient(circle_at_82%_24%,rgba(0,212,255,0.14),transparent_24%),linear-gradient(180deg,rgba(3,3,8,0),rgba(3,3,8,0.65)_72%,rgba(3,3,8,1))]" />
+      <div className="absolute inset-0">
+        <Suspense fallback={<div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(108,99,255,0.12),transparent_54%)]" />}>
+          <StarField className="absolute inset-0" warpStrength={warpStrength} />
+        </Suspense>
       </div>
 
-      {/* Floating orbs */}
-      <div className="absolute top-16 left-[8%] w-[280px] h-[280px] rounded-full pointer-events-none opacity-20" style={{ background: 'radial-gradient(circle, rgba(0,180,255,0.35) 0%, transparent 70%)', filter: 'blur(60px)' }} />
-      <div className="absolute bottom-20 right-[4%] w-[220px] h-[220px] rounded-full pointer-events-none opacity-15" style={{ background: 'radial-gradient(circle, rgba(255,45,85,0.3) 0%, transparent 70%)', filter: 'blur(50px)' }} />
-
-      <div className="relative z-10 max-w-[1440px] mx-auto grid grid-cols-1 xl:grid-cols-[1.1fr_0.9fr] gap-10 xl:gap-14 items-center">
-
-        {/* LEFT: Copy */}
-        <div>
-          {/* Eyebrow badge - scale in first */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.4, delay: 0 }}
-            className="inline-flex items-center gap-2.5 mb-10 border-shimmer"
-            style={{
-              background: 'rgba(0,180,255,0.06)',
-              border: '1px solid rgba(0,180,255,0.15)',
-              padding: '6px 14px',
-              borderRadius: '2px',
-            }}
+      <motion.div
+        variants={heroShellVariants}
+        initial="hidden"
+        animate="visible"
+        className="relative z-10 mx-auto grid max-w-[1440px] grid-cols-1 gap-12 xl:grid-cols-[minmax(0,1.1fr)_minmax(360px,0.9fr)] xl:items-end"
+      >
+        <div className="max-w-[860px]">
+          <p
+            className="editorial-kicker mb-8 text-[rgba(232,232,240,0.72)]"
+            data-cursor-label="open"
           >
-            <Zap size={11} style={{ color: '#00B4FF' }} />
-            <span style={{ fontFamily: 'JetBrains Mono', fontSize: '10px', fontWeight: 500, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'rgba(0,180,255,0.8)' }}>
-              {getContentValue('hero', 'eyebrow', 'Web Design + Web App Delivery')}
-            </span>
-          </motion.div>
+            {getContentValue('hero', 'eyebrow', 'Web Design + Web App Delivery')}
+          </p>
 
-          {/* Headline with staggered reveal */}
-          <motion.h1
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.3 }}
-            style={{
-              fontFamily: 'Bebas Neue',
-              fontWeight: 400,
-              letterSpacing: '0.03em',
-              textTransform: 'uppercase',
-              lineHeight: 0.92,
-              fontSize: 'clamp(58px, 10vw, 116px)',
-              color: '#F0EDE6',
-            }}
-          >
-            <StaggeredText text={line1} delay={100} staggerDelay={40} className="block" />
-            <span style={{ color: '#00B4FF' }}><StaggeredText text={line2} delay={100 + line1.length * 40} staggerDelay={40} className="block" /></span>
-          </motion.h1>
+          <div className="space-y-2">
+            <motion.div
+              variants={headlineRowVariants}
+              initial="hidden"
+              animate="visible"
+              className="flex flex-wrap gap-x-[0.22em] gap-y-3 text-[clamp(3.9rem,10vw,8.8rem)] font-[800] uppercase leading-[0.88] tracking-[-0.065em]"
+              style={{ fontFamily: 'Space Grotesk, sans-serif' }}
+            >
+              {lineOne.split(' ').map((word) => (
+                <HeadlineWord key={word}>{word}</HeadlineWord>
+              ))}
+            </motion.div>
 
-          {/* Sub - reveals after headline stagger */}
+            <motion.div
+              variants={headlineRowVariants}
+              initial="hidden"
+              animate="visible"
+              className="flex flex-wrap gap-x-[0.22em] gap-y-3 text-[clamp(3.9rem,10vw,8.8rem)] font-[800] uppercase leading-[0.88] tracking-[-0.065em]"
+              style={{ fontFamily: 'Space Grotesk, sans-serif' }}
+            >
+              {lineTwo.split(' ').map((word) => (
+                <HeadlineWord key={word} accent>
+                  {word}
+                </HeadlineWord>
+              ))}
+            </motion.div>
+          </div>
+
           <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.8 }}
-            className="max-w-[560px] mt-7 md:mt-8"
-            style={{ fontFamily: 'Space Grotesk', fontSize: 'clamp(14px,1.1vw,17px)', fontWeight: 300, color: '#8A8AA0', lineHeight: 1.8 }}
+            variants={heroShellVariants}
+            initial="hidden"
+            animate="visible"
+            transition={{ delay: 0.32 }}
+            className="mt-7 max-w-[56ch] text-[15px] leading-[1.85] text-text-secondary md:text-[18px]"
+            style={{ fontFamily: 'Inter, sans-serif' }}
           >
-            {getContentValue('hero', 'subheadline', 'Conversion-focused websites and operational web apps for teams that need a tight scope, a fast build window, and a handoff they can actually maintain.')}
+            {getContentValue(
+              'hero',
+              'subheadline',
+              'Conversion-focused websites and operational web apps for teams that need a tight scope, a fast build window, and a handoff they can actually maintain.',
+            )}
           </motion.p>
 
-          {/* CTAs - reveal after featured project */}
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5, delay: 1.5 }}
-            className="flex flex-col sm:flex-row gap-3 mt-8 md:mt-10"
+            variants={heroShellVariants}
+            initial="hidden"
+            animate="visible"
+            transition={{ delay: 0.44 }}
+            className="mt-9 flex flex-col gap-3 sm:flex-row"
           >
             <Link
               to="/contact"
-              className="shimmer-btn inline-flex items-center justify-center gap-2.5 hover:scale-[1.03] transition-transform duration-150"
-              style={{
-                fontFamily: 'JetBrains Mono',
-                fontSize: '12px',
-                fontWeight: 500,
-                letterSpacing: '0.14em',
-                textTransform: 'uppercase',
-                color: '#040408',
-                background: '#00B4FF',
-                padding: '14px 28px',
-                borderRadius: '2px',
-                boxShadow: '0 0 30px rgba(0,180,255,0.2)',
-              }}
+              className="group inline-flex items-center justify-center gap-2 rounded-full border border-[rgba(108,99,255,0.38)] bg-[rgba(108,99,255,0.16)] px-7 py-4 text-[12px] uppercase tracking-[0.28em] text-text-primary transition-transform duration-300 hover:-translate-y-0.5"
+              style={{ fontFamily: 'JetBrains Mono, monospace' }}
+              data-cursor-label="send"
+              data-magnetic="true"
             >
               {getContentValue('hero', 'cta_primary', 'Start a project')}
-              <ArrowRight size={14} />
+              <ArrowUpRight size={16} className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
             </Link>
             <Link
               to="/work"
-              className="inline-flex items-center justify-center gap-2.5 hover:scale-[1.03] transition-transform duration-150"
-              style={{
-                fontFamily: 'JetBrains Mono',
-                fontSize: '12px',
-                fontWeight: 500,
-                letterSpacing: '0.14em',
-                textTransform: 'uppercase',
-                color: '#8A8AA0',
-                border: '1px solid rgba(255,255,255,0.08)',
-                padding: '14px 28px',
-                borderRadius: '2px',
-              }}
-              onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.color = '#F0EDE6'; el.style.borderColor = 'rgba(255,255,255,0.18)'; el.style.transform = 'scale(1.03)'; }}
-              onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.color = '#8A8AA0'; el.style.borderColor = 'rgba(255,255,255,0.08)'; el.style.transform = 'scale(1)'; }}
+              className="inline-flex items-center justify-center rounded-full border border-[rgba(232,232,240,0.14)] bg-[rgba(255,255,255,0.03)] px-7 py-4 text-[12px] uppercase tracking-[0.28em] text-[rgba(232,232,240,0.74)] transition-all duration-300 hover:border-[rgba(0,212,255,0.32)] hover:text-text-primary"
+              style={{ fontFamily: 'JetBrains Mono, monospace' }}
+              data-cursor-label="view"
+              data-magnetic="true"
             >
               {getContentValue('hero', 'cta_secondary', 'See shipped work')}
             </Link>
           </motion.div>
 
-          {/* Stats - reveal after CTAs */}
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5, delay: 1.8 }}
-            className="grid grid-cols-3 gap-px mt-10 md:mt-12"
-            style={{ border: '1px solid rgba(255,255,255,0.06)', borderRadius: '2px', overflow: 'hidden' }}
+            variants={statGridVariants}
+            initial="hidden"
+            animate="visible"
+            className="mt-12 grid grid-cols-1 gap-3 sm:grid-cols-3"
           >
-            {stats.map((stat, index) => (
-              <div
-                key={stat.label + index}
-                className="px-4 py-5"
-                style={{
-                  background: '#07070F',
-                  borderRight: index < stats.length - 1 ? '1px solid rgba(255,255,255,0.06)' : 'none',
-                }}
+            {stats.map((stat) => (
+              <motion.div
+                key={stat.label}
+                variants={statCardVariants}
+                className="rounded-[28px] border border-[rgba(232,232,240,0.08)] bg-[rgba(10,12,25,0.68)] px-5 py-5 backdrop-blur-md"
               >
-                <p style={{ fontFamily: 'Bebas Neue', fontSize: 'clamp(28px,3.5vw,44px)', letterSpacing: '0.04em', color: '#00B4FF', lineHeight: 1 }}>
+                <p
+                  className="text-[clamp(2rem,4vw,2.9rem)] font-[800] leading-none text-text-primary"
+                  style={{ fontFamily: 'Space Grotesk, sans-serif' }}
+                >
                   {stat.value}
                 </p>
-                <p style={{ fontFamily: 'JetBrains Mono', fontSize: '9px', letterSpacing: '0.14em', textTransform: 'uppercase', color: '#55556A', marginTop: '6px' }}>
+                <p
+                  className="mt-3 text-[11px] uppercase tracking-[0.28em] text-[rgba(232,232,240,0.52)]"
+                  style={{ fontFamily: 'JetBrains Mono, monospace' }}
+                >
                   {stat.label}
                 </p>
-              </div>
+              </motion.div>
             ))}
           </motion.div>
         </div>
 
-        {/* RIGHT: Featured project card */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.6, delay: 1.2 }}
-          className="relative"
-        >
-          {/* Corner decorations */}
-          <div className="absolute -top-3 -left-3 w-6 h-6 border-t border-l pointer-events-none" style={{ borderColor: 'rgba(0,180,255,0.4)' }} />
-          <div className="absolute -top-3 -right-3 w-6 h-6 border-t border-r pointer-events-none" style={{ borderColor: 'rgba(0,180,255,0.4)' }} />
-          <div className="absolute -bottom-3 -left-3 w-6 h-6 border-b border-l pointer-events-none" style={{ borderColor: 'rgba(0,180,255,0.4)' }} />
-          <div className="absolute -bottom-3 -right-3 w-6 h-6 border-b border-r pointer-events-none" style={{ borderColor: 'rgba(0,180,255,0.4)' }} />
+        <motion.div variants={proofCardVariants} initial="hidden" animate="visible" className="relative">
+          <div className="pointer-events-none absolute -left-12 top-12 h-44 w-44 rounded-full bg-[rgba(108,99,255,0.18)] blur-[90px]" />
+          <div className="pointer-events-none absolute -bottom-4 right-0 h-56 w-56 rounded-full bg-[rgba(0,212,255,0.14)] blur-[110px]" />
 
-          <div
-            className="overflow-hidden"
-            style={{
-              background: '#07070F',
-              border: '1px solid rgba(255,255,255,0.07)',
-              borderRadius: '4px',
-            }}
+          <motion.div
+            style={{ transform: cardTransform }}
+            className="interactive-glow overflow-hidden rounded-[34px] border border-[rgba(232,232,240,0.08)] bg-[rgba(8,10,20,0.88)]"
           >
-            {/* Card header */}
-            <div
-              className="px-5 py-4 flex items-center justify-between gap-4"
-              style={{ borderBottom: '1px solid rgba(0,180,255,0.08)' }}
-            >
+            <div className="flex items-center justify-between border-b border-[rgba(232,232,240,0.08)] px-5 py-4">
               <div>
-                <p style={{ fontFamily: 'JetBrains Mono', fontSize: '10px', letterSpacing: '0.18em', textTransform: 'uppercase', color: 'rgba(0,180,255,0.7)' }}>
+                <p
+                  className="text-[11px] uppercase tracking-[0.34em] text-[rgba(0,212,255,0.76)]"
+                  style={{ fontFamily: 'JetBrains Mono, monospace' }}
+                >
                   {getContentValue('hero', 'proof_kicker', 'Live delivery board')}
                 </p>
-                <p style={{ fontFamily: 'Space Grotesk', fontSize: '12px', fontWeight: 300, color: '#55556A', marginTop: '2px' }}>
-                  {getContentValue('hero', 'proof_title', 'Creative builds that respect real deadlines.')}
+                <p className="mt-2 max-w-[36ch] text-sm leading-[1.6] text-text-secondary">
+                  {getContentValue('hero', 'proof_title', 'Creative builds that still respect real deadlines.')}
                 </p>
               </div>
-              <div className="flex items-center gap-1.5">
-                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#FF2D55', flexShrink: 0 }} />
-                <span style={{ fontFamily: 'JetBrains Mono', fontSize: '9px', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(255,45,85,0.7)' }}>Live</span>
-              </div>
-            </div>
-
-            {/* Project image */}
-            <div 
-              className="relative group cursor-pointer" 
-              style={{ minHeight: '340px' }}
-              onMouseEnter={e => {
-                const overlay = e.currentTarget.querySelector('.hover-reveal') as HTMLElement;
-                if (overlay) overlay.style.opacity = '1';
-              }}
-              onMouseLeave={e => {
-                const overlay = e.currentTarget.querySelector('.hover-reveal') as HTMLElement;
-                if (overlay) overlay.style.opacity = '0';
-              }}
-            >
-              {featuredProject?.image ? (
-                <img
-                  src={featuredProject.image}
-                  alt={featuredProject.name}
-                  loading="lazy"
-                  decoding="async"
-                  className="absolute inset-0 h-full w-full object-cover opacity-80 group-hover:scale-105 transition-transform duration-500"
-                />
-              ) : (
-                <div
-                  className="absolute inset-0"
-                  style={{ background: 'linear-gradient(135deg, rgba(0,180,255,0.2) 0%, rgba(0,80,120,0.15) 50%, rgba(255,45,85,0.12) 100%)' }}
-                />
-              )}
-              {/* Overlay */}
-              <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(4,4,8,0.96) 0%, rgba(4,4,8,0.2) 50%, transparent 100%)' }} />
-              
-              {/* Hover reveal - shows view action */}
-              <div 
-                className="hover-reveal absolute inset-0 flex items-center justify-center transition-opacity duration-300"
-                style={{ 
-                  background: 'rgba(4,4,8,0.8)', 
-                  opacity: 0 
-                }}
-              >
-                <span 
-                  className="px-6 py-3 text-xs uppercase tracking-widest"
-                  style={{ fontFamily: 'JetBrains Mono', color: '#00B4FF', border: '1px solid #00B4FF', borderRadius: '2px' }}
-                >
-                  {featuredProject?.url ? 'View Project' : 'Featured'}
-                </span>
-              </div>
-
-              {/* Tag */}
               <span
-                className="absolute top-4 left-4"
-                style={{
-                  fontFamily: 'JetBrains Mono',
-                  fontSize: '9px',
-                  letterSpacing: '0.18em',
-                  textTransform: 'uppercase',
-                  color: '#040408',
-                  background: '#00B4FF',
-                  padding: '3px 8px',
-                  borderRadius: '2px',
-                }}
+                className="rounded-full border border-[rgba(0,212,255,0.18)] px-3 py-1 text-[10px] uppercase tracking-[0.28em] text-[rgba(0,212,255,0.76)]"
+                style={{ fontFamily: 'JetBrains Mono, monospace' }}
               >
-                {featuredProject?.tag || 'Featured release'}
+                Active
               </span>
+            </div>
 
-              {/* Project info */}
-              <div className="absolute left-5 right-5 bottom-5">
-                <h2
-                  style={{
-                    fontFamily: 'Bebas Neue',
-                    fontSize: 'clamp(32px,4vw,52px)',
-                    letterSpacing: '0.03em',
-                    textTransform: 'uppercase',
-                    color: '#F0EDE6',
-                    lineHeight: 0.95,
-                  }}
-                >
-                  {featuredProject?.name || 'Launch-ready systems'}
-                </h2>
-                <p
-                  style={{ fontFamily: 'Space Grotesk', fontSize: '13px', fontWeight: 300, color: '#8A8AA0', marginTop: '8px', maxWidth: '38ch' }}
-                >
-                  {getContentValue('hero', 'proof_description', 'Each release is scoped against launch pressure, content reality, and what your team can maintain after handoff.')}
-                </p>
+            <div className="grid grid-cols-1 md:grid-cols-[1.12fr_0.88fr]">
+              <div className="relative min-h-[360px] overflow-hidden border-b border-[rgba(232,232,240,0.08)] md:border-b-0 md:border-r">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(108,99,255,0.28),transparent_30%),radial-gradient(circle_at_76%_20%,rgba(0,212,255,0.18),transparent_24%),linear-gradient(180deg,rgba(6,7,14,0.25),rgba(3,3,8,0.86))]" />
+                {featuredProject?.image ? (
+                  <img
+                    src={featuredProject.image}
+                    alt={featuredProject.name}
+                    loading="lazy"
+                    decoding="async"
+                    className="absolute inset-0 h-full w-full object-cover opacity-74"
+                  />
+                ) : null}
+                <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent,rgba(3,3,8,0.16)_42%,rgba(3,3,8,0.88)_100%)]" />
+                <div className="absolute bottom-6 left-6 right-6">
+                  <p
+                    className="mb-3 text-[11px] uppercase tracking-[0.28em] text-[rgba(0,212,255,0.84)]"
+                    style={{ fontFamily: 'JetBrains Mono, monospace' }}
+                  >
+                    {featuredProject?.tag || 'Featured release'}
+                  </p>
+                  <h2
+                    className="max-w-[10ch] text-[clamp(2.4rem,6vw,4.5rem)] font-[800] uppercase leading-[0.88] tracking-[-0.06em] text-text-primary"
+                    style={{ fontFamily: 'Space Grotesk, sans-serif' }}
+                  >
+                    {featuredProject?.name || 'Launch-ready systems'}
+                  </h2>
+                  <p className="mt-4 max-w-[40ch] text-[15px] leading-[1.8] text-[rgba(232,232,240,0.72)]">
+                    {getContentValue(
+                      'hero',
+                      'proof_description',
+                      'Each release is scoped against launch pressure, content reality, and what your team can maintain after handoff.',
+                    )}
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-px bg-[rgba(232,232,240,0.06)]">
+                {stats.map((stat, index) => (
+                  <div
+                    key={stat.label}
+                    className="bg-[rgba(10,12,25,0.96)] px-5 py-5"
+                  >
+                    <p
+                      className="text-[11px] uppercase tracking-[0.28em] text-[rgba(232,232,240,0.48)]"
+                      style={{ fontFamily: 'JetBrains Mono, monospace' }}
+                    >
+                      Panel {String(index + 1).padStart(2, '0')}
+                    </p>
+                    <p
+                      className="mt-4 text-[clamp(1.9rem,4vw,2.8rem)] font-[800] leading-none text-text-primary"
+                      style={{ fontFamily: 'Space Grotesk, sans-serif' }}
+                    >
+                      {stat.value}
+                    </p>
+                    <p className="mt-2 text-sm leading-[1.65] text-text-secondary">{stat.label}</p>
+                  </div>
+                ))}
+                <div className="bg-[rgba(10,12,25,0.96)] px-5 py-5">
+                  <p
+                    className="text-[11px] uppercase tracking-[0.28em] text-[rgba(232,232,240,0.48)]"
+                    style={{ fontFamily: 'JetBrains Mono, monospace' }}
+                  >
+                    Notes
+                  </p>
+                  <p className="mt-4 text-sm leading-[1.8] text-[rgba(232,232,240,0.72)]">
+                    {getContentValue(
+                      'hero',
+                      'proof_note',
+                      'The homepage pulls from the same editable content system used by the admin panel.',
+                    )}
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
+          </motion.div>
         </motion.div>
-      </div>
-
-      {/* Scroll hint */}
-      <div className="absolute bottom-7 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2">
-        <span style={{ fontFamily: 'JetBrains Mono', fontSize: '9px', letterSpacing: '0.22em', textTransform: 'uppercase', color: '#55556A' }}>scroll</span>
-        <div className="w-px h-6 scroll-indicator-line" style={{ background: 'rgba(0,180,255,0.4)' }} />
-      </div>
+      </motion.div>
     </section>
   );
 }

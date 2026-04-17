@@ -1,42 +1,42 @@
 /* ── GOOGLE FONTS ────────────────────────────────────── */
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600;700&family=Bebas+Neue&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&family=DM+Sans:wght@400;500;700&family=Syne:wght@700;800&display=swap');
 
 @import "tailwindcss";
 
 @theme {
   /* ── Background layers ── */
-  --color-page-bg:      #040408;
-  --color-surface-1:    #07070F;
-  --color-surface-2:    #0B0B18;
-  --color-surface-3:    #0F101F;
-  --color-footer-bg:    #020205;
+  --color-page-bg:      #030308;
+  --color-surface-1:    #080814;
+  --color-surface-2:    #0E1020;
+  --color-surface-3:    #14172C;
+  --color-footer-bg:    #020206;
 
   /* ── Text ── */
-  --color-text-primary:   #F0EDE6;
-  --color-text-secondary: #8A8AA0;
-  --color-text-tertiary:  #55556A;
-  --color-text-inverse:   #040408;
+  --color-text-primary:   #E8E8F0;
+  --color-text-secondary: #A7A7BC;
+  --color-text-tertiary:  #4A4A6A;
+  --color-text-inverse:   #030308;
 
   /* ── Electric Blue accent ── */
-  --color-accent:       #00B4FF;
-  --color-accent-light: #33C8FF;
-  --color-accent-dark:  #0090D4;
-  --color-accent-glow:  rgba(0,180,255,0.18);
+  --color-accent:       #6C63FF;
+  --color-accent-light: #9B95FF;
+  --color-accent-dark:  #4E47DA;
+  --color-accent-glow:  rgba(108,99,255,0.15);
 
   /* ── Signal Red accent ── */
-  --color-red:          #FF2D55;
-  --color-red-light:    #FF5577;
-  --color-red-dark:     #CC2444;
-  --color-red-glow:     rgba(255,45,85,0.15);
+  --color-red:          #00D4FF;
+  --color-red-light:    #67E7FF;
+  --color-red-dark:     #00A8CB;
+  --color-red-glow:     rgba(0,212,255,0.18);
 
   /* ── Borders ── */
   --color-border:       rgba(255,255,255,0.06);
   --color-border-hover: rgba(255,255,255,0.14);
-  --color-border-blue:  rgba(0,180,255,0.18);
+  --color-border-blue:  rgba(108,99,255,0.18);
 
   /* ── Fonts ── */
-  --font-display:  'Bebas Neue', sans-serif;
-  --font-body:     'Space Grotesk', sans-serif;
+  --font-display:  'Space Grotesk', sans-serif;
+  --font-body:     'Inter', sans-serif;
   --font-mono:     'JetBrains Mono', monospace;
 }
 
@@ -47,9 +47,9 @@ html {
 }
 
 body {
-  background-color: #040408;
-  color: #F0EDE6;
-  font-family: 'Space Grotesk', sans-serif;
+  background-color: #030308;
+  color: #E8E8F0;
+  font-family: 'Inter', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   position: relative;
@@ -128,21 +128,21 @@ body.admin-mode::after { display: none; }
 
 /* ── GRADIENT UTILITIES ───────────────────────── */
 .gradient-text {
-  background: linear-gradient(135deg, #00B4FF 0%, #33C8FF 40%, #00D4FF 70%, #FF2D55 100%);
+  background: linear-gradient(135deg, #E8E8F0 0%, #6C63FF 36%, #00D4FF 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 .gradient-text-blue {
-  background: linear-gradient(135deg, #00B4FF 0%, #33C8FF 60%, #0090D4 100%);
+  background: linear-gradient(135deg, #6C63FF 0%, #8D86FF 55%, #00D4FF 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 .gradient-text-enhanced {
-  background: linear-gradient(135deg, #00B4FF 0%, #33C8FF 30%, #FFFFFF 55%, #FF2D55 80%, #FF5577 100%);
+  background: linear-gradient(135deg, #6C63FF 0%, #00D4FF 35%, #E8E8F0 65%, #6C63FF 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -156,11 +156,11 @@ body.admin-mode::after { display: none; }
 }
 
 .gradient-bg {
-  background: linear-gradient(135deg, #00B4FF 0%, #0090D4 50%, #007AB5 100%);
+  background: linear-gradient(135deg, #6C63FF 0%, #7E77FF 52%, #00D4FF 100%);
 }
 
 .gradient-bg-red {
-  background: linear-gradient(135deg, #FF2D55 0%, #CC2444 100%);
+  background: linear-gradient(135deg, #00D4FF 0%, #00A8CB 100%);
 }
 
 /* ── BLUE ELECTRIC GLOW ──────────────────────── */
@@ -468,3 +468,88 @@ body.admin-mode::after { display: none; }
 .stagger-children > *:nth-child(4) { animation-delay: 0.4s; }
 .stagger-children > *:nth-child(5) { animation-delay: 0.5s; }
 .stagger-children > *:nth-child(6) { animation-delay: 0.6s; }
+
+/* New cinematic UI primitives */
+.void-reveal {
+  will-change: transform, opacity;
+}
+
+.editorial-kicker {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+}
+
+.hero-grid-overlay {
+  background-image:
+    linear-gradient(rgba(108,99,255,0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(108,99,255,0.05) 1px, transparent 1px);
+  background-size: 88px 88px;
+  mask-image: radial-gradient(circle at center, black 30%, transparent 92%);
+}
+
+.asteroid-mask {
+  clip-path: polygon(10% 8%, 79% 0%, 100% 24%, 96% 72%, 74% 100%, 22% 96%, 0% 72%, 4% 28%);
+}
+
+.surface-noise {
+  background-image:
+    radial-gradient(circle at 20% 22%, rgba(255,255,255,0.09), transparent 22%),
+    radial-gradient(circle at 76% 28%, rgba(0,212,255,0.12), transparent 20%),
+    radial-gradient(circle at 42% 70%, rgba(108,99,255,0.14), transparent 24%);
+  mix-blend-mode: screen;
+}
+
+.interactive-glow {
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.06),
+    0 20px 60px rgba(0,0,0,0.45),
+    0 0 50px rgba(108,99,255,0.12);
+}
+
+.custom-cursor-ring {
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.terminal-caret::after {
+  content: '';
+  display: inline-block;
+  width: 0.58ch;
+  height: 1.1em;
+  margin-left: 0.18ch;
+  background: currentColor;
+  vertical-align: -0.16em;
+  animation: terminalBlink 1s steps(1, end) infinite;
+}
+
+@keyframes terminalBlink {
+  0%, 48% { opacity: 1; }
+  49%, 100% { opacity: 0; }
+}
+
+@keyframes orbitSpin {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+@keyframes orbitSpinReverse {
+  from { transform: translate(-50%, -50%) rotate(360deg); }
+  to { transform: translate(-50%, -50%) rotate(0deg); }
+}
+
+@keyframes tooltipPulse {
+  0%, 100% { transform: scale(1); opacity: 0.82; }
+  50% { transform: scale(1.04); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .terminal-caret::after,
+  .hero-gradient-1,
+  .hero-gradient-2,
+  .marquee-track,
+  .scroll-indicator-line {
+    animation: none !important;
+  }
+}

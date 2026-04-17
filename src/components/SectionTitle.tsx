@@ -1,22 +1,28 @@
-import { motion } from 'framer-motion';
+import { motion, type Variants } from 'framer-motion';
 import type { ReactNode } from 'react';
 
-export default function SectionTitle({ children }: { children: ReactNode }) {
+const sectionTitleVariants: Variants = {
+  hidden: { opacity: 0.2, y: 60 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.85, ease: [0.16, 1, 0.3, 1] },
+  },
+};
+
+export interface SectionTitleProps {
+  children: ReactNode;
+}
+
+export default function SectionTitle({ children }: SectionTitleProps) {
   return (
     <motion.h2
-      initial={{ opacity: 0, y: 24 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.3 }}
-      transition={{ duration: 0.55 }}
-      className="mb-12 text-text-primary"
-      style={{
-        fontFamily: 'Bebas Neue, sans-serif',
-        fontWeight: 400,
-        fontSize: 'clamp(52px, 7vw, 96px)',
-        lineHeight: 0.95,
-        letterSpacing: '0.03em',
-        textTransform: 'uppercase',
-      }}
+      variants={sectionTitleVariants}
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true, amount: 0.35 }}
+      className="mb-12 max-w-[14ch] text-[clamp(2.8rem,7vw,6.25rem)] font-[800] uppercase leading-[0.92] tracking-[-0.055em] text-text-primary"
+      style={{ fontFamily: 'Space Grotesk, sans-serif' }}
     >
       {children}
     </motion.h2>
