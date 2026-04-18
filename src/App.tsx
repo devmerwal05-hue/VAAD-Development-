@@ -36,13 +36,7 @@ function withRouteBoundary(element: ReactNode) {
 }
 
 function PublicSite() {
-  const normalizedPath = typeof window !== 'undefined'
-    ? window.location.pathname.toLowerCase()
-    : '';
-  const isAdminPath = normalizedPath.startsWith('/admin');
-
   const [introComplete, setIntroComplete] = useState(() => {
-    if (isAdminPath) return true;
     try {
       return sessionStorage.getItem('vaad_intro_seen') === '1';
     } catch {
@@ -61,7 +55,7 @@ function PublicSite() {
 
   return (
     <ContentProvider>
-      {!isAdminPath && !introComplete && <IntroSplash onComplete={handleIntroComplete} />}
+      {!introComplete && <IntroSplash onComplete={handleIntroComplete} />}
       <BrowserRouter>
         <RouteEffects />
         <PublicSiteGuard>
