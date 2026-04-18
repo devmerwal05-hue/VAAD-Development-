@@ -45,7 +45,7 @@ export default function FAQ() {
               viewport={{ once: true, amount: 0.3 }}
               transition={{ duration: 0.4, ease, delay: index * 0.04 }}
               style={{
-                background: open === index ? 'rgba(0,180,255,0.03)' : '#07070F',
+                background: open === index ? 'rgba(108,99,255,0.03)' : '#07070F',
                 borderBottom: index < faqs.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
                 transition: 'background 0.3s',
               }}
@@ -66,13 +66,13 @@ export default function FAQ() {
                 <span
                   className="shrink-0 w-7 h-7 flex items-center justify-center transition-all duration-200"
                   style={{
-                    border: `1px solid ${open === index ? 'rgba(0,180,255,0.4)' : 'rgba(255,255,255,0.08)'}`,
+                    border: `1px solid ${open === index ? 'rgba(108,99,255,0.4)' : 'rgba(255,255,255,0.08)'}`,
                     borderRadius: '2px',
-                    background: open === index ? 'rgba(0,180,255,0.08)' : 'transparent',
+                    background: open === index ? 'rgba(108,99,255,0.08)' : 'transparent',
                   }}
                 >
                   {open === index
-                    ? <Minus size={13} style={{ color: '#00B4FF' }} />
+                    ? <Minus size={13} style={{ color: 'var(--color-accent)' }} />
                     : <Plus size={13} style={{ color: '#55556A' }} />
                   }
                 </span>
@@ -90,8 +90,8 @@ export default function FAQ() {
                     transition={{ duration: 0.32, ease }}
                     className="overflow-hidden"
                   >
-                    <div className="px-6 md:px-8 pb-6" style={{ borderTop: '1px solid rgba(0,180,255,0.08)' }}>
-                      <div style={{ width: '20px', height: '1px', background: 'rgba(255,45,85,0.4)', margin: '16px 0 14px' }} />
+                    <div className="px-6 md:px-8 pb-6" style={{ borderTop: '1px solid rgba(108,99,255,0.08)' }}>
+                      <div style={{ width: '20px', height: '1px', background: 'rgba(0,212,255,0.4)', margin: '16px 0 14px' }} />
                       <p style={{ fontFamily: 'Space Grotesk', fontSize: '14px', fontWeight: 300, color: '#8A8AA0', lineHeight: 1.78 }}>
                         {faq.a}
                       </p>

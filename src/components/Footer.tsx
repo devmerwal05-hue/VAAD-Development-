@@ -36,13 +36,13 @@ export default function Footer() {
   ];
 
   return (
-    <footer className="relative" style={{ background: '#020205', borderTop: '1px solid rgba(0,180,255,0.08)' }}>
+    <footer className="relative" style={{ background: '#020205', borderTop: '1px solid rgba(108,99,255,0.08)' }}>
 
       {/* CTA band */}
       <div className="relative overflow-hidden">
         {/* Background electric mesh */}
-        <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 50% 100%, rgba(0,180,255,0.06), transparent 60%)' }} />
-        <div className="absolute inset-x-0 top-0 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(0,180,255,0.3) 40%, rgba(0,180,255,0.3) 60%, transparent)' }} />
+        <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 50% 100%, var(--color-accent-glow), transparent 60%)' }} />
+        <div className="absolute inset-x-0 top-0 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(108,99,255,0.3) 40%, rgba(108,99,255,0.3) 60%, transparent)' }} />
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -52,7 +52,7 @@ export default function Footer() {
           className="max-w-[1440px] mx-auto px-6 md:px-10 py-20 md:py-28 relative z-10"
         >
           {/* Catalog label */}
-          <p className="mb-6" style={{ fontFamily: 'JetBrains Mono', fontSize: '10px', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(0,180,255,0.5)' }}>
+          <p className="mb-6" style={{ fontFamily: 'JetBrains Mono', fontSize: '10px', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--color-accent)', opacity: 0.5 }}>
             — Begin a project
           </p>
 
@@ -67,7 +67,7 @@ export default function Footer() {
             }}
           >
             {c('footer', 'cta_headline', 'Ready to')}{' '}
-            <span style={{ color: '#00B4FF' }}>
+            <span style={{ color: 'var(--color-accent)' }}>
               {c('footer', 'cta_highlight', 'Build?')}
             </span>
           </h2>
@@ -81,19 +81,19 @@ export default function Footer() {
 
           <Link
             to="/contact"
-            className="shimmer-btn inline-flex items-center gap-3 text-[#040408] font-medium transition-all duration-300"
+            className="shimmer-btn inline-flex items-center gap-3 text-text-inverse font-medium transition-all duration-300"
             style={{
               fontFamily: 'JetBrains Mono',
               fontSize: '12px',
               letterSpacing: '0.14em',
               textTransform: 'uppercase',
-              background: '#00B4FF',
+              background: 'var(--color-accent)',
               padding: '14px 28px',
               borderRadius: '2px',
-              boxShadow: '0 0 40px rgba(0,180,255,0.2)',
+              boxShadow: '0 0 40px var(--color-accent-glow)',
             }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.boxShadow = '0 0 60px rgba(0,180,255,0.4)'; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.boxShadow = '0 0 40px rgba(0,180,255,0.2)'; }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.boxShadow = '0 0 60px var(--color-accent-glow)'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.boxShadow = '0 0 40px var(--color-accent-glow)'; }}
           >
             Get In Touch <ArrowUpRight size={15} />
           </Link>
@@ -114,8 +114,8 @@ export default function Footer() {
             </p>
 
             <div className="mt-8 flex items-center gap-3">
-              <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', background: '#00B4FF', boxShadow: '0 0 8px rgba(0,180,255,0.6)', flexShrink: 0 }} />
-              <span style={{ fontFamily: 'JetBrains Mono', fontSize: '10px', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(0,180,255,0.7)' }}>
+              <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', background: 'var(--color-accent)', boxShadow: '0 0 8px var(--color-accent-glow)', flexShrink: 0 }} />
+              <span style={{ fontFamily: 'JetBrains Mono', fontSize: '10px', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--color-accent)', opacity: 0.7 }}>
                 Available for projects
               </span>
             </div>
@@ -133,7 +133,7 @@ export default function Footer() {
                     {('href' in item) && (item.href.startsWith('mailto:') || item.href === '#') ? (
                       <a
                         href={(item as { label: string; href: string }).href}
-                        className="transition-colors duration-200 hover:text-[#00B4FF]"
+                        className="transition-colors duration-200 hover:text-accent"
                         style={{ fontFamily: 'Space Grotesk', fontSize: '13px', fontWeight: 300, color: '#8A8AA0' }}
                       >
                         {item.label}
@@ -141,7 +141,7 @@ export default function Footer() {
                     ) : (
                       <Link
                         to={('href' in item) ? (item as { label: string; href: string }).href : '/'}
-                        className="transition-colors duration-200 hover:text-[#00B4FF]"
+                        className="transition-colors duration-200 hover:text-accent"
                         style={{ fontFamily: 'Space Grotesk', fontSize: '13px', fontWeight: 300, color: '#8A8AA0' }}
                       >
                         {item.label}

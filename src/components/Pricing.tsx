@@ -34,7 +34,7 @@ export default function Pricing() {
   return (
     <section className="py-20 md:py-32 relative">
       {/* Background */}
-      <div className="absolute top-0 left-1/4 w-[300px] h-[300px] pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(0,180,255,0.05), transparent 70%)', filter: 'blur(60px)' }} />
+      <div className="absolute top-0 left-1/4 w-[300px] h-[300px] pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(108,99,255,0.05), transparent 70%)', filter: 'blur(60px)' }} />
 
       <div className="max-w-[1440px] mx-auto px-6 md:px-10 relative z-10">
         <SectionLabel number={labelParts[0] || '06'} label={labelParts[1] || 'Pricing'} />
@@ -64,7 +64,7 @@ export default function Pricing() {
               transition={{ duration: 0.5, ease, delay: index * 0.07 }}
               className="relative flex flex-col p-7 md:p-9 card-accent-top"
               style={{
-                background: plan.highlighted ? 'rgba(0,180,255,0.03)' : '#07070F',
+                background: plan.highlighted ? 'rgba(108,99,255,0.03)' : '#07070F',
                 borderRight: index < plans.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none',
                 transition: 'background 0.3s',
               }}
@@ -79,7 +79,7 @@ export default function Pricing() {
                     letterSpacing: '0.14em',
                     textTransform: 'uppercase',
                     color: '#040408',
-                    background: '#00B4FF',
+                    background: 'var(--color-accent)',
                     padding: '3px 8px',
                     borderRadius: '2px',
                   }}
@@ -106,7 +106,7 @@ export default function Pricing() {
 
                 {/* Price */}
                 <div className="flex items-baseline gap-1 mb-4">
-                  <span style={{ fontFamily: 'Bebas Neue', fontSize: '52px', letterSpacing: '0.02em', color: plan.highlighted ? '#00B4FF' : '#F0EDE6', lineHeight: 1 }}>
+                  <span style={{ fontFamily: 'Bebas Neue', fontSize: '52px', letterSpacing: '0.02em', color: plan.highlighted ? 'var(--color-accent)' : '#F0EDE6', lineHeight: 1 }}>
                     ${plan.price.replace('$', '')}
                   </span>
                   <span style={{ fontFamily: 'JetBrains Mono', fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase', color: '#55556A', marginBottom: '4px' }}>
@@ -133,13 +133,13 @@ export default function Pricing() {
                           justifyContent: 'center',
                           width: '16px',
                           height: '16px',
-                          background: 'rgba(0,180,255,0.08)',
-                          border: '1px solid rgba(0,180,255,0.2)',
+                          background: 'rgba(108,99,255,0.08)',
+                          border: '1px solid rgba(108,99,255,0.2)',
                           borderRadius: '2px',
                           flexShrink: 0,
                         }}
                       >
-                        <Check size={10} style={{ color: '#00B4FF' }} />
+                        <Check size={10} style={{ color: 'var(--color-accent)' }} />
                       </span>
                       <span style={{ fontFamily: 'Space Grotesk', fontSize: '13px', fontWeight: 300, color: '#8A8AA0' }}>
                         {feature}
@@ -161,9 +161,9 @@ export default function Pricing() {
                     borderRadius: '2px',
                     ...(plan.highlighted
                       ? {
-                          background: '#00B4FF',
+                          background: 'var(--color-accent)',
                           color: '#040408',
-                          boxShadow: '0 0 30px rgba(0,180,255,0.18)',
+                          boxShadow: '0 0 30px rgba(108,99,255,0.18)',
                         }
                       : {
                           background: 'transparent',
@@ -175,8 +175,8 @@ export default function Pricing() {
                   onMouseEnter={e => {
                     if (!plan.highlighted) {
                       const el = e.currentTarget as HTMLElement;
-                      el.style.borderColor = 'rgba(0,180,255,0.3)';
-                      el.style.color = '#00B4FF';
+                      el.style.borderColor = 'rgba(108,99,255,0.3)';
+                      el.style.color = 'var(--color-accent)';
                     }
                   }}
                   onMouseLeave={e => {
@@ -208,11 +208,11 @@ export default function Pricing() {
           <Link
             to="/contact"
             className="inline-flex items-center gap-2 transition-colors duration-200"
-            style={{ fontFamily: 'JetBrains Mono', fontSize: '11px', letterSpacing: '0.14em', textTransform: 'uppercase', color: '#00B4FF' }}
+            style={{ fontFamily: 'JetBrains Mono', fontSize: '11px', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--color-accent)' }}
             onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#33C8FF'; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = '#00B4FF'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'var(--color-accent)'; }}
           >
-            <span style={{ display: 'inline-block', width: '14px', height: '1px', background: '#00B4FF' }} />
+            <span style={{ display: 'inline-block', width: '14px', height: '1px', background: 'var(--color-accent)' }} />
             {getContentValue('pricing', 'cta_button', 'Request a scoped estimate')}
           </Link>
         </motion.div>

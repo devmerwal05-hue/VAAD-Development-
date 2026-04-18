@@ -1,13 +1,14 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { lazy, Suspense, useState, useCallback, type ReactNode } from 'react';
+import { lazy, Suspense, type ReactNode } from 'react';
 import { ContentProvider } from './lib/ContentProvider';
 import ErrorBoundary from './components/ErrorBoundary';
-import IntroSplash from './components/IntroSplash';
 import HomePage from './pages/HomePage';
 import AdminDashboard from './pages/AdminDashboard';
 import RouteEffects from './components/RouteEffects';
 import PublicSiteGuard from './components/PublicSiteGuard';
 import { useContent } from './lib/useContent';
+import { useLenis } from './hooks/useLenis';
+import CustomCursor from './components/CustomCursor';
 
 const WorkPage = lazy(() => import('./pages/WorkPage'));
 const ServicesPage = lazy(() => import('./pages/ServicesPage'));
@@ -36,36 +37,20 @@ function withRouteBoundary(element: ReactNode) {
 }
 
 function PublicSite() {
+  useLenis();
+
   const normalizedPath = typeof window !== 'undefined'
     ? window.location.pathname.toLowerCase()
     : '';
   const isAdminPath = normalizedPath.startsWith('/admin');
 
-  const [introComplete, setIntroComplete] = useState(() => {
-    if (isAdminPath) return true;
-    try {
-      return sessionStorage.getItem('vaad_intro_seen') === '1';
-    } catch {
-      return true;
-    }
-  });
-
-  const handleIntroComplete = useCallback(() => {
-    try {
-      sessionStorage.setItem('vaad_intro_seen', '1');
-    } catch {
-      // Ignore
-    }
-    setIntroComplete(true);
-  }, []);
-
   return (
     <ContentProvider>
-      {!isAdminPath && !introComplete && <IntroSplash onComplete={handleIntroComplete} />}
       <BrowserRouter>
         <RouteEffects />
         <PublicSiteGuard>
           <Suspense fallback={<PageLoader />}>
+            <CustomCursor />
             <Routes>
               <Route path="/" element={withRouteBoundary(<HomePage />)} />
               <Route path="/work" element={withRouteBoundary(<WorkPage />)} />

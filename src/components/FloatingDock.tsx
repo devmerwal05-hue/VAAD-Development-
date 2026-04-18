@@ -22,9 +22,9 @@ function DockLink({ item }: { item: FloatingDockItem }) {
           fontSize: '9px',
           letterSpacing: '0.14em',
           textTransform: 'uppercase',
-          color: '#00B4FF',
+          color: 'var(--color-accent)',
           background: 'rgba(4,4,8,0.92)',
-          border: '1px solid rgba(0,180,255,0.2)',
+          border: '1px solid rgba(108,99,255,0.2)',
           padding: '3px 8px',
           borderRadius: '2px',
         }}
@@ -45,7 +45,7 @@ function DockLink({ item }: { item: FloatingDockItem }) {
         style={{ color: '#55556A' }}
         aria-label={item.title}
         title={item.title}
-        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#00B4FF'; }}
+        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = 'var(--color-accent)'; }}
         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = '#55556A'; }}
       >
         {content}
@@ -60,7 +60,7 @@ function DockLink({ item }: { item: FloatingDockItem }) {
       title={item.title}
       className={({ isActive }) =>
         `group relative flex items-center justify-center p-1 transition-colors duration-200 ${
-          isActive ? 'text-[#00B4FF]' : 'text-[#55556A] hover:text-[#00B4FF]'
+          isActive ? 'text-[var(--color-accent)]' : 'text-[#55556A] hover:text-[var(--color-accent)]'
         }`
       }
     >
@@ -77,7 +77,7 @@ function FloatingDockImpl({ items, className }: { items: FloatingDockItem[]; cla
         background: 'rgba(4,4,8,0.85)',
         backdropFilter: 'blur(24px)',
         WebkitBackdropFilter: 'blur(24px)',
-        border: '1px solid rgba(0,180,255,0.1)',
+        border: '1px solid rgba(108,99,255,0.1)',
         borderRadius: '2px',
       }}
     >

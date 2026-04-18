@@ -107,7 +107,6 @@ function AsteroidCard({ project, index, featured = false }: AsteroidCardProps) {
         </div>
 
         <div className="absolute inset-x-0 bottom-0 p-6 md:p-8">
-          <p className="editorial-kicker mb-4 text-[rgba(232,232,240,0.44)]">Asteroid card</p>
           <h3
             className={`max-w-[12ch] font-[800] uppercase leading-[0.9] tracking-[-0.055em] text-text-primary ${featured ? 'text-[clamp(2.8rem,5vw,4.8rem)]' : 'text-[clamp(2.2rem,4vw,3.5rem)]'}`}
             style={{ fontFamily: 'Space Grotesk, sans-serif' }}
@@ -179,7 +178,7 @@ export default function Portfolio({ className = '' }: PortfolioProps) {
           <SectionLabel number={labelParts[0] || '04'} label={labelParts[1] || 'Work'} />
           <SectionTitle>{getContentValue('portfolio', 'title', 'Selected work')}</SectionTitle>
           <p className="-mt-4 max-w-[56ch] text-[15px] leading-[1.85] text-text-secondary md:text-[17px]">
-            Each card keeps the asteroid silhouette from the current site, but with a more cinematic surface response, stronger depth, and cleaner editorial framing.
+            {getContentValue('portfolio', 'subtitle', 'Deep-dive explorations of core systems, brand environments, and deployment-ready web products.')}
           </p>
         </div>
 

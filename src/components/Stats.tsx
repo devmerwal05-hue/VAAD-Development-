@@ -31,13 +31,13 @@ function AnimatedStat({ value, suffix = '' }: { value: string; suffix?: string }
 
   const numericValue = Number.parseInt(value, 10);
   if (Number.isNaN(numericValue)) {
-    return <span ref={ref} style={{ color: '#00B4FF' }}>{value}</span>;
+    return <span ref={ref} style={{ color: 'var(--color-accent)' }}>{value}</span>;
   }
 
   return (
     <span ref={ref}>
-      <motion.span style={{ color: '#00B4FF' }}>{rounded}</motion.span>
-      {suffix && <span style={{ color: '#00B4FF' }}>{suffix}</span>}
+      <motion.span style={{ color: 'var(--color-accent)' }}>{rounded}</motion.span>
+      {suffix && <span style={{ color: 'var(--color-accent)' }}>{suffix}</span>}
     </span>
   );
 }
@@ -69,7 +69,7 @@ export default function Stats() {
 
   return (
     <section className="py-20 md:py-32 relative">
-      <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 50% 50%, rgba(0,180,255,0.03), transparent 60%)' }} />
+      <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 50% 50%, rgba(108,99,255,0.03), transparent 60%)' }} />
 
       <div className="max-w-[1440px] mx-auto px-6 md:px-10 relative z-10">
         <SectionLabel number={labelParts[0] || '02'} label={labelParts[1] || 'Why Us'} />
@@ -92,13 +92,13 @@ export default function Stats() {
                 background: '#07070F',
                 borderRight: (statCount <= 2 ? index % 2 === 0 : index % 4 !== 3) ? '1px solid rgba(255,255,255,0.05)' : 'none',
               }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(0,180,255,0.025)'; }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(108,99,255,0.025)'; }}
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '#07070F'; }}
             >
               {/* Sublabel */}
               <p
                 className="mb-4"
-                style={{ fontFamily: 'JetBrains Mono', fontSize: '9px', letterSpacing: '0.18em', textTransform: 'uppercase', color: 'rgba(255,45,85,0.6)' }}
+                style={{ fontFamily: 'JetBrains Mono', fontSize: '9px', letterSpacing: '0.18em', textTransform: 'uppercase', color: 'rgba(0,212,255,0.6)' }}
               >
                 {stat.sublabel}
               </p>
@@ -118,7 +118,7 @@ export default function Stats() {
                 {stat.label}
               </p>
 
-              <div style={{ width: '20px', height: '1px', background: 'rgba(0,180,255,0.3)', marginBottom: '12px' }} />
+              <div style={{ width: '20px', height: '1px', background: 'rgba(108,99,255,0.3)', marginBottom: '12px' }} />
 
               <p style={{ fontFamily: 'Space Grotesk', fontSize: '13px', fontWeight: 300, color: '#8A8AA0', lineHeight: 1.7 }}>
                 {stat.description}
