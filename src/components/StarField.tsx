@@ -132,10 +132,17 @@ export default function StarField({ className = '', active = true, warpRef, warp
       context.fillRect(0, 0, width, height);
 
       context.save();
-      context.fillStyle = 'rgba(108,99,255,0.12)';
+      context.fillStyle = 'rgba(108,99,255,0.08)';
       context.beginPath();
       context.arc(width * 0.68, height * 0.24, 220, 0, Math.PI * 2);
       context.fill();
+      
+      // VA.AD text
+      context.font = 'bold 48px "Bebas Neue", sans-serif';
+      context.fillStyle = 'rgba(0,180,255,0.15)';
+      context.textAlign = 'center';
+      context.textBaseline = 'middle';
+      context.fillText('VA.AD', width * 0.68, height * 0.24);
       context.restore();
 
       for (const star of starsRef.current) {
