@@ -84,7 +84,7 @@ function OrbitNode({ radius, angle, service, active, iconIndex, onHover, onLeave
       onBlur={onLeave}
       data-cursor-label="open"
     >
-      <Icon size={18} style={{ color: active ? '#00D4FF' : '#E8E8F0' }} />
+      <Icon size={18} style={{ color: active ? 'var(--color-red)' : '#E8E8F0' }} />
       <span className="sr-only">{service.title}</span>
     </motion.button>
   );
@@ -93,7 +93,7 @@ function OrbitNode({ radius, angle, service, active, iconIndex, onHover, onLeave
 export default function Services({ className = '' }: ServicesProps) {
   const { getContentValue } = useContent();
   const labelParts = getContentValue('services', 'label', '01 / Services').split(' / ');
-  const [hoveredIndex, setHoveredIndex] = useState<number>(0);
+  const [hoveredIndex, setHoveredIndex] = useState<number>(-1);
 
   const services: ServiceItem[] = [1, 2, 3, 4].map((index) => ({
     title: getContentValue('services', `card_${index}_title`, ['High-conviction websites', 'Operational web apps', 'Commerce builds', 'Launch support'][index - 1]),
@@ -106,8 +106,8 @@ export default function Services({ className = '' }: ServicesProps) {
     ring: index <= 2 ? 0 : 1,
   }));
 
-  const hoveredService = services[hoveredIndex] || services[0];
-  const hoveredRing = hoveredService.ring;
+  const hoveredService = hoveredIndex >= 0 ? services[hoveredIndex] : services[0];
+  const hoveredRing = hoveredIndex >= 0 ? hoveredService.ring : -1;
 
   return (
     <section className={`relative overflow-hidden px-6 py-24 md:px-10 md:py-36 ${className}`}>
@@ -161,7 +161,7 @@ export default function Services({ className = '' }: ServicesProps) {
                       service={service}
                       active={hoveredIndex === services.indexOf(service)}
                       onHover={() => setHoveredIndex(services.indexOf(service))}
-                      onLeave={() => setHoveredIndex(services.indexOf(service))}
+                      onLeave={() => setHoveredIndex(-1)}
                     />
                   ))}
                 </div>

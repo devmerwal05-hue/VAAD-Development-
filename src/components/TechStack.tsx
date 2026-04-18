@@ -45,7 +45,7 @@ export default function TechStack() {
 
   return (
     <section className="py-20 md:py-36 relative overflow-hidden">
-      <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 30% 50%, rgba(0,180,255,0.03), transparent 50%)' }} />
+      <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 30% 50%, rgba(108,99,255,0.03), transparent 50%)' }} />
 
       <div className="max-w-[1440px] mx-auto px-6 md:px-10 relative z-10">
         <SectionLabel number={labelParts[0] || '09'} label={labelParts[1] || 'Capabilities'} />
@@ -87,13 +87,13 @@ export default function TechStack() {
                   borderBottom: !isLastRow ? '1px solid rgba(255,255,255,0.05)' : 'none',
                   transition: 'background 0.3s',
                 }}
-                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(0,180,255,0.02)'; }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(108,99,255,0.02)'; }}
                 onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '#07070F'; }}
               >
                 {/* Ghost number */}
                 <span
                   className="absolute top-4 right-5 pointer-events-none select-none"
-                  style={{ fontFamily: 'Bebas Neue', fontSize: '64px', letterSpacing: '0.02em', color: 'rgba(0,180,255,0.025)', lineHeight: 1 }}
+                  style={{ fontFamily: 'Bebas Neue', fontSize: '64px', letterSpacing: '0.02em', color: 'rgba(108,99,255,0.025)', lineHeight: 1 }}
                 >
                   {String(i + 1).padStart(2, '0')}
                 </span>
@@ -104,12 +104,12 @@ export default function TechStack() {
                     <div
                       className="w-10 h-10 flex items-center justify-center shrink-0 transition-all duration-300"
                       style={{
-                        background: 'rgba(0,180,255,0.06)',
-                        border: '1px solid rgba(0,180,255,0.12)',
+                        background: 'rgba(108,99,255,0.06)',
+                        border: '1px solid rgba(108,99,255,0.12)',
                         borderRadius: '2px',
                       }}
                     >
-                      <Icon size={18} style={{ color: '#00B4FF' }} />
+                      <Icon size={18} style={{ color: 'var(--color-accent)' }} />
                     </div>
 
                     <div>
@@ -135,9 +135,9 @@ export default function TechStack() {
                           fontWeight: 500,
                           letterSpacing: '0.1em',
                           textTransform: 'uppercase',
-                          color: '#00B4FF',
-                          background: 'rgba(0,180,255,0.06)',
-                          border: '1px solid rgba(0,180,255,0.12)',
+                          color: 'var(--color-accent)',
+                          background: 'rgba(108,99,255,0.06)',
+                          border: '1px solid rgba(108,99,255,0.12)',
                           padding: '3px 8px',
                           borderRadius: '2px',
                         }}

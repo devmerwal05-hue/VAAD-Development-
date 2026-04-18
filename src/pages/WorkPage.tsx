@@ -3,6 +3,7 @@ import { ExternalLink } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import Marquee from '../components/Marquee';
 import PageWrapper from '../components/PageWrapper';
+import PageHero from '../components/PageHero';
 import { usePageMetadata } from '../hooks/usePageMetadata';
 import { buildPortfolioProjects } from '../lib/portfolio';
 import { useContent } from '../lib/useContent';
@@ -22,42 +23,12 @@ export default function WorkPage() {
 
   return (
     <PageWrapper>
-      {/* Page hero */}
-      <section className="pt-28 md:pt-36 pb-12">
-        <div className="max-w-[1440px] mx-auto px-6 md:px-10">
-          {/* Scan-line grid accent */}
-          <div className="absolute inset-x-0 top-0 h-[320px] pointer-events-none" style={{ backgroundImage: 'linear-gradient(rgba(0,180,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(0,180,255,0.02) 1px, transparent 1px)', backgroundSize: '64px 64px', opacity: 0.6 }} />
-
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.75, ease }}
-            className="max-w-[700px] relative z-10"
-          >
-            {/* Eyebrow */}
-            <div
-              className="inline-flex items-center gap-2.5 mb-8"
-              style={{ background: 'rgba(0,180,255,0.06)', border: '1px solid rgba(0,180,255,0.15)', padding: '5px 12px', borderRadius: '2px' }}
-            >
-              <span style={{ width: '4px', height: '4px', borderRadius: '50%', background: '#00B4FF', boxShadow: '0 0 6px rgba(0,180,255,0.7)', flexShrink: 0 }} />
-              <span style={{ fontFamily: 'JetBrains Mono', fontSize: '10px', fontWeight: 500, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'rgba(0,180,255,0.8)' }}>
-                {getContentValue('work_page', 'eyebrow', 'Selected Work')}
-              </span>
-            </div>
-
-            <h1
-              style={{ fontFamily: 'Bebas Neue', fontSize: 'clamp(52px,9vw,100px)', letterSpacing: '0.03em', textTransform: 'uppercase', lineHeight: 0.93, color: '#F0EDE6', marginBottom: '20px' }}
-            >
-              {getContentValue('work_page', 'title_before', 'Sites and products that had to')}{' '}
-              <span style={{ color: '#00B4FF' }}>{getContentValue('work_page', 'title_highlight', 'ship on time')}</span>
-            </h1>
-
-            <p style={{ fontFamily: 'Space Grotesk', fontSize: 'clamp(14px,1.1vw,17px)', fontWeight: 300, color: '#8A8AA0', lineHeight: 1.75 }}>
-              {getContentValue('work_page', 'description', 'These are the kinds of builds we take on: lean teams, real delivery pressure, and a clear need for design and engineering to move in the same sprint.')}
-            </p>
-          </motion.div>
-        </div>
-      </section>
+      <PageHero
+        eyebrow={getContentValue('work_page', 'eyebrow', 'Selected Work')}
+        titleBefore={getContentValue('work_page', 'title_before', 'Sites and products that had to')}
+        titleHighlight={getContentValue('work_page', 'title_highlight', 'ship on time')}
+        description={getContentValue('work_page', 'description', 'These are the kinds of builds we take on: lean teams, real delivery pressure, and a clear need for design and engineering to move in the same sprint.')}
+      />
 
       {/* Projects */}
       <section className="py-10 md:py-14">
@@ -90,7 +61,7 @@ export default function WorkPage() {
                     />
                   ) : (
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <span style={{ fontFamily: 'Bebas Neue', fontSize: 'clamp(40px,5vw,72px)', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'rgba(0,180,255,0.12)' }}>
+                      <span style={{ fontFamily: 'Bebas Neue', fontSize: 'clamp(40px,5vw,72px)', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'rgba(108,99,255,0.12)' }}>
                         {project.name}
                       </span>
                     </div>
@@ -127,7 +98,7 @@ export default function WorkPage() {
                 <span
                   style={{
                     fontFamily: 'JetBrains Mono', fontSize: '9px', letterSpacing: '0.18em', textTransform: 'uppercase',
-                    color: '#040408', background: '#00B4FF', padding: '3px 8px', borderRadius: '2px', display: 'inline-block', marginBottom: '16px',
+                    color: '#040408', background: 'var(--color-accent)', padding: '3px 8px', borderRadius: '2px', display: 'inline-block', marginBottom: '16px',
                   }}
                 >
                   {project.tag}
@@ -136,11 +107,11 @@ export default function WorkPage() {
                 <h2 style={{ fontFamily: 'Bebas Neue', fontSize: 'clamp(32px,4vw,56px)', letterSpacing: '0.03em', textTransform: 'uppercase', color: '#F0EDE6', lineHeight: 0.95, marginBottom: '10px' }}>
                   {project.name}
                 </h2>
-                <p style={{ fontFamily: 'Space Grotesk', fontSize: '13px', fontWeight: 500, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#00B4FF', marginBottom: '14px' }}>
+                <p style={{ fontFamily: 'Space Grotesk', fontSize: '13px', fontWeight: 500, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--color-accent)', marginBottom: '14px' }}>
                   {project.subtitle}
                 </p>
 
-                <div style={{ width: '20px', height: '1px', background: 'rgba(255,45,85,0.5)', marginBottom: '14px' }} />
+                <div style={{ width: '20px', height: '1px', background: 'rgba(0,212,255,0.5)', marginBottom: '14px' }} />
 
                 <p style={{ fontFamily: 'Space Grotesk', fontSize: '14px', fontWeight: 300, color: '#8A8AA0', lineHeight: 1.78, marginBottom: '28px' }}>
                   {project.description}
@@ -154,8 +125,8 @@ export default function WorkPage() {
                     className="shimmer-btn inline-flex items-center gap-2.5 self-start transition-all duration-300"
                     style={{
                       fontFamily: 'JetBrains Mono', fontSize: '11px', fontWeight: 500, letterSpacing: '0.14em', textTransform: 'uppercase',
-                      color: '#040408', background: '#00B4FF', padding: '11px 22px', borderRadius: '2px',
-                      boxShadow: '0 0 30px rgba(0,180,255,0.15)',
+                      color: '#040408', background: 'var(--color-accent)', padding: '11px 22px', borderRadius: '2px',
+                      boxShadow: '0 0 30px rgba(108,99,255,0.15)',
                     }}
                   >
                     {getContentValue('work_page', 'project_link_label', 'View live project')}
@@ -179,7 +150,7 @@ export default function WorkPage() {
             viewport={{ once: true }}
             transition={{ duration: 0.6, ease }}
           >
-            <p style={{ fontFamily: 'JetBrains Mono', fontSize: '10px', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(0,180,255,0.5)', marginBottom: '16px' }}>
+            <p style={{ fontFamily: 'JetBrains Mono', fontSize: '10px', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(108,99,255,0.5)', marginBottom: '16px' }}>
               — Start a project
             </p>
             <h2 style={{ fontFamily: 'Bebas Neue', fontSize: 'clamp(36px,5vw,64px)', letterSpacing: '0.03em', textTransform: 'uppercase', color: '#F0EDE6', lineHeight: 0.95, marginBottom: '14px' }}>
@@ -193,8 +164,8 @@ export default function WorkPage() {
               className="shimmer-btn inline-flex items-center gap-2.5"
               style={{
                 fontFamily: 'JetBrains Mono', fontSize: '12px', fontWeight: 500, letterSpacing: '0.14em', textTransform: 'uppercase',
-                color: '#040408', background: '#00B4FF', padding: '14px 28px', borderRadius: '2px',
-                boxShadow: '0 0 40px rgba(0,180,255,0.2)',
+                color: '#040408', background: 'var(--color-accent)', padding: '14px 28px', borderRadius: '2px',
+                boxShadow: '0 0 40px rgba(108,99,255,0.2)',
               }}
             >
               {getContentValue('work_page', 'cta_button', 'Start the conversation')}

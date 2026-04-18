@@ -213,7 +213,7 @@ export default function Contact({ className = '' }: ContactProps) {
               ].map(({ icon: Icon, label, href }) => (
                 <div key={label} className="flex items-start gap-3 rounded-[22px] border border-[rgba(232,232,240,0.08)] bg-[rgba(255,255,255,0.03)] px-4 py-4">
                   <div className="mt-0.5 flex h-9 w-9 items-center justify-center rounded-full border border-[rgba(108,99,255,0.22)] bg-[rgba(108,99,255,0.12)]">
-                    <Icon size={15} style={{ color: '#00D4FF' }} />
+                    <Icon size={15} style={{ color: 'var(--color-red)' }} />
                   </div>
                   {href ? (
                     <a href={href} className="text-[15px] leading-[1.7] text-text-secondary transition-colors hover:text-text-primary">

@@ -122,7 +122,7 @@ export default function StarField({ className = '', active = true, warpRef, warp
       const bounds = canvas.getBoundingClientRect();
       const width = bounds.width;
       const height = bounds.height;
-      const warp = clamp(warpStrength?.get() ?? warpRef?.current ?? 0.32, 0.15, 1);
+      const warp = clamp(warpStrength?.get() ?? warpRef?.current ?? 0.32, 0, 1);
 
       smoothedRef.current.x += (mouseRef.current.x - smoothedRef.current.x) * 0.035;
       smoothedRef.current.y += (mouseRef.current.y - smoothedRef.current.y) * 0.035;
@@ -171,7 +171,7 @@ export default function StarField({ className = '', active = true, warpRef, warp
         context.lineTo(tailX, tailY);
         context.stroke();
 
-        context.fillStyle = star.depth > 0.64 ? '#00D4FF' : '#E8E8F0';
+        context.fillStyle = star.depth > 0.64 ? 'var(--color-red)' : '#E8E8F0';
         context.beginPath();
         context.arc(currentX, currentY, star.size * (0.4 + warp * 0.45), 0, Math.PI * 2);
         context.fill();

@@ -1,5 +1,5 @@
 /* ── GOOGLE FONTS ────────────────────────────────────── */
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&family=DM+Sans:wght@400;500;700&family=Syne:wght@700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&family=DM+Sans:wght@400;500;700&family=Syne:wght@700;800&family=Bebas+Neue&display=swap');
 
 @import "tailwindcss";
 
@@ -24,10 +24,10 @@
   --color-accent-glow:  rgba(108,99,255,0.15);
 
   /* ── Signal Red accent ── */
-  --color-red:          #00D4FF;
-  --color-red-light:    #67E7FF;
-  --color-red-dark:     #00A8CB;
-  --color-red-glow:     rgba(0,212,255,0.18);
+  --color-red:          #FF2D55;
+  --color-red-light:    #FF5A7E;
+  --color-red-dark:     #D41B42;
+  --color-red-glow:     rgba(255,45,85,0.18);
 
   /* ── Borders ── */
   --color-border:       rgba(255,255,255,0.06);
@@ -68,7 +68,7 @@ button:focus-visible,
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
-  outline: 2px solid rgba(0,180,255,0.8);
+  outline: 2px solid var(--color-accent);
   outline-offset: 3px;
 }
 
@@ -76,7 +76,7 @@ textarea:focus-visible {
 ::-webkit-scrollbar { width: 3px; }
 ::-webkit-scrollbar-track { background: #040408; }
 ::-webkit-scrollbar-thumb { background: #1a1a2e; border-radius: 2px; }
-::-webkit-scrollbar-thumb:hover { background: #00B4FF; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-accent); }
 
 /* ── SELECT ──────────────────────────────────── */
 select {
@@ -101,8 +101,8 @@ body.admin-mode::after { display: none; }
 /* ── SCAN-LINE GRID ──────────────────────────── */
 .grid-pattern {
   background-image:
-    linear-gradient(rgba(0,180,255,0.025) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0,180,255,0.025) 1px, transparent 1px);
+    linear-gradient(rgba(108,99,255,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(108,99,255,0.025) 1px, transparent 1px);
   background-size: 64px 64px;
 }
 
@@ -110,7 +110,7 @@ body.admin-mode::after { display: none; }
 .catalog-rule {
   width: 100%;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(0,180,255,0.25) 20%, rgba(0,180,255,0.5) 50%, rgba(0,180,255,0.25) 80%, transparent);
+  background: linear-gradient(90deg, transparent, rgba(108,99,255,0.25) 20%, rgba(108,99,255,0.5) 50%, rgba(108,99,255,0.25) 80%, transparent);
 }
 
 /* ── TYPOGRAPHY UTILITIES ────────────────────── */
@@ -160,15 +160,15 @@ body.admin-mode::after { display: none; }
 }
 
 .gradient-bg-red {
-  background: linear-gradient(135deg, #00D4FF 0%, #00A8CB 100%);
+  background: linear-gradient(135deg, var(--color-red) 0%, var(--color-red-dark) 100%);
 }
 
 /* ── BLUE ELECTRIC GLOW ──────────────────────── */
 .blue-glow {
-  box-shadow: 0 0 20px rgba(0,180,255,0.25), 0 0 60px rgba(0,180,255,0.08);
+  box-shadow: 0 0 20px var(--color-accent-glow), 0 0 60px rgba(108,99,255,0.08);
 }
 .blue-glow-sm {
-  box-shadow: 0 0 10px rgba(0,180,255,0.2);
+  box-shadow: 0 0 10px var(--color-accent-glow);
 }
 
 /* ── SHIMMER BUTTON ──────────────────────────── */
@@ -196,10 +196,10 @@ body.admin-mode::after { display: none; }
   border: 1px solid rgba(255,255,255,0.06);
 }
 .glass-blue {
-  background: rgba(0,180,255,0.04);
+  background: var(--color-accent-glow);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(0,180,255,0.12);
+  border: 1px solid var(--color-border-blue);
 }
 
 /* ── SPECIMEN CARD ───────────────────────────── */
@@ -210,8 +210,8 @@ body.admin-mode::after { display: none; }
   transition: border-color 0.3s ease, box-shadow 0.4s ease;
 }
 .specimen-card:hover {
-  border-color: rgba(0,180,255,0.2);
-  box-shadow: 0 0 40px rgba(0,180,255,0.05), inset 0 0 60px rgba(0,180,255,0.02);
+  border-color: var(--color-border-blue);
+  box-shadow: 0 0 40px var(--color-accent-glow), inset 0 0 60px rgba(108,99,255,0.02);
 }
 
 /* top accent line on cards */
@@ -220,7 +220,7 @@ body.admin-mode::after { display: none; }
   position: absolute;
   top: 0; left: 0; right: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, #00B4FF, transparent);
+  background: linear-gradient(90deg, transparent, var(--color-accent), transparent);
   opacity: 0;
   transition: opacity 0.4s ease;
 }
@@ -232,7 +232,8 @@ body.admin-mode::after { display: none; }
   font-size: 10px;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: rgba(0,180,255,0.6);
+  color: var(--color-accent);
+  opacity: 0.6;
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -242,7 +243,8 @@ body.admin-mode::after { display: none; }
   display: inline-block;
   width: 20px;
   height: 1px;
-  background: rgba(0,180,255,0.5);
+  background: var(--color-accent);
+  opacity: 0.5;
 }
 
 /* ── STATUS BADGE ────────────────────────────── */
@@ -259,9 +261,9 @@ body.admin-mode::after { display: none; }
   text-transform: uppercase;
 }
 .status-badge-blue {
-  background: rgba(0,180,255,0.08);
-  border: 1px solid rgba(0,180,255,0.2);
-  color: #00B4FF;
+  background: var(--color-accent-glow);
+  border: 1px solid var(--color-accent-glow);
+  color: var(--color-accent);
 }
 .status-badge-red {
   background: rgba(255,45,85,0.08);
@@ -285,14 +287,14 @@ body.admin-mode::after { display: none; }
   font-weight: 500;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  background: rgba(0,180,255,0.06);
-  border: 1px solid rgba(0,180,255,0.14);
-  color: #00B4FF;
+  background: var(--color-accent-glow);
+  border: 1px solid var(--color-border-blue);
+  color: var(--color-accent);
   transition: background 0.2s, border-color 0.2s;
 }
 .tag-chip:hover {
-  background: rgba(0,180,255,0.12);
-  border-color: rgba(0,180,255,0.28);
+  background: rgba(108,99,255,0.12);
+  border-color: rgba(108,99,255,0.28);
 }
 
 /* ── HERO DRIFTS ─────────────────────────────── */
@@ -307,7 +309,7 @@ body.admin-mode::after { display: none; }
   66% { transform: translate3d(8%, -3%, 0) scale(0.88); }
 }
 .hero-gradient-1 {
-  background: radial-gradient(ellipse 900px 700px at 10% 40%, rgba(0,180,255,0.08) 0%, transparent 70%);
+  background: radial-gradient(ellipse 900px 700px at 10% 40%, var(--color-accent-glow) 0%, transparent 70%);
   animation: drift1 35s ease-in-out infinite;
   will-change: transform;
 }
@@ -365,7 +367,7 @@ body.admin-mode::after { display: none; }
   position: fixed;
   left: 0; right: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(0,180,255,0.12), rgba(0,180,255,0.3), rgba(0,180,255,0.12), transparent);
+  background: linear-gradient(90deg, transparent, rgba(108,99,255,0.12), rgba(108,99,255,0.3), rgba(108,99,255,0.12), transparent);
   pointer-events: none;
   z-index: 0;
   animation: scanLine 12s ease-in-out infinite;
@@ -385,7 +387,7 @@ body.admin-mode::after { display: none; }
   inset: -1px;
   border-radius: inherit;
   padding: 1px;
-  background: linear-gradient(90deg, transparent, rgba(0,180,255,0.4), transparent, rgba(0,180,255,0.25), transparent);
+  background: linear-gradient(90deg, transparent, rgba(108,99,255,0.4), transparent, rgba(108,99,255,0.25), transparent);
   background-size: 200% 100%;
   animation: borderShimmer 3s linear infinite;
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
@@ -400,8 +402,8 @@ body.admin-mode::after { display: none; }
   transition: border-color 0.3s ease, box-shadow 0.4s ease, transform 0.3s ease;
 }
 .card-hover:hover {
-  border-color: rgba(0,180,255,0.18) !important;
-  box-shadow: 0 0 50px rgba(0,180,255,0.06);
+  border-color: var(--color-border-blue) !important;
+  box-shadow: 0 0 50px var(--color-accent-glow);
   transform: translateY(-2px);
 }
 
@@ -414,8 +416,8 @@ body.admin-mode::after { display: none; }
 
 /* ── GLOW RING ───────────────────────────────── */
 @keyframes glowPulse {
-  0%, 100% { box-shadow: 0 0 10px rgba(0,180,255,0.15), 0 0 30px rgba(0,180,255,0.04); }
-  50% { box-shadow: 0 0 20px rgba(0,180,255,0.3), 0 0 55px rgba(0,180,255,0.1); }
+  0%, 100% { box-shadow: 0 0 10px var(--color-accent-glow), 0 0 30px rgba(108,99,255,0.04); }
+  50% { box-shadow: 0 0 20px rgba(108,99,255,0.3), 0 0 55px rgba(108,99,255,0.1); }
 }
 .glow-ring { animation: glowPulse 3.5s ease-in-out infinite; }
 
@@ -457,7 +459,7 @@ body.admin-mode::after { display: none; }
 .section-divider {
   position: relative;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(0,180,255,0.35), transparent);
+  background: linear-gradient(90deg, transparent, rgba(108,99,255,0.35), transparent);
 }
 
 /* ── STAGGER CHILDREN ────────────────────────── */

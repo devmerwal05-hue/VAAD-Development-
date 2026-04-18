@@ -29,7 +29,7 @@ export default function Marquee() {
           width: '4px',
           height: '4px',
           borderRadius: '50%',
-          background: 'rgba(0,180,255,0.35)',
+          background: 'rgba(108,99,255,0.35)',
           flexShrink: 0,
         }}
       />
@@ -42,8 +42,8 @@ export default function Marquee() {
       style={{
         height: '44px',
         background: 'rgba(7,7,15,0.6)',
-        borderTop: '1px solid rgba(0,180,255,0.07)',
-        borderBottom: '1px solid rgba(0,180,255,0.07)',
+        borderTop: '1px solid rgba(108,99,255,0.07)',
+        borderBottom: '1px solid rgba(108,99,255,0.07)',
       }}
     >
       <div className="marquee-track flex items-center gap-6 whitespace-nowrap">

@@ -1,4 +1,4 @@
-import { m as motion } from 'framer-motion';
+import { motion, type Variants } from 'framer-motion';
 import { useContent } from '../lib/useContent';
 
 interface PageHeroProps {
@@ -8,7 +8,16 @@ interface PageHeroProps {
   titleHighlight: string;
 }
 
-const ease: [number, number, number, number] = [0.16, 0.77, 0.47, 0.97];
+const ease: [number, number, number, number] = [0.16, 1, 0.3, 1];
+
+const heroVariants: Variants = {
+  hidden: { opacity: 0, y: 30 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.8, ease },
+  },
+};
 
 export default function PageHero({
   description,
@@ -16,97 +25,56 @@ export default function PageHero({
   titleBefore,
   titleHighlight,
 }: PageHeroProps) {
-  const { getContentValue } = useContent();
-
   return (
-    <section className="section-pad swiss-section relative overflow-hidden pt-28 md:pt-36">
-      <div className="absolute inset-0 grid-pattern opacity-20 pointer-events-none" />
-      <span className="swiss-meta swiss-meta--tl">{getContentValue('ui', 'page_hero_meta_left', 'page.hero')}</span>
-      <span className="swiss-meta swiss-meta--tr">{getContentValue('ui', 'page_hero_meta_right', 'layout // 12-col')}</span>
-
-      <div className="absolute inset-0 pointer-events-none">
-        <div
-          className="absolute -left-16 top-[5%] h-[420px] w-[420px] rounded-full blur-[130px]"
-          style={{ background: 'rgba(232,19,42,0.18)' }}
-        />
-        <div
-          className="absolute -right-24 top-[10%] h-[520px] w-[520px] rounded-full blur-[150px]"
-          style={{ background: 'rgba(12,33,88,0.85)' }}
-        />
-      </div>
-
-      <div className="relative z-10 site-container swiss-grid">
-        <div className="swiss-full-col grid grid-cols-1 items-end gap-8 lg:grid-cols-12 lg:gap-12">
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, ease }}
-            className="corner-marks border border-[rgba(232,19,42,0.22)] bg-[rgba(9,22,40,0.72)] px-6 py-9 md:px-9 md:py-12 lg:col-span-6 lg:px-10"
+    <section className="relative overflow-hidden pb-10 pt-28 md:pt-36">
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 h-[280px]"
+        style={{
+          backgroundImage: 'linear-gradient(rgba(108,99,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(108,99,255,0.02) 1px, transparent 1px)',
+          backgroundSize: '64px 64px'
+        }}
+      />
+      <div className="relative z-10 mx-auto max-w-[1440px] px-6 md:px-10">
+        <motion.div
+          variants={heroVariants}
+          initial="hidden"
+          animate="visible"
+          className="max-w-[820px]"
+        >
+          <div
+            className="mb-8 inline-flex items-center gap-2.5 rounded-[4px] border border-[rgba(108,99,255,0.15)] bg-[rgba(108,99,255,0.06)] px-3.5 py-1.5"
           >
-            <div className="mb-9 flex items-center gap-4">
-              <span className="dot-red" />
-              <span className="section-ref">{eyebrow}</span>
-              <div className="h-[1px] w-20 bg-[rgba(232,19,42,0.35)]" />
-            </div>
-
-            <h1
-              className="display-hero max-w-[19ch] text-text-primary"
+            <span
+              className="h-1 w-1 rounded-full bg-accent"
               style={{
-                fontFamily: "'Playfair Display', serif",
-                fontWeight: 900,
-                fontSize: 'clamp(44px, 6.8vw, 94px)',
+                background: 'var(--color-accent)',
+                boxShadow: '0 0 8px var(--color-accent-glow)',
+                flexShrink: 0
               }}
+            />
+            <span
+              className="text-[10px] font-[500] uppercase tracking-[0.2em] text-[rgba(108,99,255,0.85)]"
+              style={{ fontFamily: 'JetBrains Mono, monospace' }}
             >
-              <span className="block break-words">{titleBefore}</span>
-              <span className="mt-2 block break-words italic text-accent">{titleHighlight}</span>
-            </h1>
+              {eyebrow}
+            </span>
+          </div>
 
-            <div className="my-9 h-[1px] w-full max-w-[300px] bg-[linear-gradient(90deg,rgba(232,19,42,0.65),rgba(232,19,42,0.08),transparent)]" />
-
-            <p
-              className="reading-track text-[15px] leading-[1.9] text-[rgba(234,230,219,0.62)] md:text-[17px]"
-              style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}
-            >
-              {description}
-            </p>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 28 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.75, ease, delay: 0.06 }}
-            className="hidden lg:col-span-6 lg:block"
+          <h1
+            className="mb-8 text-[clamp(2.8rem,8vw,6rem)] font-[800] uppercase leading-[0.92] tracking-[-0.05em] text-text-primary"
+            style={{ fontFamily: 'Space Grotesk, sans-serif' }}
           >
-            <div className="corner-marks border border-[rgba(232,19,42,0.2)] bg-[rgba(9,22,40,0.78)] p-9">
-              <div className="mb-6 flex items-center justify-between">
-                <span className="annotation-label">{getContentValue('ui', 'page_hero_panel_top_left', '00 / 01')}</span>
-                <span className="annotation-label">{getContentValue('ui', 'page_hero_panel_top_right', '01')}</span>
-              </div>
+            {titleBefore}{' '}
+            <span className="gradient-text-blue">{titleHighlight}</span>
+          </h1>
 
-              <div className="h-[1px] bg-[rgba(232,19,42,0.2)]" />
-
-              <div className="mt-6 grid grid-cols-3 gap-4">
-                {[
-                  getContentValue('ui', 'page_hero_panel_grid_1', '01'),
-                  getContentValue('ui', 'page_hero_panel_grid_2', '02'),
-                  getContentValue('ui', 'page_hero_panel_grid_3', '03'),
-                ].map((label, index) => (
-                  <div key={`${index}-${label}`} className="border border-[rgba(232,19,42,0.14)] px-4 py-2 text-center">
-                    <span className="annotation-label">{label}</span>
-                  </div>
-                ))}
-              </div>
-
-              <div className="mt-7 rounded-lg border border-[rgba(232,19,42,0.14)] px-4 py-5">
-                <div className="mb-3 flex items-center gap-2">
-                  <span className="dot-red" />
-                  <span className="annotation-label">{getContentValue('ui', 'page_hero_panel_bottom', '00 / 00')}</span>
-                </div>
-                <div className="h-[1px] bg-[rgba(232,19,42,0.2)]" />
-              </div>
-            </div>
-          </motion.div>
-        </div>
+          <p
+            className="max-w-[52ch] text-[15px] leading-[1.85] text-text-secondary md:text-[18px]"
+            style={{ fontFamily: 'Inter, sans-serif' }}
+          >
+            {description}
+          </p>
+        </motion.div>
       </div>
     </section>
   );

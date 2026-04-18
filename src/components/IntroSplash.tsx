@@ -30,7 +30,7 @@ export default function IntroSplash({ onComplete }: { onComplete: () => void }) 
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
-            backgroundImage: 'linear-gradient(rgba(0,180,255,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(0,180,255,0.025) 1px, transparent 1px)',
+            backgroundImage: 'linear-gradient(rgba(108,99,255,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(108,99,255,0.025) 1px, transparent 1px)',
             backgroundSize: '64px 64px',
           }}
         />
@@ -50,7 +50,7 @@ export default function IntroSplash({ onComplete }: { onComplete: () => void }) 
           style={{
             width: '320px',
             height: '320px',
-            background: 'radial-gradient(circle, rgba(0,180,255,0.18) 0%, rgba(0,180,255,0.06) 40%, transparent 70%)',
+            background: 'radial-gradient(circle, rgba(108,99,255,0.18) 0%, rgba(108,99,255,0.06) 40%, transparent 70%)',
             filter: 'blur(50px)',
           }}
         />
@@ -85,13 +85,13 @@ export default function IntroSplash({ onComplete }: { onComplete: () => void }) 
               width: '10px',
               height: '10px',
               borderRadius: '50%',
-              background: '#00B4FF',
+              background: 'var(--color-accent)',
               margin: '0 4px',
               marginTop: '6px',
               flexShrink: 0,
               boxShadow:
                 phase === 'glow' || phase === 'exit'
-                  ? '0 0 16px rgba(0,180,255,0.9), 0 0 48px rgba(0,180,255,0.45)'
+                  ? '0 0 16px rgba(108,99,255,0.9), 0 0 48px rgba(108,99,255,0.45)'
                   : 'none',
               transition: 'box-shadow 0.4s ease',
             }}
@@ -122,7 +122,7 @@ export default function IntroSplash({ onComplete }: { onComplete: () => void }) 
             fontSize: '10px',
             letterSpacing: '0.28em',
             textTransform: 'uppercase',
-            color: 'rgba(0,180,255,0.55)',
+            color: 'rgba(108,99,255,0.55)',
             marginTop: '16px',
           }}
         >
@@ -140,9 +140,9 @@ export default function IntroSplash({ onComplete }: { onComplete: () => void }) 
             transition={{ duration: 1.8, ease: [0.16, 0.77, 0.47, 0.97] }}
             style={{
               height: '100%',
-              background: '#00B4FF',
+              background: 'var(--color-accent)',
               transformOrigin: 'left',
-              boxShadow: '0 0 8px rgba(0,180,255,0.6)',
+              boxShadow: '0 0 8px rgba(108,99,255,0.6)',
             }}
           />
         </div>

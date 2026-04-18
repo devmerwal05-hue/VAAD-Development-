@@ -10,7 +10,6 @@ import Pricing from '../components/Pricing';
 import FAQ from '../components/FAQ';
 import Contact from '../components/Contact';
 import Footer from '../components/Footer';
-import CustomCursor from '../components/CustomCursor';
 import { usePageMetadata } from '../hooks/usePageMetadata';
 import { useContent } from '../lib/useContent';
 import { useState } from 'react';
@@ -55,7 +54,6 @@ export default function HomePage() {
       >
         {getContentValue('ui', 'home_skip_link', 'Skip to content')}
       </a>
-      <CustomCursor />
       <Navigation />
       <main id="page-content">
         <Hero />

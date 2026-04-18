@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Menu, X } from 'lucide-react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import { useContent } from '../lib/useContent';
 import Logo from './Logo';
 
@@ -12,7 +12,9 @@ interface NavLinkItem {
 
 export default function Navigation() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const { getContentValue } = useContent();
+  const location = useLocation();
 
   const navLinks: NavLinkItem[] = [
     { label: getContentValue('nav', 'link_1', 'Work'), href: getContentValue('nav', 'link_1_href', '/work') },
@@ -24,8 +26,19 @@ export default function Navigation() {
 
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? 'hidden' : '';
-    return () => { document.body.style.overflow = ''; };
+    return () => {
+      document.body.style.overflow = '';
+    };
   }, [mobileOpen]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const closeMobileMenu = () => setMobileOpen(false);
 
@@ -33,13 +46,12 @@ export default function Navigation() {
     <>
       <nav
         aria-label="Primary"
-        className="fixed top-0 left-0 right-0 z-50 h-[64px] flex items-center"
+        className="fixed top-0 left-0 right-0 z-50 flex h-[64px] items-center transition-all duration-300"
         style={{
-          background: 'rgba(4,4,8,0.85)',
-          backdropFilter: 'blur(24px)',
-          WebkitBackdropFilter: 'blur(24px)',
-          borderBottom: '1px solid rgba(0,180,255,0.08)',
-          transition: 'border-color 0.3s',
+          background: scrolled ? 'rgba(4,4,8,0.85)' : 'transparent',
+          backdropFilter: scrolled ? 'blur(24px)' : 'none',
+          WebkitBackdropFilter: scrolled ? 'blur(24px)' : 'none',
+          borderBottom: scrolled ? '1px solid rgba(232,232,240,0.08)' : '1px solid transparent',
         }}
       >
         <div className="w-full max-w-[1440px] mx-auto px-6 md:px-10 flex items-center justify-between gap-4">
@@ -58,15 +70,15 @@ export default function Navigation() {
                   <>
                     <span className="relative z-10">{link.label}</span>
                     {/* Animated underline */}
-                    <span 
-                      className="absolute bottom-0 left-4 right-4 h-[1px] bg-[#00B4FF] origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-200 ease-out"
-                      style={{ transformOrigin: 'left' }}
+                    <span
+                      className="absolute bottom-0 left-4 right-4 h-[1px] bg-accent origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-200 ease-out"
+                      style={{ transformOrigin: 'left', backgroundColor: 'var(--color-accent)' }}
                     />
                     {isActive && (
                       <span
                         aria-hidden="true"
                         className="absolute bottom-0 left-1/2 -translate-x-1/2 w-4 h-[1px]"
-                        style={{ background: '#00B4FF' }}
+                        style={{ background: 'var(--color-accent)' }}
                       />
                     )}
                   </>
@@ -85,8 +97,8 @@ export default function Navigation() {
               fontWeight: 500,
               letterSpacing: '0.12em',
               textTransform: 'uppercase',
-              color: '#040408',
-              background: '#00B4FF',
+              color: 'var(--color-text-inverse)',
+              background: 'var(--color-accent)',
               padding: '8px 18px',
               borderRadius: '2px',
             }}
@@ -98,7 +110,7 @@ export default function Navigation() {
           <button
             type="button"
             className="md:hidden text-text-primary p-2 rounded-sm transition-colors"
-            style={{ background: mobileOpen ? 'rgba(0,180,255,0.1)' : 'transparent' }}
+            style={{ background: mobileOpen ? 'var(--color-accent-glow)' : 'transparent' }}
             onClick={() => setMobileOpen((current) => !current)}
             aria-controls="mobile-navigation"
             aria-expanded={mobileOpen}
@@ -122,14 +134,14 @@ export default function Navigation() {
             style={{ background: 'rgba(4,4,8,0.98)', backdropFilter: 'blur(24px)' }}
           >
             {/* Top rule */}
-            <div className="h-[64px] shrink-0 border-b border-[rgba(0,180,255,0.1)]" />
+            <div className="h-[64px] shrink-0 border-b border-[rgba(232,232,240,0.08)]" />
             <div
               className="flex-1 overflow-y-auto flex flex-col items-start justify-center px-8 py-8 gap-1"
               role="dialog"
               aria-modal="true"
             >
               {/* Section label */}
-              <p style={{ fontFamily: 'JetBrains Mono', fontSize: '10px', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(0,180,255,0.45)', marginBottom: '24px' }}>
+              <p style={{ fontFamily: 'JetBrains Mono', fontSize: '10px', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--color-text-tertiary)', marginBottom: '24px' }}>
                 — Navigation
               </p>
               {navLinks.map((link, index) => (
@@ -144,16 +156,21 @@ export default function Navigation() {
                     onClick={closeMobileMenu}
                     className={({ isActive }) =>
                       `block py-3 transition-colors ${
-                        isActive ? 'text-[#00B4FF]' : 'text-[#F0EDE6] hover:text-[#00B4FF]'
+                        isActive ? 'text-accent' : 'text-[#F0EDE6] hover:text-accent'
                       }`
                     }
-                    style={{ fontFamily: 'Bebas Neue', fontSize: 'clamp(36px,12vw,56px)', letterSpacing: '0.04em' }}
+                    style={{
+                      fontFamily: 'Bebas Neue',
+                      fontSize: 'clamp(36px,12vw,56px)',
+                      letterSpacing: '0.04em',
+                      color: location.pathname === link.href ? 'var(--color-accent)' : undefined
+                    }}
                   >
                     {link.label}
                   </NavLink>
                 </motion.div>
               ))}
-              <div className="mt-8 h-px w-12" style={{ background: 'rgba(0,180,255,0.3)' }} />
+              <div className="mt-8 h-px w-12" style={{ background: 'var(--color-accent-glow)' }} />
             </div>
           </motion.div>
         )}

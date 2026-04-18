@@ -30,7 +30,7 @@ export default function Logo({ size = 'md', className = '', linkTo = '/' }: Logo
       <span
         className="transition-colors duration-300"
         style={{ color: '#F0EDE6' }}
-        onMouseEnter={e => { (e.currentTarget.closest('a') as HTMLElement | null)?.querySelectorAll('span').forEach(s => { if (s.tagName !== 'SPAN' || !s.style.background) s.style.color = '#00B4FF'; }); }}
+        onMouseEnter={e => { (e.currentTarget.closest('a') as HTMLElement | null)?.querySelectorAll('span').forEach(s => { if (s.tagName !== 'SPAN' || !s.style.background) s.style.color = 'var(--color-accent)'; }); }}
       >
         {firstHalf}
       </span>
@@ -40,9 +40,9 @@ export default function Logo({ size = 'md', className = '', linkTo = '/' }: Logo
         style={{
           width: size === 'lg' ? '7px' : size === 'md' ? '5px' : '4px',
           height: size === 'lg' ? '7px' : size === 'md' ? '5px' : '4px',
-          background: '#00B4FF',
+          background: 'var(--color-accent)',
           borderRadius: '50%',
-          boxShadow: '0 0 8px rgba(0,180,255,0.7)',
+          boxShadow: '0 0 8px var(--color-accent-glow)',
           marginTop: '2px',
           flexShrink: 0,
         }}
