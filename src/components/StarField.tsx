@@ -45,6 +45,8 @@ export default function StarField({ className = '', active = true, warpRef, warp
   const starsRef = useRef<StarNode[]>([]);
   const mouseRef = useRef({ x: 0, y: 0 });
   const smoothedRef = useRef({ x: 0, y: 0 });
+  const circleHoverRef = useRef<{ active: number; target: number; scale: number; glow: number }>({ active: 0, target: 0, scale: 48, glow: 0.08 });
+  const soundPlayedRef = useRef(false);
   const [isMobile, setIsMobile] = useState(false);
   const [ready, setReady] = useState(false);
 
@@ -116,6 +118,37 @@ export default function StarField({ className = '', active = true, warpRef, warp
       const bounds = canvas.getBoundingClientRect();
       mouseRef.current.x = ((event.clientX - bounds.left) / bounds.width - 0.5) * 2;
       mouseRef.current.y = ((event.clientY - bounds.top) / bounds.height - 0.5) * 2;
+      
+      // Circle hover detection (at 68% left, 24% top, 220px radius)
+      const circleX = bounds.width * 0.68;
+      const circleY = bounds.height * 0.24;
+      const distance = Math.sqrt(
+        Math.pow(event.clientX - circleX, 2) + 
+        Math.pow(event.clientY - circleY, 2)
+      );
+      
+      const isOverCircle = distance < 220 ? 1 : 0;
+      circleHoverRef.current.target = isOverCircle;
+      
+      // Play subtle hover sound once
+      if (isOverCircle && !soundPlayedRef.current) {
+        soundPlayedRef.current = true;
+        try {
+          const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+          const oscillator = audioContext.createOscillator();
+          const gainNode = audioContext.createGain();
+          oscillator.connect(gainNode);
+          gainNode.connect(audioContext.destination);
+          oscillator.frequency.setValueAtTime(440, audioContext.currentTime);
+          oscillator.type = 'sine';
+          gainNode.gain.setValueAtTime(0.03, audioContext.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.15);
+          oscillator.start(audioContext.currentTime);
+          oscillator.stop(audioContext.currentTime + 0.15);
+        } catch {}
+      } else if (!isOverCircle) {
+        soundPlayedRef.current = false;
+      }
     };
 
     const render = () => {
@@ -132,17 +165,30 @@ export default function StarField({ className = '', active = true, warpRef, warp
       context.fillRect(0, 0, width, height);
 
       context.save();
-      context.fillStyle = 'rgba(108,99,255,0.08)';
+      // Smooth hover transition
+      circleHoverRef.current.active += (circleHoverRef.current.target - circleHoverRef.current.active) * 0.15;
+      circleHoverRef.current.glow = 0.08 + circleHoverRef.current.active * 0.15;
+      circleHoverRef.current.scale = 48 + circleHoverRef.current.active * 12;
+      
+      const glowOpacity = circleHoverRef.current.glow;
+      context.fillStyle = `rgba(108,99,255,${glowOpacity})`;
       context.beginPath();
       context.arc(width * 0.68, height * 0.24, 220, 0, Math.PI * 2);
       context.fill();
       
-      // VA.AD text
-      context.font = 'bold 48px "Bebas Neue", sans-serif';
-      context.fillStyle = 'rgba(0,180,255,0.15)';
+      // Glow effect when hovering
+      if (circleHoverRef.current.active > 0.01) {
+        context.shadowColor = 'rgba(0,180,255,0.6)';
+        context.shadowBlur = circleHoverRef.current.active * 40;
+      }
+      
+      // VA.AD text with hover animation
+      context.font = `bold ${circleHoverRef.current.scale}px "Bebas Neue", sans-serif`;
+      context.fillStyle = `rgba(0,180,255,${0.15 + circleHoverRef.current.active * 0.25})`;
       context.textAlign = 'center';
       context.textBaseline = 'middle';
       context.fillText('VA.AD', width * 0.68, height * 0.24);
+      context.shadowBlur = 0;
       context.restore();
 
       for (const star of starsRef.current) {
