@@ -11,6 +11,7 @@ import FAQ from '../components/FAQ';
 import Contact from '../components/Contact';
 import Footer from '../components/Footer';
 import CustomCursor from '../components/CustomCursor';
+import SectionChapterRail from '../components/SectionChapterRail';
 import { usePageMetadata } from '../hooks/usePageMetadata';
 import { useContent } from '../lib/useContent';
 import { useState } from 'react';
@@ -47,6 +48,16 @@ export default function HomePage() {
     );
   }
 
+  const chapters = [
+    { id: 'home-services', number: '01', label: 'Services' },
+    { id: 'home-stats', number: '02', label: 'Why Us' },
+    { id: 'home-process', number: '03', label: 'Process' },
+    { id: 'home-work', number: '04', label: 'Work' },
+    { id: 'home-pricing', number: '05', label: 'Pricing' },
+    { id: 'home-faq', number: '06', label: 'FAQ' },
+    { id: 'home-contact', number: '07', label: 'Contact' },
+  ];
+
   return (
     <>
       <a
@@ -57,17 +68,32 @@ export default function HomePage() {
       </a>
       <CustomCursor />
       <Navigation />
+      <SectionChapterRail sections={chapters} />
       <main id="page-content">
         <Hero />
         <Marquee />
-        <Services />
+        <div id="home-services">
+          <Services />
+        </div>
         <TechStack />
-        <Stats />
-        <Process />
-        <Portfolio />
-        <Pricing />
-        <FAQ />
-        <Contact />
+        <div id="home-stats">
+          <Stats />
+        </div>
+        <div id="home-process">
+          <Process />
+        </div>
+        <div id="home-work">
+          <Portfolio />
+        </div>
+        <div id="home-pricing">
+          <Pricing />
+        </div>
+        <div id="home-faq">
+          <FAQ />
+        </div>
+        <div id="home-contact">
+          <Contact />
+        </div>
       </main>
       <Footer />
     </>

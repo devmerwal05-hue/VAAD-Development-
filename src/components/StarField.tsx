@@ -18,6 +18,10 @@ interface StarNode {
   y: number;
 }
 
+interface AudioCapableWindow extends Window {
+  webkitAudioContext?: typeof AudioContext;
+}
+
 export interface StarfieldProps {
   active?: boolean;
   className?: string;
@@ -123,8 +127,8 @@ export default function StarField({ className = '', active = true, warpRef, warp
       const circleX = bounds.width * 0.68;
       const circleY = bounds.height * 0.24;
       const distance = Math.sqrt(
-        Math.pow(event.clientX - circleX, 2) + 
-        Math.pow(event.clientY - circleY, 2)
+        Math.pow(event.clientX - bounds.left - circleX, 2) +
+        Math.pow(event.clientY - bounds.top - circleY, 2)
       );
       
       const isOverCircle = distance < 220 ? 1 : 0;
@@ -134,7 +138,9 @@ export default function StarField({ className = '', active = true, warpRef, warp
       if (isOverCircle && !soundPlayedRef.current) {
         soundPlayedRef.current = true;
         try {
-          const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+          const AudioContextConstructor = window.AudioContext || (window as AudioCapableWindow).webkitAudioContext;
+          if (!AudioContextConstructor) return;
+          const audioContext = new AudioContextConstructor();
           const oscillator = audioContext.createOscillator();
           const gainNode = audioContext.createGain();
           oscillator.connect(gainNode);
@@ -145,7 +151,9 @@ export default function StarField({ className = '', active = true, warpRef, warp
           gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.15);
           oscillator.start(audioContext.currentTime);
           oscillator.stop(audioContext.currentTime + 0.15);
-        } catch {}
+        } catch {
+          // Audio feedback is optional; drawing should continue even if the browser blocks it.
+        }
       } else if (!isOverCircle) {
         soundPlayedRef.current = false;
       }

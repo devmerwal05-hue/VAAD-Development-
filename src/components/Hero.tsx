@@ -127,6 +127,7 @@ export default function Hero({ className = '' }: HeroProps) {
 
   const lineOne = getContentValue('hero', 'headline_line1', 'Small teams need fast systems');
   const lineTwo = getContentValue('hero', 'headline_line2', 'not vague agency timelines.');
+  const brandWord = getContentValue('nav', 'logo_text', 'VAAD');
 
   const stats = [
     {
@@ -177,11 +178,26 @@ export default function Hero({ className = '' }: HeroProps) {
       }}
     >
       <div className="hero-grid-overlay absolute inset-0 opacity-70" />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_18%,rgba(108,99,255,0.22),transparent_30%),radial-gradient(circle_at_82%_24%,rgba(0,212,255,0.14),transparent_24%),linear-gradient(180deg,rgba(3,3,8,0),rgba(3,3,8,0.65)_72%,rgba(3,3,8,1))]" />
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(3,3,8,0),rgba(3,3,8,0.65)_72%,rgba(3,3,8,1))]" />
+      <div className="hero-nebula hero-nebula-a absolute left-[-6%] top-[8%] h-[340px] w-[340px]" />
+      <div className="hero-nebula hero-nebula-b absolute right-[-4%] top-[16%] h-[380px] w-[380px]" />
+      <div className="hero-nebula hero-nebula-c absolute bottom-[18%] left-[24%] h-[300px] w-[300px]" />
+      <div className="hero-nebula hero-nebula-d absolute bottom-[-8%] right-[12%] h-[420px] w-[420px]" />
       <div className="absolute inset-0">
         <Suspense fallback={<div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(108,99,255,0.12),transparent_54%)]" />}>
           <StarField className="absolute inset-0" warpStrength={warpStrength} />
         </Suspense>
+      </div>
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 top-[12%] z-[1] flex justify-center overflow-hidden"
+      >
+        <span
+          className="hero-brand-ghost whitespace-nowrap text-[clamp(9rem,28vw,30rem)] font-[800] uppercase leading-none tracking-[-0.08em] text-[rgba(232,232,240,0.03)]"
+          style={{ fontFamily: 'Space Grotesk, sans-serif' }}
+        >
+          {brandWord}
+        </span>
       </div>
 
       <motion.div
@@ -237,7 +253,7 @@ export default function Hero({ className = '' }: HeroProps) {
             {getContentValue(
               'hero',
               'subheadline',
-              'Conversion-focused websites and operational web apps for teams that need a tight scope, a fast build window, and a handoff they can actually maintain.',
+              'VAAD builds conversion-focused websites and operational web apps. We do it for small teams that need a tight scope, a fast release window, and a handoff they can maintain.',
             )}
           </motion.p>
 

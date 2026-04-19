@@ -83,6 +83,7 @@ export default function Contact({ className = '' }: ContactProps) {
   const [submitPhase, setSubmitPhase] = useState<'idle' | 'connecting' | 'sending' | 'success'>('idle');
   const [serverError, setServerError] = useState('');
   const [receiptCode, setReceiptCode] = useState('');
+  const availabilityMessage = getContentValue('contact', 'availability_tooltip', '2 project slots open this quarter.');
 
   const contactEmail = getContentValue('contact', 'email', 'hello@vaad.dev');
   const projectTypeOptions = PROJECT_TYPE_OPTIONS.map((option) => ({
@@ -182,6 +183,18 @@ export default function Contact({ className = '' }: ContactProps) {
           className="mb-12 max-w-[820px]"
         >
           <SectionLabel number={labelParts[0] || '08'} label={labelParts[1] || 'Contact'} />
+          <div className="group relative inline-flex items-center gap-2 rounded-full border border-[rgba(34,197,94,0.18)] bg-[rgba(34,197,94,0.08)] px-4 py-2">
+            <span className="availability-dot h-2.5 w-2.5 rounded-full bg-[#22C55E]" />
+            <span
+              className="text-[11px] uppercase tracking-[0.22em] text-[rgba(219,255,230,0.9)]"
+              style={{ fontFamily: 'JetBrains Mono, monospace' }}
+            >
+              {getContentValue('contact', 'availability_badge', 'Currently accepting')}
+            </span>
+            <div className="pointer-events-none absolute left-0 top-[calc(100%+12px)] w-[260px] rounded-[20px] border border-[rgba(232,232,240,0.08)] bg-[rgba(8,10,20,0.96)] px-4 py-3 text-[13px] leading-[1.7] text-text-secondary opacity-0 shadow-[0_20px_40px_rgba(0,0,0,0.24)] transition-all duration-200 group-hover:pointer-events-auto group-hover:opacity-100 group-hover:translate-y-0 group-focus-within:pointer-events-auto group-focus-within:opacity-100">
+              {availabilityMessage}
+            </div>
+          </div>
           <SectionTitle>{getContentValue('contact', 'title', 'Tell us what needs to ship')}</SectionTitle>
         </motion.div>
 

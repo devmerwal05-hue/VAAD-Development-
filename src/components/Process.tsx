@@ -1,5 +1,5 @@
-import { motion, useScroll, useTransform, type Variants } from 'framer-motion';
-import { useMemo, useRef } from 'react';
+import { motion, useMotionValueEvent, useScroll, useTransform, type Variants } from 'framer-motion';
+import { Fragment, useMemo, useRef, useState } from 'react';
 import SectionLabel from './SectionLabel';
 import SectionTitle from './SectionTitle';
 import { useContent } from '../lib/useContent';
@@ -44,6 +44,7 @@ export default function Process({ className = '' }: ProcessProps) {
   const { getContentValue } = useContent();
   const labelParts = getContentValue('process', 'label', '03 / Process').split(' / ');
   const sectionRef = useRef<HTMLElement | null>(null);
+  const [activeStep, setActiveStep] = useState(0);
   const { scrollYProgress } = useScroll({
     target: sectionRef,
     offset: ['start start', 'end end'],
@@ -69,6 +70,11 @@ export default function Process({ className = '' }: ProcessProps) {
   const desktopX = useTransform(scrollYProgress, [0, 1], [0, -desktopOffset]);
   const progressScale = useTransform(scrollYProgress, [0, 1], [0.08, 1]);
 
+  useMotionValueEvent(scrollYProgress, 'change', (latest) => {
+    const nextIndex = Math.min(steps.length - 1, Math.max(0, Math.round(latest * (steps.length - 1))));
+    setActiveStep(nextIndex);
+  });
+
   return (
     <section ref={sectionRef} className={`relative overflow-hidden px-6 py-24 md:px-10 md:py-36 ${className}`} style={{ minHeight: `${steps.length * 72}vh` }}>
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_78%_18%,rgba(108,99,255,0.14),transparent_20%),radial-gradient(circle_at_12%_72%,rgba(0,212,255,0.12),transparent_18%)]" />
@@ -91,11 +97,33 @@ export default function Process({ className = '' }: ProcessProps) {
               <div className="mb-3 flex items-center justify-between">
                 <p className="editorial-kicker text-[rgba(232,232,240,0.52)]">Countdown timeline</p>
                 <p className="text-[11px] uppercase tracking-[0.28em] text-[rgba(0,212,255,0.82)]" style={{ fontFamily: 'JetBrains Mono, monospace' }}>
-                  Scroll synced
+                  {`Ch. ${String(activeStep + 1).padStart(2, '0')}`}
                 </p>
               </div>
               <div className="h-1 overflow-hidden rounded-full bg-[rgba(255,255,255,0.06)]">
                 <motion.div className="h-full origin-left gradient-bg" style={{ scaleX: progressScale }} />
+              </div>
+              <div className="mt-5 flex items-center gap-3">
+                {steps.map((step, index) => (
+                  <Fragment key={step.title}>
+                    <motion.span
+                      animate={{
+                        opacity: index <= activeStep ? 1 : 0.36,
+                        scale: index === activeStep ? 1.2 : 1,
+                        backgroundColor: index <= activeStep ? '#00D4FF' : 'rgba(232,232,240,0.16)',
+                      }}
+                      transition={{ duration: 0.24, ease: 'easeOut' }}
+                      className="h-2.5 w-2.5 rounded-full"
+                    />
+                    {index < steps.length - 1 ? (
+                      <motion.span
+                        animate={{ opacity: index < activeStep ? 1 : 0.24 }}
+                        transition={{ duration: 0.24, ease: 'easeOut' }}
+                        className="h-px flex-1 bg-[rgba(0,212,255,0.42)]"
+                      />
+                    ) : null}
+                  </Fragment>
+                ))}
               </div>
             </div>
 
@@ -108,6 +136,9 @@ export default function Process({ className = '' }: ProcessProps) {
                   whileInView="visible"
                   viewport={{ once: true, amount: 0.18 }}
                   className="relative h-[460px] w-[418px] shrink-0 overflow-hidden rounded-[34px] border border-[rgba(232,232,240,0.08)] bg-[rgba(10,12,25,0.88)] p-7"
+                  style={{
+                    boxShadow: index === activeStep ? '0 0 0 1px rgba(0,212,255,0.12)' : 'none',
+                  }}
                 >
                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_14%,rgba(108,99,255,0.2),transparent_24%),radial-gradient(circle_at_82%_78%,rgba(0,212,255,0.12),transparent_22%)]" />
                   <div className="relative z-10 flex h-full flex-col">

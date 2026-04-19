@@ -21,21 +21,30 @@ export default function SectionLabel({ number, label }: SectionLabelProps) {
       initial="hidden"
       whileInView="visible"
       viewport={{ once: true, amount: 0.5 }}
-      className="mb-6 flex items-center gap-4"
+      className="relative mb-8 overflow-hidden pt-6"
     >
       <span
-        className="inline-flex items-center gap-3 text-[11px] uppercase tracking-[0.34em] text-[rgba(232,232,240,0.48)]"
-        style={{ fontFamily: 'JetBrains Mono, monospace' }}
+        aria-hidden="true"
+        className="pointer-events-none absolute -left-2 -top-10 text-[clamp(10rem,24vw,25rem)] font-[800] uppercase leading-none tracking-[-0.08em] text-[rgba(232,232,240,0.04)]"
+        style={{ fontFamily: 'Space Grotesk, sans-serif' }}
       >
-        <span className="h-px w-8 bg-[rgba(108,99,255,0.55)]" />
         {number}
       </span>
-      <span
-        className="text-[11px] uppercase tracking-[0.34em] text-[rgba(232,232,240,0.74)]"
-        style={{ fontFamily: 'JetBrains Mono, monospace' }}
-      >
-        {label}
-      </span>
+      <div className="relative z-10 flex items-center gap-4">
+        <span
+          className="inline-flex items-center gap-3 text-[11px] uppercase tracking-[0.34em] text-[rgba(232,232,240,0.48)]"
+          style={{ fontFamily: 'JetBrains Mono, monospace' }}
+        >
+          <span className="h-px w-8 bg-[rgba(108,99,255,0.55)]" />
+          {number}
+        </span>
+        <span
+          className="text-[11px] uppercase tracking-[0.34em] text-[rgba(232,232,240,0.74)]"
+          style={{ fontFamily: 'JetBrains Mono, monospace' }}
+        >
+          {label}
+        </span>
+      </div>
     </motion.div>
   );
 }

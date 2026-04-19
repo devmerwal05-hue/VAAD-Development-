@@ -32,8 +32,14 @@ function deriveLabel(target: HTMLElement | null) {
   return 'view';
 }
 
+function deriveAccent(target: HTMLElement | null) {
+  if (!target) return '';
+  return target.dataset.cursorAccent || target.closest<HTMLElement>('[data-cursor-accent]')?.dataset.cursorAccent || '';
+}
+
 export default function CustomCursor({ enabled = true }: CustomCursorProps) {
   const [active, setActive] = useState(false);
+  const [accent, setAccent] = useState('');
   const [label, setLabel] = useState('');
   const [hidden, setHidden] = useState(true);
   const [isTouch, setIsTouch] = useState(false);
@@ -74,10 +80,12 @@ export default function CustomCursor({ enabled = true }: CustomCursorProps) {
         pointerX.set(event.clientX * 0.62 + magneticX * 0.38);
         pointerY.set(event.clientY * 0.62 + magneticY * 0.38);
         setLabel(deriveLabel(candidate));
+        setAccent(deriveAccent(candidate));
         setActive(true);
       } else {
         pointerX.set(event.clientX);
         pointerY.set(event.clientY);
+        setAccent('');
         setLabel('');
         setActive(false);
       }
@@ -85,6 +93,7 @@ export default function CustomCursor({ enabled = true }: CustomCursorProps) {
 
     const handlePointerLeave = () => {
       setHidden(true);
+      setAccent('');
       setActive(false);
       setLabel('');
     };
@@ -102,6 +111,17 @@ export default function CustomCursor({ enabled = true }: CustomCursorProps) {
 
   if (!enabled || isTouch) return null;
 
+  const ringAccent = accent || '#6C63FF';
+  const ringBackground = active
+    ? `color-mix(in srgb, ${ringAccent} 18%, transparent)`
+    : 'rgba(108,99,255,0.06)';
+  const ringBorder = active
+    ? `color-mix(in srgb, ${ringAccent} 42%, rgba(232,232,240,0.16))`
+    : 'rgba(232,232,240,0.16)';
+  const dotGlow = active
+    ? `0 0 18px color-mix(in srgb, ${ringAccent} 45%, transparent)`
+    : '0 0 10px rgba(232,232,240,0.35)';
+
   return (
     <>
       <motion.div
@@ -112,7 +132,7 @@ export default function CustomCursor({ enabled = true }: CustomCursorProps) {
       >
         <div
           className="h-2.5 w-2.5 rounded-full bg-[#E8E8F0]"
-          style={{ transform: 'translate(-50%, -50%)', boxShadow: active ? '0 0 18px rgba(108,99,255,0.45)' : '0 0 10px rgba(232,232,240,0.35)' }}
+          style={{ transform: 'translate(-50%, -50%)', boxShadow: dotGlow, background: active ? ringAccent : '#E8E8F0' }}
         />
       </motion.div>
 
@@ -130,8 +150,8 @@ export default function CustomCursor({ enabled = true }: CustomCursorProps) {
             height: active ? 96 : 34,
             fontFamily: 'JetBrains Mono, monospace',
             transition: 'width 180ms ease, height 180ms ease, border-color 180ms ease, background 180ms ease',
-            borderColor: active ? 'rgba(108,99,255,0.42)' : 'rgba(232,232,240,0.16)',
-            background: active ? 'rgba(108,99,255,0.14)' : 'rgba(108,99,255,0.06)',
+            borderColor: ringBorder,
+            background: ringBackground,
           }}
         >
           <motion.span

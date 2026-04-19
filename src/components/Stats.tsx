@@ -6,9 +6,10 @@ import { useContent } from '../lib/useContent';
 
 const ease: [number, number, number, number] = [0.16, 0.77, 0.47, 0.97];
 
-function AnimatedStat({ value, suffix = '' }: { value: string; suffix?: string }) {
+function AnimatedStat({ value, suffix = '', tickerLabel }: { value: string; suffix?: string; tickerLabel: string }) {
   const ref = useRef<HTMLSpanElement>(null);
   const [inView, setInView] = useState(false);
+  const [showTicker, setShowTicker] = useState(false);
   const count = useMotionValue(0);
   const rounded = useTransform(count, (current) => Math.round(current));
 
@@ -26,18 +27,45 @@ function AnimatedStat({ value, suffix = '' }: { value: string; suffix?: string }
       if (!Number.isNaN(numericValue)) {
         animate(count, numericValue, { duration: 1.8, ease: [0.16, 0.77, 0.47, 0.97] });
       }
+
+      const timer = window.setTimeout(() => setShowTicker(true), Number.isNaN(numericValue) ? 0 : 1050);
+      return () => window.clearTimeout(timer);
     }
   }, [count, inView, value]);
 
   const numericValue = Number.parseInt(value, 10);
   if (Number.isNaN(numericValue)) {
-    return <span ref={ref} style={{ color: '#00B4FF' }}>{value}</span>;
+    return (
+      <span ref={ref} className="inline-flex items-end gap-3">
+        <span style={{ color: '#00B4FF' }}>{value}</span>
+        <motion.span
+          initial={{ opacity: 0, x: 16 }}
+          animate={showTicker ? { opacity: 1, x: 0 } : { opacity: 0, x: 16 }}
+          transition={{ duration: 0.32, ease }}
+          className="rounded-full border border-[rgba(0,180,255,0.18)] bg-[rgba(0,180,255,0.08)] px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-[rgba(0,180,255,0.88)]"
+          style={{ fontFamily: 'JetBrains Mono, monospace' }}
+        >
+          {tickerLabel}
+        </motion.span>
+      </span>
+    );
   }
 
   return (
-    <span ref={ref}>
-      <motion.span style={{ color: '#00B4FF' }}>{rounded}</motion.span>
-      {suffix && <span style={{ color: '#00B4FF' }}>{suffix}</span>}
+    <span ref={ref} className="inline-flex items-end gap-3">
+      <span>
+        <motion.span style={{ color: '#00B4FF' }}>{rounded}</motion.span>
+        {suffix && <span style={{ color: '#00B4FF' }}>{suffix}</span>}
+      </span>
+      <motion.span
+        initial={{ opacity: 0, x: 16 }}
+        animate={showTicker ? { opacity: 1, x: 0 } : { opacity: 0, x: 16 }}
+        transition={{ duration: 0.32, ease }}
+        className="rounded-full border border-[rgba(0,180,255,0.18)] bg-[rgba(0,180,255,0.08)] px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-[rgba(0,180,255,0.88)]"
+        style={{ fontFamily: 'JetBrains Mono, monospace' }}
+      >
+        {tickerLabel}
+      </motion.span>
     </span>
   );
 }
@@ -47,10 +75,10 @@ export default function Stats() {
   const labelParts = getContentValue('stats', 'label', '02 / Why Us').split(' / ');
 
   const statDefaults = [
-    { value: '7', suffix: '', label: 'Days to first milestone', sublabel: 'Delivery', description: 'Projects start with a clearly defined first ship target instead of an open-ended discovery loop.' },
-    { value: '48', suffix: 'h', label: 'Typical response window', sublabel: 'Communication', description: 'You are not waiting days for a status update when decisions are blocking progress.' },
-    { value: '90', suffix: '%', label: 'Mobile traffic share considered', sublabel: 'Real usage', description: 'Layouts are designed around the traffic mix most small businesses actually see.' },
-    { value: '1', suffix: '', label: 'Single accountable team', sublabel: 'Ownership', description: 'Design, development, and launch decisions are owned by the same small team.' },
+    { value: '7', suffix: '', label: 'Days to first milestone', sublabel: 'Delivery', ticker: 'days', description: 'Projects start with a clearly defined first ship target instead of an open-ended discovery loop.' },
+    { value: '48', suffix: 'h', label: 'Typical response window', sublabel: 'Communication', ticker: 'hours', description: 'You are not waiting days for a status update when decisions are blocking progress.' },
+    { value: '90', suffix: '%', label: 'Mobile traffic share considered', sublabel: 'Real usage', ticker: 'mobile', description: 'Layouts are designed around the traffic mix most small businesses actually see.' },
+    { value: '1', suffix: '', label: 'Single accountable team', sublabel: 'Ownership', ticker: 'team', description: 'Design, development, and launch decisions are owned by the same small team.' },
   ];
 
   const storedStatCount = Number(getContentValue('stats', 'stat_count', ''));
@@ -63,6 +91,7 @@ export default function Stats() {
       suffix: getContentValue('stats', `stat_${index + 1}_suffix`, fallback?.suffix || ''),
       label: getContentValue('stats', `stat_${index + 1}_label`, fallback?.label || ''),
       sublabel: getContentValue('stats', `stat_${index + 1}_sublabel`, fallback?.sublabel || ''),
+      ticker: getContentValue('stats', `stat_${index + 1}_ticker`, fallback?.ticker || ''),
       description: getContentValue('stats', `stat_${index + 1}_desc`, fallback?.description || ''),
     };
   }).filter(s => s.label);
@@ -107,7 +136,7 @@ export default function Stats() {
               <div
                 style={{ fontFamily: 'Bebas Neue', fontSize: 'clamp(48px,4.5vw,68px)', letterSpacing: '0.02em', lineHeight: 1 }}
               >
-                <AnimatedStat value={stat.value} suffix={stat.suffix} />
+                <AnimatedStat value={stat.value} suffix={stat.suffix} tickerLabel={stat.ticker || stat.sublabel} />
               </div>
 
               {/* Label */}

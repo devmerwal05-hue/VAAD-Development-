@@ -1,15 +1,18 @@
 import type { ContentGetter } from './content-context';
 
 export interface PortfolioProject {
-  tag: string;
+  accentColor: string;
+  accentSolid: string;
+  credits: string[];
+  description: string;
+  gallery: string[];
+  gradientAngle: string;
+  image: string;
   name: string;
   subtitle: string;
-  description: string;
+  tag: string;
   url: string;
-  image: string;
-  gallery: string[];
-  accentColor: string;
-  gradientAngle: string;
+  year: string;
 }
 
 const accentColorPool = [
@@ -21,10 +24,13 @@ const accentColorPool = [
   'rgba(251,146,60,0.10)',
 ];
 
+const accentSolidPool = ['#7C6FF7', '#A855F7', '#22D3EE', '#EC4899', '#22C55E', '#FB923C'];
+
 const gradientAnglePool = ['135deg', '225deg', '315deg', '45deg', '180deg', '270deg'];
 
 const fallbackProjects = [
   {
+    credits: ['Shopify', 'Supabase', 'Framer Motion'],
     tag: 'Coffee Commerce',
     name: 'Kofi Supply',
     subtitle: 'Inventory-aware storefront',
@@ -32,8 +38,10 @@ const fallbackProjects = [
     url: '',
     image: '/images/project-kofi.svg',
     gallery: ['/images/project-kofi.svg'],
+    year: '2026',
   },
   {
+    credits: ['React', 'Node', 'Postgres'],
     tag: 'Ops Dashboard',
     name: 'Novare',
     subtitle: 'Internal workflow system',
@@ -41,8 +49,10 @@ const fallbackProjects = [
     url: '',
     image: '/images/project-novare.svg',
     gallery: ['/images/project-novare.svg'],
+    year: '2025',
   },
   {
+    credits: ['Vite', 'Content', 'Vercel'],
     tag: 'Retail Experience',
     name: 'Solebound',
     subtitle: 'Launch-ready product site',
@@ -50,6 +60,7 @@ const fallbackProjects = [
     url: '',
     image: '/images/project-solebound.svg',
     gallery: ['/images/project-solebound.svg'],
+    year: '2025',
   },
 ] as const;
 
@@ -60,20 +71,27 @@ export function buildPortfolioProjects(getContentValue: ContentGetter, projectCo
     const projectNumber = index + 1;
     const fallbackProject = fallbackProjects[index];
     const galleryValue = getContentValue('portfolio', `project_${projectNumber}_gallery`, fallbackProject?.gallery.join(',') || '');
+    const creditsValue = getContentValue('portfolio', `project_${projectNumber}_credits`, fallbackProject?.credits.join(',') || '');
 
     return {
-      tag: getContentValue('portfolio', `project_${projectNumber}_tag`, fallbackProject?.tag || ''),
-      name: getContentValue('portfolio', `project_${projectNumber}_name`, fallbackProject?.name || ''),
-      subtitle: getContentValue('portfolio', `project_${projectNumber}_subtitle`, fallbackProject?.subtitle || ''),
+      accentColor: accentColorPool[index % accentColorPool.length],
+      accentSolid: accentSolidPool[index % accentSolidPool.length],
+      credits: creditsValue
+        .split(',')
+        .map((entry) => entry.trim())
+        .filter(Boolean),
       description: getContentValue('portfolio', `project_${projectNumber}_desc`, fallbackProject?.description || ''),
-      url: getContentValue('portfolio', `project_${projectNumber}_url`, fallbackProject?.url || ''),
-      image: getContentValue('portfolio', `project_${projectNumber}_image`, fallbackProject?.image || ''),
       gallery: galleryValue
         .split(',')
         .map((entry) => entry.trim())
         .filter(Boolean),
-      accentColor: accentColorPool[index % accentColorPool.length],
       gradientAngle: gradientAnglePool[index % gradientAnglePool.length],
+      image: getContentValue('portfolio', `project_${projectNumber}_image`, fallbackProject?.image || ''),
+      name: getContentValue('portfolio', `project_${projectNumber}_name`, fallbackProject?.name || ''),
+      tag: getContentValue('portfolio', `project_${projectNumber}_tag`, fallbackProject?.tag || ''),
+      subtitle: getContentValue('portfolio', `project_${projectNumber}_subtitle`, fallbackProject?.subtitle || ''),
+      url: getContentValue('portfolio', `project_${projectNumber}_url`, fallbackProject?.url || ''),
+      year: getContentValue('portfolio', `project_${projectNumber}_year`, fallbackProject?.year || ''),
     };
   }).filter((project) => project.name);
 }
