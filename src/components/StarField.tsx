@@ -164,9 +164,15 @@ export default function StarField({ className = '', active = true, warpRef, warp
       context.fillStyle = '#030308';
       context.fillRect(0, 0, width, height);
 
+      // Clip to canvas bounds - prevents off-screen drawing
       context.save();
-      // Smooth hover transition
-      circleHoverRef.current.active += (circleHoverRef.current.target - circleHoverRef.current.active) * 0.15;
+      context.beginPath();
+      context.rect(0, 0, width, height);
+      context.clip();
+
+      // Interactive VA.AD circle section (inside clip)
+      const circleHoverRef_Val = circleHoverRef.current.active + (circleHoverRef.current.target - circleHoverRef.current.active) * 0.15;
+      circleHoverRef.current.active = circleHoverRef_Val;
       circleHoverRef.current.glow = 0.08 + circleHoverRef.current.active * 0.15;
       circleHoverRef.current.scale = 48 + circleHoverRef.current.active * 12;
       
@@ -176,20 +182,17 @@ export default function StarField({ className = '', active = true, warpRef, warp
       context.arc(width * 0.68, height * 0.24, 220, 0, Math.PI * 2);
       context.fill();
       
-      // Glow effect when hovering
       if (circleHoverRef.current.active > 0.01) {
         context.shadowColor = 'rgba(0,180,255,0.6)';
         context.shadowBlur = circleHoverRef.current.active * 40;
       }
       
-      // VA.AD text with hover animation
       context.font = `bold ${circleHoverRef.current.scale}px "Bebas Neue", sans-serif`;
       context.fillStyle = `rgba(0,180,255,${0.15 + circleHoverRef.current.active * 0.25})`;
       context.textAlign = 'center';
       context.textBaseline = 'middle';
       context.fillText('VA.AD', width * 0.68, height * 0.24);
       context.shadowBlur = 0;
-      context.restore();
 
       for (const star of starsRef.current) {
         const depthShiftX = smoothedRef.current.x * star.depth * 32;
@@ -199,9 +202,10 @@ export default function StarField({ className = '', active = true, warpRef, warp
         star.y += drift * (0.7 + star.depth * 1.2);
         star.x += smoothedRef.current.x * 0.18 * (0.2 + star.depth);
 
-        if (star.y > height + 30 || star.x < -40 || star.x > width + 40) {
+        // Reset with tighter threshold to prevent clustering
+        if (star.y > height + 2 || star.x < -2 || star.x > width + 2) {
           star.x = Math.random() * width;
-          star.y = -20 - Math.random() * 120;
+          star.y = -2 - Math.random() * 120;
           star.depth = Math.random();
           star.size = 0.8 + Math.random() * 2.4;
           star.velocity = 0.08 + Math.random() * 0.22;
@@ -209,6 +213,10 @@ export default function StarField({ className = '', active = true, warpRef, warp
 
         const currentX = star.x + depthShiftX;
         const currentY = star.y + depthShiftY;
+
+        // Skip drawing if off canvas
+        if (currentX < 0 || currentX > width || currentY < 0 || currentY > height) continue;
+
         const trail = 10 + warp * 46 * (0.35 + star.depth);
         const tailX = currentX - smoothedRef.current.x * 18;
         const tailY = currentY - trail;
@@ -229,6 +237,9 @@ export default function StarField({ className = '', active = true, warpRef, warp
         context.arc(currentX, currentY, star.size * (0.4 + warp * 0.45), 0, Math.PI * 2);
         context.fill();
       }
+      
+      // Restore clipping after star loop
+      context.restore();
 
       frameRef.current = window.requestAnimationFrame(render);
     };
