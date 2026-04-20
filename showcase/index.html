@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A showcase of award-winning web design techniques — smooth scrolling, 3D particles, split-text reveals, custom cursors, and more.">
+    <title>VAAD — Design Showcase</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- GSAP + Plugins -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollToPlugin.min.js"></script>
+
+    <!-- Lenis Smooth Scroll -->
+    <script src="https://unpkg.com/lenis@1.1.18/dist/lenis.min.js"></script>
+
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- ===== CUSTOM CURSOR ===== -->
+    <div class="cursor" id="cursor">
+        <div class="cursor-dot"></div>
+        <div class="cursor-ring"></div>
+    </div>
+
+    <!-- ===== PRELOADER ===== -->
+    <div class="preloader" id="preloader">
+        <div class="preloader-inner">
+            <div class="preloader-brand">VAAD</div>
+            <div class="preloader-bar">
+                <div class="preloader-progress" id="preloaderProgress"></div>
+            </div>
+            <div class="preloader-counter" id="preloaderCounter">0</div>
+        </div>
+    </div>
+
+    <!-- ===== NAVIGATION ===== -->
+    <nav class="nav" id="nav">
+        <a href="#hero" class="nav-logo">
+            <span class="nav-logo-text">VAAD</span>
+            <span class="nav-logo-dot">.</span>
+        </a>
+        <div class="nav-links" id="navLinks">
+            <a href="#about" class="nav-link" data-index="01">About</a>
+            <a href="#work" class="nav-link" data-index="02">Work</a>
+            <a href="#services" class="nav-link" data-index="03">Services</a>
+            <a href="#contact" class="nav-link" data-index="04">Contact</a>
+        </div>
+        <button class="nav-menu-btn" id="menuBtn" aria-label="Toggle menu">
+            <span class="menu-line"></span>
+            <span class="menu-line"></span>
+        </button>
+    </nav>
+
+    <!-- ===== MOBILE MENU OVERLAY ===== -->
+    <div class="menu-overlay" id="menuOverlay">
+        <div class="menu-overlay-inner">
+            <a href="#about" class="menu-overlay-link" data-index="01">About</a>
+            <a href="#work" class="menu-overlay-link" data-index="02">Work</a>
+            <a href="#services" class="menu-overlay-link" data-index="03">Services</a>
+            <a href="#contact" class="menu-overlay-link" data-index="04">Contact</a>
+        </div>
+        <div class="menu-overlay-footer">
+            <span>© 2026 VAAD Studio</span>
+            <div class="menu-overlay-socials">
+                <a href="#">Twitter</a>
+                <a href="#">Instagram</a>
+                <a href="#">Dribbble</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== THREE.JS PARTICLE CANVAS ===== -->
+    <canvas id="particleCanvas"></canvas>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <main id="smooth-wrapper">
+
+        <!-- HERO SECTION -->
+        <section class="hero" id="hero">
+            <div class="hero-content">
+                <div class="hero-overline">
+                    <span class="hero-overline-line"></span>
+                    <span class="hero-overline-text">Digital Design Studio — 2026</span>
+                </div>
+                <h1 class="hero-title">
+                    <span class="hero-title-line">
+                        <span class="hero-title-word" data-split>We Create</span>
+                    </span>
+                    <span class="hero-title-line">
+                        <span class="hero-title-word hero-title-outline" data-split>Digital</span>
+                    </span>
+                    <span class="hero-title-line">
+                        <span class="hero-title-word" data-split>Experiences</span>
+                    </span>
+                </h1>
+                <p class="hero-sub">Award-winning interfaces crafted at the intersection of art, motion, and technology.</p>
+                <div class="hero-cta-row">
+                    <a href="#work" class="magnetic-btn" data-magnetic>
+                        <span class="magnetic-btn-text">View Work</span>
+                        <span class="magnetic-btn-icon">→</span>
+                    </a>
+                    <a href="#contact" class="hero-text-link">Start a project</a>
+                </div>
+            </div>
+            <div class="hero-scroll-indicator">
+                <div class="scroll-line"></div>
+                <span>Scroll</span>
+            </div>
+        </section>
+
+        <!-- MARQUEE -->
+        <section class="marquee-section">
+            <div class="marquee-track">
+                <div class="marquee-content">
+                    <span>UI/UX Design</span>
+                    <span class="marquee-dot">◆</span>
+                    <span>3D Experiences</span>
+                    <span class="marquee-dot">◆</span>
+                    <span>WebGL</span>
+                    <span class="marquee-dot">◆</span>
+                    <span>Motion Design</span>
+                    <span class="marquee-dot">◆</span>
+                    <span>Brand Strategy</span>
+                    <span class="marquee-dot">◆</span>
+                    <span>Interactive Art</span>
+                    <span class="marquee-dot">◆</span>
+                    <span>UI/UX Design</span>
+                    <span class="marquee-dot">◆</span>
+                    <span>3D Experiences</span>
+                    <span class="marquee-dot">◆</span>
+                    <span>WebGL</span>
+                    <span class="marquee-dot">◆</span>
+                    <span>Motion Design</span>
+                    <span class="marquee-dot">◆</span>
+                    <span>Brand Strategy</span>
+                    <span class="marquee-dot">◆</span>
+                    <span>Interactive Art</span>
+                    <span class="marquee-dot">◆</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- ABOUT SECTION -->
+        <section class="about" id="about">
+            <div class="section-container">
+                <div class="about-grid">
+                    <div class="about-left">
+                        <span class="section-label">01 — About</span>
+                        <h2 class="about-heading reveal-text">
+                            We blend story, art & technology to craft immersive digital worlds.
+                        </h2>
+                    </div>
+                    <div class="about-right">
+                        <p class="about-text reveal-text">
+                            Founded in 2024, VAAD Studio is a multidisciplinary design collective pushing the boundaries of web experiences. We believe every pixel should move, every scroll should tell a story, and every interaction should feel alive.
+                        </p>
+                        <p class="about-text reveal-text">
+                            From cinematic brand microsites to AI-powered interfaces, we partner with visionary brands who demand more than templates. Our work lives at the intersection of emotion and engineering.
+                        </p>
+                        <div class="about-stats">
+                            <div class="stat-item">
+                                <span class="stat-number" data-count="150">0</span>
+                                <span class="stat-label">Projects Delivered</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-number" data-count="42">0</span>
+                                <span class="stat-label">Awards Won</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-number" data-count="12">0</span>
+                                <span class="stat-label">Countries</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- HORIZONTAL SCROLL WORK SECTION -->
+        <section class="work" id="work">
+            <div class="section-container">
+                <div class="work-header">
+                    <span class="section-label">02 — Selected Work</span>
+                    <h2 class="work-heading reveal-text">Featured Projects</h2>
+                </div>
+            </div>
+            <div class="horizontal-scroll" id="horizontalScroll">
+                <div class="horizontal-track">
+                    <div class="project-card" data-color="#6c5ce7">
+                        <div class="project-card-image">
+                            <div class="project-card-overlay"></div>
+                            <div class="project-card-gradient" style="background: linear-gradient(135deg, #6c5ce7, #a29bfe);"></div>
+                            <span class="project-card-number">01</span>
+                        </div>
+                        <div class="project-card-info">
+                            <h3 class="project-card-title">Nebula</h3>
+                            <p class="project-card-desc">Immersive 3D brand experience for a luxury fragrance house.</p>
+                            <span class="project-card-tags">WebGL • Three.js • GSAP</span>
+                        </div>
+                    </div>
+                    <div class="project-card" data-color="#00b894">
+                        <div class="project-card-image">
+                            <div class="project-card-overlay"></div>
+                            <div class="project-card-gradient" style="background: linear-gradient(135deg, #00b894, #55efc4);"></div>
+                            <span class="project-card-number">02</span>
+                        </div>
+                        <div class="project-card-info">
+                            <h3 class="project-card-title">Terraform</h3>
+                            <p class="project-card-desc">AI-native dashboard for climate data visualization.</p>
+                            <span class="project-card-tags">React • D3.js • Motion</span>
+                        </div>
+                    </div>
+                    <div class="project-card" data-color="#fd79a8">
+                        <div class="project-card-image">
+                            <div class="project-card-overlay"></div>
+                            <div class="project-card-gradient" style="background: linear-gradient(135deg, #fd79a8, #fab1a0);"></div>
+                            <span class="project-card-number">03</span>
+                        </div>
+                        <div class="project-card-info">
+                            <h3 class="project-card-title">Prism</h3>
+                            <p class="project-card-desc">E-commerce reimagined with scroll-driven product storytelling.</p>
+                            <span class="project-card-tags">Shopify • Lenis • GSAP</span>
+                        </div>
+                    </div>
+                    <div class="project-card" data-color="#fdcb6e">
+                        <div class="project-card-image">
+                            <div class="project-card-overlay"></div>
+                            <div class="project-card-gradient" style="background: linear-gradient(135deg, #fdcb6e, #f39c12);"></div>
+                            <span class="project-card-number">04</span>
+                        </div>
+                        <div class="project-card-info">
+                            <h3 class="project-card-title">Meridian</h3>
+                            <p class="project-card-desc">Interactive annual report for a global energy corporation.</p>
+                            <span class="project-card-tags">Canvas • ScrollTrigger • SVG</span>
+                        </div>
+                    </div>
+                    <div class="project-card" data-color="#0984e3">
+                        <div class="project-card-image">
+                            <div class="project-card-overlay"></div>
+                            <div class="project-card-gradient" style="background: linear-gradient(135deg, #0984e3, #74b9ff);"></div>
+                            <span class="project-card-number">05</span>
+                        </div>
+                        <div class="project-card-info">
+                            <h3 class="project-card-title">Aether</h3>
+                            <p class="project-card-desc">Generative art platform with real-time audio visualization.</p>
+                            <span class="project-card-tags">WebAudio • WebGL • Shaders</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- PARALLAX IMAGE BREAK -->
+        <section class="parallax-break">
+            <div class="parallax-bg" id="parallaxBg">
+                <div class="parallax-gradient"></div>
+            </div>
+            <div class="parallax-content">
+                <blockquote class="parallax-quote reveal-text">
+                    "The details are not the details. They make the design."
+                </blockquote>
+                <cite class="parallax-cite reveal-text">— Charles Eames</cite>
+            </div>
+        </section>
+
+        <!-- SERVICES SECTION -->
+        <section class="services" id="services">
+            <div class="section-container">
+                <div class="services-header">
+                    <span class="section-label">03 — Services</span>
+                    <h2 class="services-heading reveal-text">What We Do</h2>
+                </div>
+                <div class="services-grid">
+                    <div class="service-card glass-card">
+                        <span class="service-number">01</span>
+                        <div class="service-icon">
+                            <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <rect x="6" y="6" width="36" height="36" rx="4"/>
+                                <line x1="6" y1="16" x2="42" y2="16"/>
+                                <circle cx="12" cy="11" r="1.5"/>
+                                <circle cx="18" cy="11" r="1.5"/>
+                                <circle cx="24" cy="11" r="1.5"/>
+                            </svg>
+                        </div>
+                        <h3 class="service-title">Web Design & Development</h3>
+                        <p class="service-desc">Pixel-perfect, responsive websites that push creative boundaries while maintaining 60fps performance.</p>
+                        <ul class="service-list">
+                            <li>Custom Websites</li>
+                            <li>E-Commerce</li>
+                            <li>Web Applications</li>
+                        </ul>
+                    </div>
+                    <div class="service-card glass-card">
+                        <span class="service-number">02</span>
+                        <div class="service-icon">
+                            <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M24 6L42 17V31L24 42L6 31V17L24 6Z"/>
+                                <path d="M24 22L42 17"/>
+                                <path d="M24 22L6 17"/>
+                                <path d="M24 22V42"/>
+                            </svg>
+                        </div>
+                        <h3 class="service-title">3D & Interactive Experiences</h3>
+                        <p class="service-desc">WebGL-powered worlds, product configurators, and immersive brand universes built with Three.js.</p>
+                        <ul class="service-list">
+                            <li>WebGL / Three.js</li>
+                            <li>Product 3D</li>
+                            <li>AR Experiences</li>
+                        </ul>
+                    </div>
+                    <div class="service-card glass-card">
+                        <span class="service-number">03</span>
+                        <div class="service-icon">
+                            <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <circle cx="24" cy="24" r="18"/>
+                                <path d="M16 24C16 20 24 6 24 6C24 6 32 20 32 24C32 28 28.4 32 24 32C19.6 32 16 28 16 24Z"/>
+                            </svg>
+                        </div>
+                        <h3 class="service-title">Brand & Motion Design</h3>
+                        <p class="service-desc">From identity systems to micro-animations, we craft brands that move and breathe across every touchpoint.</p>
+                        <ul class="service-list">
+                            <li>Brand Identity</li>
+                            <li>Motion Systems</li>
+                            <li>Design Systems</li>
+                        </ul>
+                    </div>
+                    <div class="service-card glass-card">
+                        <span class="service-number">04</span>
+                        <div class="service-icon">
+                            <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <rect x="8" y="8" width="14" height="14" rx="2"/>
+                                <rect x="26" y="8" width="14" height="14" rx="2"/>
+                                <rect x="8" y="26" width="14" height="14" rx="2"/>
+                                <rect x="26" y="26" width="14" height="14" rx="7"/>
+                            </svg>
+                        </div>
+                        <h3 class="service-title">UI/UX Strategy</h3>
+                        <p class="service-desc">Research-backed interfaces designed for delight. We prototype, test, and iterate until every interaction feels inevitable.</p>
+                        <ul class="service-list">
+                            <li>User Research</li>
+                            <li>Prototyping</li>
+                            <li>Interaction Design</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- AWARDS MARQUEE -->
+        <section class="awards-section">
+            <div class="section-container">
+                <span class="section-label">Recognition</span>
+            </div>
+            <div class="awards-grid">
+                <div class="award-item">
+                    <span class="award-org">Awwwards</span>
+                    <span class="award-name">Site of the Year</span>
+                    <span class="award-year">2026</span>
+                </div>
+                <div class="award-item">
+                    <span class="award-org">FWA</span>
+                    <span class="award-name">FWA of the Day</span>
+                    <span class="award-year">2025</span>
+                </div>
+                <div class="award-item">
+                    <span class="award-org">CSS Design Awards</span>
+                    <span class="award-name">Best UI Design</span>
+                    <span class="award-year">2025</span>
+                </div>
+                <div class="award-item">
+                    <span class="award-org">The Webby Awards</span>
+                    <span class="award-name">Best Visual Design</span>
+                    <span class="award-year">2025</span>
+                </div>
+                <div class="award-item">
+                    <span class="award-org">Red Dot</span>
+                    <span class="award-name">Communication Design</span>
+                    <span class="award-year">2024</span>
+                </div>
+                <div class="award-item">
+                    <span class="award-org">Awwwards</span>
+                    <span class="award-name">Developer Award</span>
+                    <span class="award-year">2024</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- TESTIMONIALS -->
+        <section class="testimonials">
+            <div class="section-container">
+                <div class="testimonial-card glass-card">
+                    <div class="testimonial-quote">"</div>
+                    <p class="testimonial-text" id="testimonialText">VAAD delivered something we didn't even know we needed. The immersive web experience transformed our brand perception overnight.</p>
+                    <div class="testimonial-author">
+                        <div class="testimonial-author-info">
+                            <span class="testimonial-name" id="testimonialName">Sarah Chen</span>
+                            <span class="testimonial-role" id="testimonialRole">VP Design, Meridian Corp</span>
+                        </div>
+                        <div class="testimonial-nav">
+                            <button class="testimonial-btn" id="prevTestimonial" aria-label="Previous testimonial">←</button>
+                            <span class="testimonial-count"><span id="testimonialCurrent">1</span> / <span id="testimonialTotal">3</span></span>
+                            <button class="testimonial-btn" id="nextTestimonial" aria-label="Next testimonial">→</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CONTACT / CTA SECTION -->
+        <section class="contact" id="contact">
+            <div class="section-container">
+                <span class="section-label">04 — Contact</span>
+                <div class="contact-content">
+                    <h2 class="contact-heading">
+                        <span class="contact-heading-line reveal-text">Let's build</span>
+                        <span class="contact-heading-line reveal-text">something</span>
+                        <span class="contact-heading-line contact-heading-outline reveal-text">extraordinary.</span>
+                    </h2>
+                    <div class="contact-cta">
+                        <a href="mailto:hello@vaad.studio" class="magnetic-btn magnetic-btn-large" data-magnetic>
+                            <span class="magnetic-btn-text">Get in Touch</span>
+                            <span class="magnetic-btn-icon">↗</span>
+                        </a>
+                        <p class="contact-email">hello@vaad.studio</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- FOOTER -->
+        <footer class="footer">
+            <div class="section-container">
+                <div class="footer-top">
+                    <div class="footer-brand">
+                        <span class="footer-logo">VAAD<span class="nav-logo-dot">.</span></span>
+                        <p class="footer-tagline">Crafting digital experiences that move people.</p>
+                    </div>
+                    <div class="footer-columns">
+                        <div class="footer-col">
+                            <h4 class="footer-col-title">Navigation</h4>
+                            <a href="#about" class="footer-link">About</a>
+                            <a href="#work" class="footer-link">Work</a>
+                            <a href="#services" class="footer-link">Services</a>
+                            <a href="#contact" class="footer-link">Contact</a>
+                        </div>
+                        <div class="footer-col">
+                            <h4 class="footer-col-title">Social</h4>
+                            <a href="#" class="footer-link">Twitter / X</a>
+                            <a href="#" class="footer-link">Instagram</a>
+                            <a href="#" class="footer-link">Dribbble</a>
+                            <a href="#" class="footer-link">LinkedIn</a>
+                        </div>
+                        <div class="footer-col">
+                            <h4 class="footer-col-title">Legal</h4>
+                            <a href="#" class="footer-link">Privacy Policy</a>
+                            <a href="#" class="footer-link">Terms of Service</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="footer-bottom">
+                    <span>© 2026 VAAD Studio. All rights reserved.</span>
+                    <span class="footer-time" id="footerTime"></span>
+                </div>
+            </div>
+        </footer>
+
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
