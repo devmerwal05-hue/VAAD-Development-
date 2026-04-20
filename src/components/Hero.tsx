@@ -343,7 +343,7 @@ export default function Hero({ className = '' }: HeroProps) {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-[1.12fr_0.88fr]">
-              <div className="relative min-h-[360px] overflow-hidden border-b border-[rgba(232,232,240,0.08)] md:border-b-0 md:border-r">
+              <div className="group relative min-h-[360px] overflow-hidden border-b border-[rgba(232,232,240,0.08)] md:border-b-0 md:border-r">
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(108,99,255,0.28),transparent_30%),radial-gradient(circle_at_76%_20%,rgba(0,212,255,0.18),transparent_24%),linear-gradient(180deg,rgba(6,7,14,0.25),rgba(3,3,8,0.86))]" />
                 {featuredProject?.image ? (
                   <img
@@ -351,10 +351,24 @@ export default function Hero({ className = '' }: HeroProps) {
                     alt={featuredProject.name}
                     loading="lazy"
                     decoding="async"
-                    className="absolute inset-0 h-full w-full object-cover opacity-74"
+                    className="absolute inset-0 h-full w-full object-cover opacity-74 transition-transform duration-500 group-hover:scale-105"
                   />
                 ) : null}
                 <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent,rgba(3,3,8,0.16)_42%,rgba(3,3,8,0.88)_100%)]" />
+                
+                {/* Hover reveal overlay */}
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 bg-[rgba(3,3,8,0.75)]">
+                  <div className="text-center transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
+                    <span className="inline-flex items-center gap-2 px-6 py-3 rounded-full border border-[rgba(0,212,255,0.5)] bg-[rgba(0,212,255,0.1)] text-[rgba(0,212,255,0.9)] text-[11px] uppercase tracking-[0.2em]" style={{ fontFamily: 'JetBrains Mono, monospace' }}>
+                      View Project
+                      <ArrowUpRight size={14} />
+                    </span>
+                    <p className="mt-3 text-[rgba(232,232,240,0.5)] text-[12px]" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+                      {featuredProject?.name || 'Featured release'}
+                    </p>
+                  </div>
+                </div>
+                
                 <div className="absolute bottom-6 left-6 right-6">
                   <p
                     className="mb-3 text-[11px] uppercase tracking-[0.28em] text-[rgba(0,212,255,0.84)]"
