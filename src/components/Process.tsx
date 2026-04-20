@@ -76,7 +76,7 @@ export default function Process({ className = '' }: ProcessProps) {
   });
 
   return (
-    <section ref={sectionRef} className={`relative overflow-hidden px-6 py-24 md:px-10 md:py-36 ${className}`} style={{ minHeight: `${steps.length * 72}vh` }}>
+    <section ref={sectionRef} className={`relative overflow-hidden px-6 py-24 md:px-10 md:py-36 ${className}`} style={{ minHeight: `${steps.length * 42}vh` }}>
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_78%_18%,rgba(108,99,255,0.14),transparent_20%),radial-gradient(circle_at_12%_72%,rgba(0,212,255,0.12),transparent_18%)]" />
 
       <div className="relative z-10 mx-auto max-w-[1440px]">
