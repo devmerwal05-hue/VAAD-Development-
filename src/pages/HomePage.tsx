@@ -14,11 +14,12 @@ import CustomCursor from '../components/CustomCursor';
 import SectionChapterRail from '../components/SectionChapterRail';
 import { usePageMetadata } from '../hooks/usePageMetadata';
 import { useContent } from '../lib/useContent';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import EntryScreen from '../components/EntryScreen';
 
 export default function HomePage() {
   const { getContentValue } = useContent();
+  const [isMobile, setIsMobile] = useState(false);
   const [launchComplete, setLaunchComplete] = useState(() => {
     try {
       return sessionStorage.getItem('vaad_home_launch_complete') === '1';
@@ -27,13 +28,21 @@ export default function HomePage() {
     }
   });
 
+  useEffect(() => {
+    const media = window.matchMedia('(max-width: 767px), (pointer: coarse)');
+    const update = () => setIsMobile(media.matches);
+    update();
+    media.addEventListener('change', update);
+    return () => media.removeEventListener('change', update);
+  }, []);
+
   usePageMetadata({
     title: getContentValue('seo', 'home_title', 'VAAD Development | Fast websites and web apps'),
     description: getContentValue('seo', 'home_description', 'VAAD Development designs, builds, and ships conversion-focused websites and operational web apps for small teams that need momentum.'),
     path: '/',
   });
 
-  if (!launchComplete) {
+  if (!launchComplete && !isMobile) {
     return (
       <EntryScreen
         onComplete={() => {
@@ -47,6 +56,17 @@ export default function HomePage() {
       />
     );
   }
+
+  useEffect(() => {
+    if (!launchComplete && isMobile) {
+      try {
+        sessionStorage.setItem('vaad_home_launch_complete', '1');
+      } catch {
+        // Ignore
+      }
+      setLaunchComplete(true);
+    }
+  }, [isMobile, launchComplete]);
 
   const chapters = [
     { id: 'home-services', number: '01', label: 'Services' },
