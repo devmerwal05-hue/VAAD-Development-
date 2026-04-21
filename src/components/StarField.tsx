@@ -60,7 +60,7 @@ export default function StarField({ className = '', active = true, warpRef, warp
   useEffect(() => {
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const saveData = (navigator as unknown as { saveData?: string }).saveData === 'on';
-    const lowPower = (navigator as unknown as { hardwareConcurrency?: number }).hardwareConcurrency <= 4;
+    const lowPower = ((navigator as unknown as { hardwareConcurrency?: number }).hardwareConcurrency ?? 8) <= 4;
     setIsLowPower(reducedMotion || saveData || lowPower || isMobile);
   }, [isMobile]);
 
