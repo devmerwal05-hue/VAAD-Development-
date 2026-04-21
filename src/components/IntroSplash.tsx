@@ -23,15 +23,16 @@ export default function IntroSplash({ onComplete, skipEntry = false }: { onCompl
   }, [onComplete, skipEntry]);
 
   return (
-    <AnimatePresence>
-      <motion.div
-        key="splash"
-        initial={{ opacity: 1 }}
-        animate={phase === 'exit' ? { opacity: 0 } : { opacity: 1 }}
-        transition={{ duration: 0.5, ease }}
-        className="fixed inset-0 z-[200] flex flex-col items-center justify-center"
-        style={{ background: '#040408' }}
-      >
+    <>
+      <AnimatePresence>
+        <motion.div
+          key="splash"
+          initial={{ opacity: 1 }}
+          animate={phase === 'exit' ? { opacity: 0 } : { opacity: 1 }}
+          transition={{ duration: 0.5, ease }}
+          className="fixed inset-0 z-[200] flex flex-col items-center justify-center"
+          style={{ background: '#040408' }}
+        >
         {/* Scan-line grid bg */}
         <div
           className="absolute inset-0 pointer-events-none"
@@ -153,18 +154,19 @@ export default function IntroSplash({ onComplete, skipEntry = false }: { onCompl
           />
         </div>
       </motion.div>
-    </AnimatePresence>
-    <AnimatePresence>
-      {showEntry && (
-        <motion.div
-          key="entry"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.3 }}
-        >
-          <EntryScreen onComplete={onComplete} />
-        </motion.div>
-      )}
-    </AnimatePresence>
+      </AnimatePresence>
+      <AnimatePresence>
+        {showEntry && (
+          <motion.div
+            key="entry"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
+          >
+            <EntryScreen onComplete={onComplete} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 }
