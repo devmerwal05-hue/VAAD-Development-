@@ -46,6 +46,7 @@ export default function StarField({ className = '', active = true, warpRef, warp
   const mouseRef = useRef({ x: 0, y: 0 });
   const smoothedRef = useRef({ x: 0, y: 0 });
   const [isMobile, setIsMobile] = useState(false);
+  const [isLowPower, setIsLowPower] = useState(false);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
@@ -55,6 +56,13 @@ export default function StarField({ className = '', active = true, warpRef, warp
     media.addEventListener('change', update);
     return () => media.removeEventListener('change', update);
   }, []);
+
+  useEffect(() => {
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const saveData = (navigator as unknown as { saveData?: string }).saveData === 'on';
+    const lowPower = (navigator as unknown as { hardwareConcurrency?: number }).hardwareConcurrency <= 4;
+    setIsLowPower(reducedMotion || saveData || lowPower || isMobile);
+  }, [isMobile]);
 
   useEffect(() => {
     if (isMobile) return;
@@ -101,14 +109,18 @@ export default function StarField({ className = '', active = true, warpRef, warp
 
     const setCanvasSize = () => {
       const bounds = canvas.getBoundingClientRect();
-      const dpr = Math.min(window.devicePixelRatio || 1, 1.75);
+      const dpr = isLowPower 
+        ? Math.min(window.devicePixelRatio || 1, 1)
+        : Math.min(window.devicePixelRatio || 1, 1.5);
       canvas.width = Math.max(1, Math.floor(bounds.width * dpr));
       canvas.height = Math.max(1, Math.floor(bounds.height * dpr));
       context.setTransform(dpr, 0, 0, dpr, 0, 0);
 
       if (starsRef.current.length === 0) {
         const starCount = Math.floor((bounds.width * bounds.height) / 9800);
-        starsRef.current = Array.from({ length: clamp(starCount, 120, 220) }, () => createStar(bounds.width, bounds.height));
+        isLowPower
+          ? starsRef.current = Array.from({ length: clamp(starCount, 15, 35) }, () => createStar(bounds.width, bounds.height))
+          : starsRef.current = Array.from({ length: clamp(starCount, 80, 150) }, () => createStar(bounds.width, bounds.height));
       }
     };
 
@@ -198,7 +210,7 @@ export default function StarField({ className = '', active = true, warpRef, warp
       window.removeEventListener('resize', setCanvasSize);
       window.removeEventListener('pointermove', handlePointerMove);
     };
-  }, [active, isMobile, ready, warpRef, warpStrength]);
+  }, [active, isMobile, isLowPower, ready, warpRef, warpStrength]);
 
   return (
     <motion.div

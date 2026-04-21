@@ -109,11 +109,16 @@ export default function EntryScreen({ onComplete }: { onComplete: () => void }) 
         if (!isLaunching) launch();
       }}
     >
-      <StarField
-        warpRef={warpRef}
-        active
-        className="absolute inset-0 w-full h-full opacity-80"
-      />
+      {!prefersReducedMotion && (
+        <StarField
+          warpRef={warpRef}
+          active
+          className="absolute inset-0 w-full h-full opacity-80"
+        />
+      )}
+      {prefersReducedMotion && (
+        <div className="absolute inset-0 bg-gradient-to-b from-[rgba(0,180,255,0.08)] to-transparent" />
+      )}
 
       <div className="absolute inset-0 hero-gradient-1 opacity-60" aria-hidden="true" />
       <div className="absolute inset-0 hero-gradient-2 opacity-60" aria-hidden="true" />

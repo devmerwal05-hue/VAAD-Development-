@@ -1,5 +1,4 @@
-/* ── GOOGLE FONTS ────────────────────────────────────── */
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&family=DM+Sans:wght@400;500;700&family=Syne:wght@700;800&display=swap');
+/* Fonts loaded via index.html with font-display: swap */
 
 @import "tailwindcss";
 
@@ -191,14 +190,14 @@ body.admin-mode::after { display: none; }
 /* ── GLASS ───────────────────────────────────── */
 .glass {
   background: rgba(7,7,15,0.7);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(255,255,255,0.06);
 }
 .glass-blue {
   background: rgba(0,180,255,0.04);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   border: 1px solid rgba(0,180,255,0.12);
 }
 
@@ -309,12 +308,10 @@ body.admin-mode::after { display: none; }
 .hero-gradient-1 {
   background: radial-gradient(ellipse 900px 700px at 10% 40%, rgba(0,180,255,0.08) 0%, transparent 70%);
   animation: drift1 35s ease-in-out infinite;
-  will-change: transform;
 }
 .hero-gradient-2 {
   background: radial-gradient(ellipse 700px 800px at 90% 20%, rgba(255,45,85,0.06) 0%, transparent 70%);
   animation: drift2 50s ease-in-out infinite;
-  will-change: transform;
 }
 
 /* ── MARQUEE ─────────────────────────────────── */
@@ -346,13 +343,13 @@ body.admin-mode::after { display: none; }
   0%, 100% { transform: translateY(0px); }
   50% { transform: translateY(-14px); }
 }
-.float-orb { animation: float 8s ease-in-out infinite; will-change: transform; }
+.float-orb { animation: float 8s ease-in-out infinite; }
 
 @keyframes float-reverse {
   0%, 100% { transform: translateY(0px); }
   50% { transform: translateY(12px); }
 }
-.float-orb-slow { animation: float-reverse 12s ease-in-out infinite; will-change: transform; }
+.float-orb-slow { animation: float-reverse 12s ease-in-out infinite; }
 
 /* ── SCAN LINE ANIMATION ─────────────────────── */
 @keyframes scanLine {
@@ -471,7 +468,6 @@ body.admin-mode::after { display: none; }
 
 /* New cinematic UI primitives */
 .void-reveal {
-  will-change: transform, opacity;
 }
 
 .editorial-kicker {

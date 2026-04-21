@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { lazy, Suspense, useState, useCallback, type ReactNode } from 'react';
+import { lazy, Suspense, useState, useCallback, useEffect, type ReactNode } from 'react';
 import { ContentProvider } from './lib/ContentProvider';
 import ErrorBoundary from './components/ErrorBoundary';
 import IntroSplash from './components/IntroSplash';
@@ -35,7 +35,8 @@ function withRouteBoundary(element: ReactNode) {
   return <ErrorBoundary scope="route">{element}</ErrorBoundary>;
 }
 
-function PublicSite() {
+function PublicSite({ skipEntry = false }: { skipEntry?: boolean }) {
+  const [isMobile, setIsMobile] = useState(false);
   const [introComplete, setIntroComplete] = useState(() => {
     try {
       return sessionStorage.getItem('vaad_intro_seen') === '1';
@@ -43,6 +44,14 @@ function PublicSite() {
       return true;
     }
   });
+
+  useEffect(() => {
+    const media = window.matchMedia('(max-width: 767px), (pointer: coarse)');
+    const update = () => setIsMobile(media.matches);
+    update();
+    media.addEventListener('change', update);
+    return () => media.removeEventListener('change', update);
+  }, []);
 
   const handleIntroComplete = useCallback(() => {
     try {
@@ -53,9 +62,11 @@ function PublicSite() {
     setIntroComplete(true);
   }, []);
 
+  const shouldSkipEntry = skipEntry || isMobile;
+
   return (
     <ContentProvider>
-      {!introComplete && <IntroSplash onComplete={handleIntroComplete} />}
+      {!introComplete && <IntroSplash onComplete={handleIntroComplete} skipEntry={shouldSkipEntry} />}
       <BrowserRouter>
         <RouteEffects />
         <PublicSiteGuard>
@@ -98,7 +109,7 @@ export default function App() {
 
   return (
     <ErrorBoundary>
-      <PublicSite />
+      <PublicSite skipEntry={true} />
     </ErrorBoundary>
   );
 }

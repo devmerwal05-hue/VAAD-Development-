@@ -1,20 +1,26 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useContent } from '../lib/useContent';
+import EntryScreen from './EntryScreen';
 
 const ease: [number, number, number, number] = [0.16, 0.77, 0.47, 0.97];
 
-export default function IntroSplash({ onComplete }: { onComplete: () => void }) {
+export default function IntroSplash({ onComplete, skipEntry = false }: { onComplete: () => void; skipEntry?: boolean }) {
   const { getContentValue } = useContent();
   const [phase, setPhase] = useState<'boot' | 'dot' | 'glow' | 'exit'>('boot');
+  const [showEntry, setShowEntry] = useState(false);
 
   useEffect(() => {
+    if (skipEntry) {
+      const t = setTimeout(() => onComplete(), 1400);
+      return () => clearTimeout(t);
+    }
     const t1 = setTimeout(() => setPhase('dot'), 700);
     const t2 = setTimeout(() => setPhase('glow'), 1100);
     const t3 = setTimeout(() => setPhase('exit'), 1800);
-    const t4 = setTimeout(() => onComplete(), 2300);
+    const t4 = setTimeout(() => setShowEntry(true), 2300);
     return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); clearTimeout(t4); };
-  }, [onComplete]);
+  }, [onComplete, skipEntry]);
 
   return (
     <AnimatePresence>
@@ -147,6 +153,18 @@ export default function IntroSplash({ onComplete }: { onComplete: () => void }) 
           />
         </div>
       </motion.div>
+    </AnimatePresence>
+    <AnimatePresence>
+      {showEntry && (
+        <motion.div
+          key="entry"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
+        >
+          <EntryScreen onComplete={onComplete} />
+        </motion.div>
+      )}
     </AnimatePresence>
   );
 }
