@@ -36,7 +36,7 @@ function withRouteBoundary(element: ReactNode) {
 }
 
 function PublicSite({ skipEntry = false }: { skipEntry?: boolean }) {
-  const [isMobile, setIsMobile] = useState(false);
+  const [isMobile, setIsMobile] = useState(true);
   const [introComplete, setIntroComplete] = useState(() => {
     try {
       return sessionStorage.getItem('vaad_intro_seen') === '1';

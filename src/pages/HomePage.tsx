@@ -19,7 +19,7 @@ import EntryScreen from '../components/EntryScreen';
 
 export default function HomePage() {
   const { getContentValue } = useContent();
-  const [isMobile, setIsMobile] = useState(false);
+  const [isMobile, setIsMobile] = useState(true);
   const [launchComplete, setLaunchComplete] = useState(() => {
     try {
       return sessionStorage.getItem('vaad_home_launch_complete') === '1';
@@ -56,17 +56,6 @@ export default function HomePage() {
       />
     );
   }
-
-  useEffect(() => {
-    if (!launchComplete && isMobile) {
-      try {
-        sessionStorage.setItem('vaad_home_launch_complete', '1');
-      } catch {
-        // Ignore
-      }
-      setLaunchComplete(true);
-    }
-  }, [isMobile, launchComplete]);
 
   const chapters = [
     { id: 'home-services', number: '01', label: 'Services' },
