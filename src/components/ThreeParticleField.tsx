@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 
 export interface ThreeParticleFieldProps {
@@ -21,19 +21,8 @@ export default function ThreeParticleField({ className = '', active = true }: Th
     return () => media.removeEventListener('change', update);
   }, []);
 
-  const isLowPower = useMemo(() => {
-    if (typeof window === 'undefined') return true;
-
-    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const nav = navigator as Navigator & { connection?: { saveData?: boolean } };
-    const saveData = Boolean(nav.connection?.saveData);
-    const lowPowerCpu = (navigator.hardwareConcurrency ?? 8) <= 4;
-
-    return reducedMotion || saveData || lowPowerCpu || isMobile;
-  }, [isMobile]);
-
   useEffect(() => {
-    if (!active || isMobile || isLowPower) return;
+    if (!active || isMobile) return;
 
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -117,9 +106,9 @@ export default function ThreeParticleField({ className = '', active = true }: Th
       renderer.dispose();
       renderer.forceContextLoss();
     };
-  }, [active, isMobile, isLowPower]);
+  }, [active, isMobile]);
 
-  if (!active || isMobile || isLowPower) {
+  if (!active || isMobile) {
     return (
       <div
         aria-hidden="true"
