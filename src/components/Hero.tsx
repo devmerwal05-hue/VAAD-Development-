@@ -1,20 +1,16 @@
 import {
-  animate,
   motion,
   useMotionTemplate,
   useMotionValue,
   useSpring,
   useTransform,
-  useReducedMotion,
   type Variants,
 } from 'framer-motion';
-import { lazy, Suspense, useEffect } from 'react';
 import { ArrowUpRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { buildPortfolioProjects } from '../lib/portfolio';
 import { useContent } from '../lib/useContent';
-
-const StarField = lazy(() => import('./StarField'));
+import ThreeParticleField from './ThreeParticleField';
 
 const heroShellVariants: Variants = {
   hidden: { opacity: 0, y: 40 },
@@ -120,7 +116,6 @@ function HeadlineWord({ children, accent = false }: HeadlineWordProps) {
 
 export default function Hero({ className = '' }: HeroProps) {
   const { content, getContentValue, projectCount } = useContent();
-  const reduceMotion = useReducedMotion();
 
   const hasStoredCount = content.some((item) => item.section === 'portfolio' && item.key === 'project_count');
   const featuredProject = buildPortfolioProjects(getContentValue, projectCount, !hasStoredCount)[0];
@@ -144,7 +139,6 @@ export default function Hero({ className = '' }: HeroProps) {
     },
   ];
 
-  const warpStrength = useMotionValue(1);
   const pointerX = useMotionValue(0);
   const pointerY = useMotionValue(0);
   const springX = useSpring(pointerX, { damping: 22, stiffness: 180, mass: 0.8 });
@@ -154,15 +148,6 @@ export default function Hero({ className = '' }: HeroProps) {
   const cardShiftX = useTransform(springX, [-0.6, 0.6], [-16, 16]);
   const cardShiftY = useTransform(springY, [-0.6, 0.6], [-10, 10]);
   const cardTransform = useMotionTemplate`perspective(1800px) rotateX(${cardRotateX}deg) rotateY(${cardRotateY}deg) translate3d(${cardShiftX}px, ${cardShiftY}px, 0px)`;
-
-  useEffect(() => {
-    const controls = animate(warpStrength, reduceMotion ? 0.22 : 0.28, {
-      duration: reduceMotion ? 0.8 : 2.6,
-      ease: [0.16, 1, 0.3, 1],
-    });
-
-    return () => controls.stop();
-  }, [reduceMotion, warpStrength]);
 
   return (
     <section
@@ -183,11 +168,7 @@ export default function Hero({ className = '' }: HeroProps) {
       <div className="hero-nebula hero-nebula-b absolute right-[-4%] top-[16%] h-[380px] w-[380px]" />
       <div className="hero-nebula hero-nebula-c absolute bottom-[18%] left-[24%] h-[300px] w-[300px]" />
       <div className="hero-nebula hero-nebula-d absolute bottom-[-8%] right-[12%] h-[420px] w-[420px]" />
-      <div className="absolute inset-0">
-        <Suspense fallback={<div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(108,99,255,0.12),transparent_54%)]" />}>
-          <StarField className="absolute inset-0" warpStrength={warpStrength} />
-        </Suspense>
-      </div>
+      <ThreeParticleField />
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-x-0 top-[12%] z-[1] flex justify-center overflow-hidden"

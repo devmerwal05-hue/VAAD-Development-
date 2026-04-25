@@ -1,5 +1,5 @@
 import { motion, type MotionValue, type Variants } from 'framer-motion';
-import { startTransition, useEffect, useRef, useState } from 'react';
+import { startTransition, useEffect, useMemo, useRef, useState } from 'react';
 
 const starfieldRevealVariants: Variants = {
   hidden: { opacity: 0, scale: 1.04 },
@@ -46,7 +46,6 @@ export default function StarField({ className = '', active = true, warpRef, warp
   const mouseRef = useRef({ x: 0, y: 0 });
   const smoothedRef = useRef({ x: 0, y: 0 });
   const [isMobile, setIsMobile] = useState(false);
-  const [isLowPower, setIsLowPower] = useState(false);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
@@ -57,11 +56,15 @@ export default function StarField({ className = '', active = true, warpRef, warp
     return () => media.removeEventListener('change', update);
   }, []);
 
-  useEffect(() => {
+  const isLowPower = useMemo(() => {
+    if (typeof window === 'undefined') return true;
+
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const saveData = (navigator as unknown as { saveData?: string }).saveData === 'on';
-    const lowPower = ((navigator as unknown as { hardwareConcurrency?: number }).hardwareConcurrency ?? 8) <= 4;
-    setIsLowPower(reducedMotion || saveData || lowPower || isMobile);
+    const nav = navigator as Navigator & { connection?: { saveData?: boolean } };
+    const saveData = Boolean(nav.connection?.saveData);
+    const lowPowerCpu = (navigator.hardwareConcurrency ?? 8) <= 4;
+
+    return reducedMotion || saveData || lowPowerCpu || isMobile;
   }, [isMobile]);
 
   useEffect(() => {
@@ -118,9 +121,17 @@ export default function StarField({ className = '', active = true, warpRef, warp
 
       if (starsRef.current.length === 0) {
         const starCount = Math.floor((bounds.width * bounds.height) / 9800);
-        isLowPower
-          ? starsRef.current = Array.from({ length: clamp(starCount, 15, 35) }, () => createStar(bounds.width, bounds.height))
-          : starsRef.current = Array.from({ length: clamp(starCount, 80, 150) }, () => createStar(bounds.width, bounds.height));
+        if (isLowPower) {
+          starsRef.current = Array.from(
+            { length: clamp(starCount, 15, 35) },
+            () => createStar(bounds.width, bounds.height),
+          );
+        } else {
+          starsRef.current = Array.from(
+            { length: clamp(starCount, 80, 150) },
+            () => createStar(bounds.width, bounds.height),
+          );
+        }
       }
     };
 

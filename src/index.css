@@ -577,6 +577,62 @@ body.admin-mode::after { display: none; }
   animation: availabilityPulse 2.2s ease-in-out infinite;
 }
 
+/* Horizontal showcase cards */
+.horizontal-scroll {
+  overflow: hidden;
+  position: relative;
+}
+
+.horizontal-track {
+  display: flex;
+  gap: 32px;
+  width: max-content;
+  padding: 0 clamp(20px, 4vw, 80px);
+}
+
+.project-card {
+  width: clamp(320px, 35vw, 500px);
+  flex-shrink: 0;
+}
+
+.project-card-image {
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+  margin-bottom: 24px;
+}
+
+.project-card-gradient {
+  position: absolute;
+  inset: 0;
+}
+
+.project-card-number {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 72px;
+  font-weight: 900;
+  color: rgba(255, 255, 255, 0.15);
+  line-height: 1;
+  z-index: 2;
+}
+
+@media (max-width: 1023px) {
+  .horizontal-track.horizontal-track-mobile {
+    width: 100%;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .horizontal-track.horizontal-track-mobile .project-card {
+    width: min(100%, 640px);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .terminal-caret::after,
   .hero-gradient-1,
