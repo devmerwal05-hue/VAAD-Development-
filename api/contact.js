@@ -1,14 +1,70 @@
-import { hasSupabaseConfig } from './_config.js';
+import {
+  getContactCaptchaProvider,
+  getContactCaptchaSecret,
+  hasSupabaseConfig,
+  shouldRequireContactCaptcha,
+} from './_config.js';
 import { BUDGET_RANGE_VALUES, CONTACT_STATUS, PROJECT_TYPE_VALUES } from './_constants.js';
 import { getSupabaseAdmin } from './_supabase.js';
 import {
   applySecurity,
-  getErrorMessage,
   getRequestBody,
   logAdminAction,
   sanitize,
   verifyAdminSession,
 } from './_security.js';
+
+const CAPTCHA_VERIFY_ENDPOINTS = {
+  recaptcha: 'https://www.google.com/recaptcha/api/siteverify',
+  turnstile: 'https://challenges.cloudflare.com/turnstile/v0/siteverify',
+};
+
+function getClientIp(req) {
+  return req.headers['x-forwarded-for']?.split(',')[0]?.trim()
+    || req.headers['x-real-ip']
+    || req.socket?.remoteAddress
+    || '';
+}
+
+async function verifyCaptchaToken({ token, secret, provider, ipAddress }) {
+  const endpoint = CAPTCHA_VERIFY_ENDPOINTS[provider] || CAPTCHA_VERIFY_ENDPOINTS.turnstile;
+
+  const body = new URLSearchParams();
+  body.set('secret', secret);
+  body.set('response', token);
+  if (ipAddress) body.set('remoteip', ipAddress);
+
+  const controller = new AbortController();
+  const timeoutHandle = setTimeout(() => controller.abort(), 5000);
+
+  try {
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body,
+      signal: controller.signal,
+    });
+
+    if (!response.ok) {
+      return { success: false, codes: ['captcha_http_error'] };
+    }
+
+    const payload = await response.json();
+    const success = Boolean(payload?.success);
+    const codes = Array.isArray(payload?.['error-codes']) ? payload['error-codes'] : [];
+
+    if (provider === 'recaptcha' && typeof payload?.score === 'number' && payload.score < 0.5) {
+      return { success: false, codes: ['low_score'] };
+    }
+
+    return { success, codes };
+  } catch (error) {
+    console.error('Captcha verification request failed:', error);
+    return { success: false, codes: ['captcha_request_failed'] };
+  } finally {
+    clearTimeout(timeoutHandle);
+  }
+}
 
 function normalizeNumericId(value) {
   if (typeof value === 'number' && Number.isFinite(value)) {
@@ -49,6 +105,7 @@ export default async function handler(req, res) {
         message,
         website,
         started_at,
+        captcha_token,
       } = body;
 
       const cleanName = sanitize(name, 200);
@@ -56,6 +113,7 @@ export default async function handler(req, res) {
       const cleanPhone = sanitize(phone || '', 30);
       const cleanCompany = sanitize(company || '', 200);
       const cleanMessage = sanitize(message, 5000);
+      const cleanCaptchaToken = sanitize(captcha_token || '', 5000);
       const honeypot = sanitize(website || '', 200);
       const startedAt = Number.parseInt(String(started_at || '0'), 10);
 
@@ -82,6 +140,32 @@ export default async function handler(req, res) {
 
       if (errors.length > 0) {
         return res.status(400).json({ error: errors.join(', ') });
+      }
+
+      const captchaSecret = getContactCaptchaSecret();
+      const captchaRequired = shouldRequireContactCaptcha() || Boolean(captchaSecret);
+
+      if (captchaRequired) {
+        if (!captchaSecret) {
+          console.error('CONTACT_REQUIRE_CAPTCHA is enabled, but CONTACT_CAPTCHA_SECRET is missing.');
+          return res.status(503).json({ error: 'Contact verification is unavailable.' });
+        }
+
+        if (!cleanCaptchaToken) {
+          return res.status(400).json({ error: 'Captcha verification is required.' });
+        }
+
+        const verification = await verifyCaptchaToken({
+          token: cleanCaptchaToken,
+          secret: captchaSecret,
+          provider: getContactCaptchaProvider(),
+          ipAddress: getClientIp(req),
+        });
+
+        if (!verification.success) {
+          console.warn('Captcha verification failed for contact submission.', { codes: verification.codes });
+          return res.status(400).json({ error: 'Bot verification failed. Please try again.' });
+        }
       }
 
       const { error } = await getSupabaseAdmin()
@@ -180,6 +264,6 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   } catch (error) {
     console.error('Contact API error:', error);
-    return res.status(500).json({ error: getErrorMessage(error) });
+    return res.status(500).json({ error: 'Internal server error.' });
   }
 }

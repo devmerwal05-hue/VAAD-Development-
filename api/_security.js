@@ -31,6 +31,7 @@ const RATE_LIMIT_WINDOWS_MS = {
 const ADMIN_SESSION_COOKIE = 'vaad_admin_session';
 const ADMIN_CSRF_COOKIE = 'vaad_admin_csrf';
 const ADMIN_SESSION_MAX_AGE_SECONDS = Number.parseInt(getEnv('ADMIN_SESSION_MAX_AGE_SECONDS') || '', 10) || (60 * 60 * 8);
+const DEV_ADMIN_SESSION_FALLBACK_SECRET = crypto.randomBytes(32).toString('hex');
 
 const URL_SCHEME_RE = /^(https?:\/\/|\/|mailto:|tel:)/i;
 const SECTION_KEY_RE = /^[a-z0-9_]+$/i;
@@ -96,8 +97,8 @@ function isSecureRequest(req) {
 function getAdminSessionSecret() {
   const secret = getEnv('ADMIN_SESSION_SECRET');
   if (!secret) {
-    console.warn('ADMIN_SESSION_SECRET is not configured. Falling back to a development-only secret.');
-    return 'dev-only-secret-change-me';
+    console.warn('ADMIN_SESSION_SECRET is not configured. Using an ephemeral development secret for this process.');
+    return DEV_ADMIN_SESSION_FALLBACK_SECRET;
   }
   return secret;
 }

@@ -1,6 +1,6 @@
 import { getUploadsBucket, getEnv } from './_config.js';
 import { getSupabaseAdmin } from './_supabase.js';
-import { applySecurity, getErrorMessage, getRequestBody, logAdminAction, sanitize, verifyAdminSession } from './_security.js';
+import { applySecurity, getRequestBody, logAdminAction, sanitize, verifyAdminSession } from './_security.js';
 
 export const config = { api: { bodyParser: { sizeLimit: '10mb' } } };
 
@@ -20,7 +20,7 @@ export default async function handler(req, res) {
     
     if (!supabaseUrl || !serviceKey) {
       console.error('Missing Supabase config:', { hasUrl: !!supabaseUrl, hasKey: !!serviceKey });
-      return res.status(503).json({ error: 'Supabase is not configured. Please set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in Vercel environment variables.' });
+      return res.status(503).json({ error: 'Storage service is unavailable.' });
     }
 
     const body = getRequestBody(req, res);
@@ -78,7 +78,7 @@ export default async function handler(req, res) {
 
     if (error) {
       console.error('Supabase storage error:', error);
-      return res.status(500).json({ error: `Upload failed: ${error.message}` });
+      return res.status(500).json({ error: 'Upload failed. Please try again later.' });
     }
 
     const { data: publicUrlData } = admin.storage.from(bucket).getPublicUrl(filePath);
@@ -99,6 +99,6 @@ export default async function handler(req, res) {
     });
   } catch (error) {
     console.error('Upload API error:', error);
-    return res.status(500).json({ error: getErrorMessage(error) });
+    return res.status(500).json({ error: 'Internal server error.' });
   }
 }

@@ -2,7 +2,6 @@ import { hasSupabaseConfig } from './_config.js';
 import { getSupabaseAdmin, getSupabasePublic } from './_supabase.js';
 import {
   applySecurity,
-  getErrorMessage,
   getRequestBody,
   hasAdminSession,
   logAdminAction,
@@ -532,6 +531,6 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   } catch (error) {
     console.error('Content API error:', error);
-    return res.status(500).json({ error: getErrorMessage(error) });
+    return res.status(500).json({ error: 'Internal server error.' });
   }
 }

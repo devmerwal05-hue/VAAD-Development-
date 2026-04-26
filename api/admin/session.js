@@ -46,7 +46,7 @@ export default async function handler(req, res) {
     const configuredPassword = getAdminPassword();
     if (!configuredPassword) {
       return res.status(503).json({
-        error: 'Admin password is not configured. Set ADMIN_PASSWORD (or ADMIN_PASS / ADMIN_PANEL_PASSWORD / VITE_ADMIN_PASSWORD).',
+        error: 'Admin authentication is not configured.',
       });
     }
 

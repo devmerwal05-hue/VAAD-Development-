@@ -31,7 +31,7 @@ function normalizeEnvSecret(value) {
 }
 
 export function getAdminPassword() {
-  const candidates = ['ADMIN_PASSWORD', 'ADMIN_PASS', 'ADMIN_PANEL_PASSWORD', 'VITE_ADMIN_PASSWORD'];
+  const candidates = ['ADMIN_PASSWORD', 'ADMIN_PASS', 'ADMIN_PANEL_PASSWORD'];
   for (const key of candidates) {
     const value = normalizeEnvSecret(getEnv(key));
     if (value) {
@@ -39,6 +39,19 @@ export function getAdminPassword() {
     }
   }
   return '';
+}
+
+export function getContactCaptchaSecret() {
+  return normalizeEnvSecret(getEnv('CONTACT_CAPTCHA_SECRET'));
+}
+
+export function shouldRequireContactCaptcha() {
+  return getBoolEnv('CONTACT_REQUIRE_CAPTCHA', false);
+}
+
+export function getContactCaptchaProvider() {
+  const provider = String(getEnv('CONTACT_CAPTCHA_PROVIDER') || 'turnstile').trim().toLowerCase();
+  return provider === 'recaptcha' ? 'recaptcha' : 'turnstile';
 }
 
 export function shouldRequireAdminMfa() {

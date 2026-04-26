@@ -1,6 +1,5 @@
 import {
   applySecurity,
-  getErrorMessage,
   getRequestBody,
   sanitize,
 } from './_security.js';
@@ -79,6 +78,6 @@ export default async function handler(req, res) {
     return res.status(202).json({ ok: true });
   } catch (error) {
     console.error('Client log API error:', error);
-    return res.status(500).json({ error: getErrorMessage(error) });
+    return res.status(500).json({ error: 'Internal server error.' });
   }
 }
